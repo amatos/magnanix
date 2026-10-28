@@ -1,0 +1,62 @@
+# Run `sops updatekeys <file>` on existing secrets whenever recipients change to update the files.
+keys:
+  # People: one age-plugin-yubikey recipient per YubiKey (`age-plugin-yubikey --list`)
+  - &yubikey0634d1c4 age1yubikey1qv0utu8hcayj3xeppwjuckzmrgd0ltjuq59ffmwd6t9f2m7depa2sl0ne87
+  - &yubikey2ab5ff2f age1yubikey1qtn8y2ad0vr9ddazfsxy4fmlt64kknhjsll2xvfgekck3n0dc0xjvf5rah6
+  - &yubikeybe7a2b66 age1yubikey1qgmkn4s840hwg4kfazjn6u4r2nq9utl60chscraq4sqg9jsf0wleu5eldvv
+  - &yubikey49705840 age1yubikey1qtkf5924nev2a5vqncdurp729tq6xmdf27y6x95fv7kk5zje5vqr6umpnj8
+  - &yubikey7cb1cad0 age1yubikey1q0pmgm34s0ckw8jj9auzlvm5mc6mpxxgc5syu0aw55cqu2hnm7krqrnq60a
+  - &yubikeyb4d67c6f age1yubikey1qt9a6xc0nzpe484kzeuw55hsm4shu3ug9j6m4ngtsexqrgptd6zfx596dqn
+
+  # Machines: host SSH key as age (`ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub`)
+  - &host_magnus age1kmemkv7z7am3ve7fhlmg7xjw3gd67tqpxqjzcugncrl37penq9zsj3v8zv
+  # This is a placeholder.  replace with the real value when available.
+  - &host_darwintron age1kmemkv7z7am3ve7fhlmg7xjw3gd67tqpxqjzcugncrl37penq9zsj3v8zv
+  # This is a placeholder.  replace with the real value when available.
+  - &host_nixostron age1kmemkv7z7am3ve7fhlmg7xjw3gd67tqpxqjzcugncrl37penq9zsj3v8zv
+  # Home Manager: per-machine user keys (`age-keygen -y ~/.config/sops-nix/key.txt`)
+  - &alberth_magnus age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
+  # This is a placeholder.  replace with the real value when available.
+  - &alberth_darwintron age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
+  # This is a placeholder.  replace with the real value when available.
+  - &alberth_nixostron age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
+
+creation_rules:
+  # System secrets for one host
+  - path_regex: secrets/hosts/magnus\.yaml$
+    key_groups:
+      - age: [*yubikey0634d1c4, *yubikey2ab5ff2f, *yubikeybe7a2b66, *yubikey49705840, *yubikey7cb1cad0, *yubikeyb4d67c6f, *host_magnus]
+  - path_regex: secrets/hosts/darwintron\.yaml$
+    key_groups:
+      - age: [*yubikey0634d1c4, *yubikey2ab5ff2f, *yubikeybe7a2b66, *yubikey49705840, *yubikey7cb1cad0, *yubikeyb4d67c6f, *host_darwintron]
+  - path_regex: secrets/hosts/nixostron\.yaml$
+    key_groups:
+      - age: [*yubikey0634d1c4, *yubikey2ab5ff2f, *yubikeybe7a2b66, *yubikey49705840, *yubikey7cb1cad0, *yubikeyb4d67c6f, *host_nixostron]
+
+  # System secrets shared by every host
+  - path_regex: secrets/common\.yaml$
+    key_groups:
+      - age:
+          - *yubikey0634d1c4
+          - *yubikey2ab5ff2f
+          - *yubikeybe7a2b66
+          - *yubikey49705840
+          - *yubikey7cb1cad0
+          - *yubikeyb4d67c6f
+          - *host_magnus
+          # - *host_darwintron
+          # - *host_nixostron
+
+  # Home Manager secrets for alberth, on every machine
+  - path_regex: secrets/users/alberth\.yaml$
+    key_groups:
+      - age:
+          - *yubikey0634d1c4
+          - *yubikey2ab5ff2f
+          - *yubikeybe7a2b66
+          - *yubikey49705840
+          - *yubikey7cb1cad0
+          - *yubikeyb4d67c6f
+          - *alberth_magnus
+          # - *alberth_darwintron
+          # - *alberth_nixostron
