@@ -31,6 +31,7 @@ in
       den.aspects._1password
       den.aspects.gpg
       den.aspects.nix-tools
+      den.aspects.zsa.voyager
     ];
 
     # Home Manager configuration for alberth
