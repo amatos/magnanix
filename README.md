@@ -49,7 +49,8 @@ modules/
 ├── host-features/             opt-in aspects that hosts include (none yet)
 ├── home-features/             opt-in aspects that users include
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
-│   └── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
+│   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
+│   └── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
 │   ├── _darwin_template.nix   copy this to add a macOS host
 │   └── _nix_template.nix      copy this to add a NixOS host
@@ -217,6 +218,59 @@ den.aspects.alberth.homeManager.sops.secrets.my_user_secret = { };
 ```
 
 The decrypted value is at `config.sops.secrets.<name>.path`.
+
+## Shells
+
+Shell configuration lives in `modules/home-features/shells/`, one aspect per shell plus shared pieces. A user opts
+into a shell from the user's aspect; `alberth` includes `shell.zsh` and `shell.fish`:
+
+```nix
+den.aspects.alberth.includes = [ den.aspects.shell.zsh den.aspects.shell.fish ];
+```
+
+| Aspect                     | File                          | What it does                                                           |
+| -------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| `shell.zsh`                | `zsh.nix`                     | Home Manager `programs.zsh`                                            |
+| `shell.fish`               | `fish.nix`                    | Home Manager `programs.fish`, plus system-level fish on NixOS and macOS |
+| `shell.bash`               | `bash.nix`                    | Home Manager `programs.bash` (defined, but no user includes it yet)    |
+| `shell.starship`           | `starship.nix`                | Home Manager `programs.starship` with a default `starship.toml`; the prompt for every shell |
+| `shell.shellAliases`       | `shell-aliases.nix`           | aliases shared by the shells, and per-OS `environment.shellAliases`    |
+| `shell.posixFunctions`     | `shell-functions-posix.nix`   | shared functions for zsh and bash                                      |
+| `shell.fishFunctions`      | `shell-functions-fish.nix`    | the same functions, written for fish                                   |
+
+Each shell aspect includes the aliases, functions and `shell.starship` aspects it needs, so including `shell.zsh` is
+enough.
+
+**Login shell.** `alberth`'s login shell is Nix's zsh on every host, set in `modules/users/alberth/alberth.nix`
+(including `shell.zsh` also enables `programs.zsh` at system level, which the setting requires):
+
+- **NixOS:** `users.users.alberth.shell = pkgs.zsh`. This overrides the fish default that `shell.fish` sets with
+  `users.defaultUserShell`.
+- **macOS:** nix-darwin only applies `users.users.<name>.shell` to users in `users.knownUsers`, and listing
+  `alberth` there would make nix-darwin manage (and possibly delete) the account. So the config adds Nix's zsh
+  to `/etc/shells` (`environment.shells`) and sets the shell on the existing account with `dscl` in a
+  `postActivation` script. It runs after every activation and only changes the shell if it differs. Open a new
+  terminal after the first switch for it to take effect.
+  Check it with `dscl . -read /Users/alberth UserShell`; it should be `/run/current-system/sw/bin/zsh`.
+
+- **zsh:** config lives in `$XDG_CONFIG_HOME/zsh`. oh-my-zsh is enabled with its theme turned off, because
+  Starship draws the prompt. The history file is
+  `~/.local/share/zsh/history`, effectively unlimited and shared between sessions. Plugins load in this order:
+  `fzf-tab` (must be first), `zsh-autosuggestions`, `zsh-syntax-highlighting`, `zsh-history-substring-search`,
+  `you-should-use`. On Linux the `fzf-tab` native module is stripped so it falls back to pure zsh. A glibc
+  mismatch stops the prebuilt module loading on non-NixOS hosts, and the fallback avoids that. `envExtra` sources
+  the Nix daemon profile, so `nix` is on `PATH` when zsh is the login shell on non-NixOS Linux.
+- **fish:** Home Manager enables fish integration, turns off the greeting, and installs the `autopair` and `bass`
+  plugins. Fish is also enabled at system level on NixOS (where it becomes the default user shell) and on macOS.
+  OS-specific aliases and functions live next to that (xclip clipboard aliases and PulseAudio and DNS resets on
+  NixOS; `pbcopy` aliases and `tail-exit-node-fix` on macOS).
+- **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`),
+  and fish also loads `op` completions.
+- **Aliases and functions:** the common aliases (`rm`/`mv`/`cp` with `-i`, the `ssh*` variants, `git-log`,
+  `git-author`) apply to zsh and fish. The functions cover GPG and YubiKey resets, Docker cleanup, Tailscale
+  and DNS fixes, network info, and a zoxide and fzf directory jumper (`zox`). They are written once for POSIX
+  shells and once for fish, so keep the two files in step when adding or changing one. In `shell-functions-posix.nix`
+  each entry becomes a shell function; in `shell-functions-fish.nix` it becomes a fish function.
 
 ## Direnv
 

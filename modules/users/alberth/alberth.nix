@@ -33,6 +33,8 @@ in
       den.aspects.gpg
       den.aspects.nix-tools
       den.aspects.zsa.voyager
+      den.aspects.shell.zsh
+      den.aspects.shell.fish
     ];
 
     # Home Manager configuration for alberth
@@ -51,6 +53,33 @@ in
 
       # initialPassword = "id";
     };
+
+    # Login shell: Nix's zsh (not macOS's /bin/zsh). The zsh aspect enables
+    # programs.zsh at system level, which this setting requires.
+    os =
+      { pkgs, ... }:
+      {
+        # On NixOS this also overrides the fish default set by the shell.fish aspect.
+        users.users.${meta.username}.shell = pkgs.zsh;
+      };
+
+    # nix-darwin only applies users.users.<name>.shell to users in users.knownUsers,
+    # and adding alberth there would make nix-darwin manage (and delete) the account.
+    # So set the shell on the existing account after every activation instead, and
+    # list it in /etc/shells (nix-darwin doesn't add programs.zsh to it), which
+    # chsh and login require.
+    darwin =
+      { pkgs, ... }:
+      {
+        environment.shells = [ pkgs.zsh ];
+
+        system.activationScripts.postActivation.text = ''
+          if [ "$(dscl . -read /Users/${meta.username} UserShell)" != "UserShell: /run/current-system/sw/bin/zsh" ]; then
+            echo "setting ${meta.username}'s login shell to Nix zsh..." >&2
+            dscl . -create /Users/${meta.username} UserShell /run/current-system/sw/bin/zsh
+          fi
+        '';
+      };
 
     # extraGroups and openssh are NixOS-only users.users options
     # (not supported by nix-darwin's users.users submodule).
