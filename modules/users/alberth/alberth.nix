@@ -33,7 +33,7 @@ in
       den.aspects.gpg
       den.aspects.nix-tools
       den.aspects.zed
-
+      den.aspects.fonts
       den.aspects.zsa.voyager
       den.aspects.shell.zsh
       den.aspects.shell.fish
