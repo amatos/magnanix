@@ -32,7 +32,7 @@
         };
         _1password-gui = {
           enable = true;
-         };
+        };
       };
     };
   };

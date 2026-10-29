@@ -1,7 +1,7 @@
 { den, ... }: {
   den.aspects.zsa.keymapp = {
     includes = [
-      (den.provides.unfree [ "keymapp"])
+      (den.provides.unfree [ "keymapp" ])
     ];
 
     homeManager = { pkgs, ... }: {
