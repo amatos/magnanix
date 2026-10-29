@@ -37,5 +37,14 @@ in
     };
   };
 
+  # Determinate 3.* module
+  flake-file.inputs.determinate = {
+    url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
+    inputs.nixpkgs.follows = "nixpkgs";
+    # Keep the nixpkgs that Determinate's own `nix` input pins. Making it follow
+    # ours (what auto-follow would do) changed the nixostron closure.
+    inputs.nix.inputs.nixpkgs.autoFollow = false;
+  };
+
   den.default.includes = [ den.aspects.determinate ];
 }

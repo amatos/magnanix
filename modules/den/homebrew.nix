@@ -22,5 +22,8 @@
     ];
   };
 
+  # nix-homebrew installs and manages Homebrew itself on macOS
+  flake-file.inputs.nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
   den.default.includes = [ den.aspects.homebrew ];
 }

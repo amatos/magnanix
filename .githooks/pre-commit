@@ -1,0 +1,39 @@
+#!/bin/sh
+# Pre-commit hook, enabled by the dev shell (`git config core.hooksPath .githooks`).
+# Skip it for one commit with `git commit --no-verify`.
+#
+# It only runs when the staged changes include a .nix file or flake.lock, and checks:
+#   1. staged .nix files are formatted (nixfmt, RFC 166)
+#   2. flake.nix and flake.lock match what flake-file generates from the modules
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+nix_files="$(printf '%s\n' "$staged" | grep '\.nix$' || true)"
+if [ -z "$nix_files" ] && ! printf '%s\n' "$staged" | grep -qx 'flake.lock'; then
+  exit 0
+fi
+
+if [ -n "$nix_files" ]; then
+  echo "pre-commit: checking Nix formatting..."
+
+  if ! printf '%s\n' "$nix_files" | xargs nix fmt -- --check >/dev/null 2>&1; then
+    echo "pre-commit: some staged Nix files are not formatted." >&2
+    echo "pre-commit: run 'git ls-files -z \"*.nix\" | xargs -0 -r nix fmt', then 'git add' the changes." >&2
+    exit 1
+  fi
+fi
+
+echo "pre-commit: checking flake.nix is up to date (nix run .#write-flake)..."
+nix run .#write-flake >/dev/null 2>&1 || {
+  echo "pre-commit: 'nix run .#write-flake' failed; run it manually to see the error." >&2
+  exit 1
+}
+
+if ! git diff --quiet -- flake.nix flake.lock; then
+  echo "pre-commit: write-flake regenerated flake.nix and/or flake.lock." >&2
+  echo "pre-commit: review the changes, 'git add flake.nix flake.lock' and commit again." >&2
+  exit 1
+fi
