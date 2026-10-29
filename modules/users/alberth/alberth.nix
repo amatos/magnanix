@@ -37,6 +37,7 @@ in
       den.aspects.zsa.voyager
       den.aspects.shell.zsh
       den.aspects.shell.fish
+      den.aspects.tui.zoxide
     ];
 
     # Home Manager configuration for alberth
