@@ -28,8 +28,9 @@ in
       den.batteries.define-user
       den.batteries.primary-user
 
-      den.aspects.gpg
       den.aspects._1password
+      den.aspects.gpg
+      den.aspects.nix-tools
     ];
 
     # Home Manager configuration for alberth
