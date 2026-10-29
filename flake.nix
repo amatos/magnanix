@@ -40,7 +40,7 @@
     let
       # Evaluate every module under ./modules. Hosts, users and features are all
       # declared there as Den aspects; Den builds the system configurations.
-      den =
+      denConfig =
         (inputs.nixpkgs.lib.evalModules {
           modules = [ (inputs.import-tree ./modules) ];
           specialArgs = { inherit inputs; };
@@ -66,7 +66,13 @@
       # System configuration outputs, one per Den host. The host names must match
       # `scutil --get LocalHostName` (macOS) or `hostname` (NixOS) so that
       # `darwin-rebuild` / `nixos-rebuild` pick them up.
-      inherit (den.flake) darwinConfigurations nixosConfigurations;
+      inherit (denConfig.flake) darwinConfigurations nixosConfigurations;
+
+      # One `nh` wrapper per Den host / home, named after it, so that e.g.
+      # `nix run .#darwintron -- switch` runs `nh darwin switch .#darwinConfigurations.darwintron`.
+      packages = forEachSupportedSystem (
+        { pkgs, ... }: denConfig.den.lib.nh.denPackages { fromFlake = true; } pkgs
+      );
 
       # Development environment
       devShells = forEachSupportedSystem (
