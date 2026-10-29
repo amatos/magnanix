@@ -29,6 +29,7 @@ in
       den.batteries.primary-user
 
       den.aspects._1password
+      den.aspects.direnv
       den.aspects.gpg
       den.aspects.nix-tools
       den.aspects.zsa.voyager
