@@ -32,6 +32,8 @@ in
       den.aspects.direnv
       den.aspects.gpg
       den.aspects.nix-tools
+      den.aspects.zed
+
       den.aspects.zsa.voyager
       den.aspects.shell.zsh
       den.aspects.shell.fish
