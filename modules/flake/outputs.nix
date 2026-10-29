@@ -35,12 +35,21 @@ in
     inherit (config.flake) darwinConfigurations nixosConfigurations;
 
     packages = forEachSupportedSystem (
-      { pkgs, ... }:
+      { pkgs, system }:
+      let
+        # flake-file's scripts hardcode `pkgs.nix` (stock nixpkgs Nix) in their PATH. That
+        # Nix doesn't know the settings Determinate writes to /etc/nix/nix.conf
+        # (lazy-trees, eval-cores, build-time-fetch-tree) and warns about them on every
+        # call, so swap in Determinate's own Nix for those scripts.
+        pkgsWithDeterminateNix = pkgs.extend (
+          _: _: { nix = inputs.determinate.inputs.nix.packages.${system}.default; }
+        );
+      in
       # One `nh` wrapper per Den host / home, named after it, so that e.g.
       # `nix run .#darwintron -- switch` runs `nh darwin switch .#darwinConfigurations.darwintron`.
       config.den.lib.nh.denPackages { fromFlake = true; } pkgs
       # flake-file's generators, e.g. `nix run .#write-flake`
-      // lib.mapAttrs (_: mkApp: mkApp pkgs) config.flake-file.apps
+      // lib.mapAttrs (_: mkApp: mkApp pkgsWithDeterminateNix) config.flake-file.apps
     );
 
     # `nix flake check` fails when flake.nix is out of date with the modules
