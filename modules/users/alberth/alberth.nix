@@ -33,6 +33,7 @@ in
       den.aspects.direnv
       den.aspects.fonts
       den.aspects.gpg
+      den.aspects.macos.audioApps
       den.aspects.mas
       den.aspects.nix-tools
       den.aspects.shell.fish
