@@ -31,6 +31,7 @@ in
       den.aspects._1password
       den.aspects.direnv
       den.aspects.gpg
+      den.aspects.mas
       den.aspects.nix-tools
       den.aspects.zed
       den.aspects.fonts
