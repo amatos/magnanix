@@ -30,6 +30,7 @@ in
 
       den.aspects._1password
       den.aspects.ai.claude
+      den.aspects.alberth.darwinCustomizations
       den.aspects.browsers
       den.aspects.direnv
       den.aspects.fonts
@@ -39,11 +40,11 @@ in
       den.aspects.nix-tools
       den.aspects.shell.fish
       den.aspects.shell.zsh
+      den.aspects.tex
       den.aspects.tui.atuin
       den.aspects.tui.zoxide
       den.aspects.zed
       den.aspects.zsa.voyager
-      den.aspects.alberth.darwinCustomizations
     ];
 
     # Home Manager configuration for alberth
