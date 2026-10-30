@@ -38,6 +38,7 @@ in
       den.aspects.zsa.voyager
       den.aspects.shell.zsh
       den.aspects.shell.fish
+      den.aspects.tui.atuin
       den.aspects.tui.zoxide
       den.aspects.ai.claude
     ];
