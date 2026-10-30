@@ -2,22 +2,278 @@
   # Starship prompt. Home Manager adds the init hook to each enabled shell
   # (zsh, fish, bash) by default, so this works with whichever shells a user includes.
   den.aspects.shell.starship = {
-    homeManager.programs.starship = {
-      enable = true;
+    homeManager =
+      { lib, ... }:
+      let
+        # Modules that are turned off entirely.
+        disabledModules =
+          lib.genAttrs
+            [
+              "hg_branch"
+              "dart"
+              "dotnet"
+              "elixir"
+              "elm"
+              "erlang"
+              "julia"
+              "kotlin"
+              "nim"
+              "ocaml"
+              "php"
+              "purescript"
+              "swift"
+              "zig"
+              "openstack"
+              "crystal"
+              "lua"
+              "jobs"
+            ]
+            (_: {
+              disabled = true;
+            });
+      in
+      {
+        programs.starship = {
+          enable = true;
+          settings = {
+            # Default is 500ms — bump to 1s so custom modules whose `when`/`command`
+            # shells out (e.g. `custom.tztime` with `when = "true"`) don't trip the
+            # WARN on slower-starting shells (xonsh, in particular, has measurable
+            # subprocess overhead vs zsh).
+            command_timeout = 1000;
 
-      # Written to ~/.config/starship.toml. These are Starship's own defaults, spelled
-      # out as a starting point; change them here (https://starship.rs/config/).
-      settings = {
-        "$schema" = "https://starship.rs/config-schema.json";
+            format = lib.concatStrings [
+              "$battery"
+              "\${custom.tztime}"
+              "$username"
+              "$hostname"
+              "$directory"
+              "$memory_usage"
+              "$git_branch"
+              "$git_commit"
+              "$git_state"
+              "$git_metrics"
+              "$git_status"
+              "$kubernetes"
+              "$helm"
+              "$terraform"
+              "$pulumi"
+              "$azure"
+              "$gcloud"
+              "$aws"
+              "$docker_context"
+              "$env_var"
+              "$golang"
+              "$nodejs"
+              "$java"
+              "$ruby"
+              "$rust"
+              "$python"
+              "$cmd_duration"
+              "$status"
+              "$sudo"
+              "$line_break"
+              "$shell"
+              "$character"
+            ];
 
-        add_newline = true;
-        command_timeout = 500; # milliseconds
+            custom = {
+              tztime = {
+                command = ''date +"%H:%M:%S[%Z]"'';
+                when = "true";
+                style = "yellow";
+                format = "[$symbol($output)]($style) ";
+              };
+              uptime = {
+                command = "uptime-mine";
+                format = "[$symbol($output)](green)";
+                disabled = true;
+              };
+            };
 
-        character = {
-          success_symbol = "[❯](bold green)";
-          error_symbol = "[❯](bold red)";
+            line_break.disabled = false;
+
+            shell = {
+              bash_indicator = "🐚";
+              zsh_indicator = "🦓";
+              fish_indicator = "🐟";
+              powershell_indicator = "🪟";
+              unknown_indicator = "❓";
+              style = "cyan bold";
+              disabled = false;
+            };
+
+            status = {
+              style = "bg:#CC99CC";
+              symbol = "🔴";
+              format = "[\\[$symbol $common_meaning$signal_name$maybe_int\\]]($style)";
+              map_symbol = true;
+              disabled = false;
+            };
+
+            sudo = {
+              style = "bold red";
+              symbol = "🧙 ";
+              disabled = false;
+              allow_windows = true;
+              format = "[$symbol]($style)";
+            };
+
+            hostname = {
+              ssh_only = false;
+              trim_at = ".";
+              disabled = false;
+              format = "@[$hostname](bold red):";
+            };
+
+            username = {
+              style_user = "fg:#CC99CC";
+              style_root = "white";
+              show_always = true;
+              format = "[$user]($style)";
+            };
+
+            character = {
+              success_symbol = "[➜](bold green) ";
+              error_symbol = "[✗](bold red) ";
+              vicmd_symbol = "[V](bold green) ";
+            };
+
+            directory = {
+              format = "[$path]($style)[$read_only]($read_only_style) ";
+              style = "bold #f57800";
+              read_only = "🔒";
+              read_only_style = "red";
+              truncation_symbol = "…/";
+              truncation_length = 3;
+              truncate_to_repo = true;
+            };
+
+            time = {
+              time_format = "%R";
+              format = "🕙 [$time]($style) ";
+              style = "bright-white";
+              disabled = true;
+            };
+
+            memory_usage = {
+              disabled = false;
+              format = "$symbol [\${ram_pct}(|\${swap_pct})]($style) ";
+              threshold = -1;
+              symbol = "🐏";
+              style = "fg:#E29191";
+            };
+
+            battery = {
+              full_symbol = "🔋 ";
+              charging_symbol = "⚡ ";
+              discharging_symbol = "💀 ";
+              display = [
+                {
+                  threshold = 100;
+                  style = "bold yellow";
+                }
+              ];
+            };
+
+            kubernetes = {
+              format = " [⛵ $context ($namespace)](bold #2b6fe5) ";
+              disabled = false;
+            };
+
+            docker_context.format = "[🐋 $context](blue bold)";
+
+            aws = {
+              format = " [$symbol ($profile )(\\($region\\) )]($style)";
+              style = "bold blue";
+              symbol = "🟧";
+              region_aliases = {
+                "us-east-2" = "US:E:2";
+                "us-west-2" = "US:W:2";
+                "eu-west-2" = "EU:W:2";
+              };
+            };
+
+            gcloud = {
+              format = "[$symbol $account(@$domain)(\\($region\\))]($style) ";
+              symbol = "⛅";
+              region_aliases = {
+                "us-central1" = "uc1";
+                "asia-northeast1" = "an1";
+              };
+            };
+
+            azure = {
+              disabled = false;
+              format = "[$symbol ($subscription)]($style) ";
+              symbol = "🔷";
+              style = "blue bold";
+            };
+
+            git_branch = {
+              symbol = "🌱 ";
+              truncation_length = 8;
+              truncation_symbol = "";
+              style = "bold yellow";
+            };
+
+            git_commit = {
+              commit_hash_length = 8;
+              style = "bold white";
+            };
+
+            git_state.format = "[\\($state( $progress_current of $progress_total)\\)]($style)";
+
+            git_metrics = {
+              added_style = "bold blue";
+              format = "[+$added]($added_style)/[-$deleted]($deleted_style) ";
+            };
+
+            git_status = {
+              conflicted = "💥 ";
+              ahead = "🚀 x\${count}";
+              behind = "🐢 x\${count}";
+              diverged = "🔱 🚀 x\${ahead_count} 🐢 x\${behind_count}";
+              untracked = "🚧 x\${count}";
+              stashed = "📦 ";
+              modified = "📝 x\${count}";
+              staged = "📥 x\${count}";
+              renamed = "📛 x\${count}";
+              deleted = "❌ x\${count}";
+              style = "bright-white";
+              format = "$all_status$ahead_behind";
+            };
+
+            terraform.format = "[🧱 $version$workspace]($style)";
+            pulumi.format = "[🚢 ($version )$stack]($style)";
+            helm.format = "[⎈ $version](bold white) ";
+            rust.format = "[🦀 $version](red bold)";
+
+            python = {
+              symbol = "👾 ";
+              pyenv_version_name = true;
+              # Display the version of python from inside a local venv.
+              #
+              # Note this will only work when the venv is inside the project and it
+              # will only work in the directory that contains the venv dir.
+              python_binary = [
+                "./venv/bin/python"
+                "python"
+                "python3"
+                "python2"
+              ];
+            };
+
+            nodejs.format = "[🤖 $version](bold green)";
+            golang.format = "[🐹 $version](bold cyan)";
+
+            cmd_duration = {
+              min_time = 500;
+              format = " [$duration](bold yellow)";
+            };
+          }
+          // disabledModules;
         };
       };
-    };
   };
 }
