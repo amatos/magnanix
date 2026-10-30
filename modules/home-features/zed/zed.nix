@@ -150,16 +150,8 @@
             mime = "text/markdown";
           }
           {
-            ext = ".nix";
-            mime = "text/x-nix";
-          }
-          {
             ext = ".yaml";
             mime = "application/yaml";
-          }
-          {
-            ext = ".asc";
-            mime = "application/pgp-keys";
           }
           {
             ext = ".sh";
