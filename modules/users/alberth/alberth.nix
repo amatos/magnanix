@@ -29,18 +29,18 @@ in
       den.batteries.primary-user
 
       den.aspects._1password
+      den.aspects.ai.claude
       den.aspects.direnv
+      den.aspects.fonts
       den.aspects.gpg
       den.aspects.mas
       den.aspects.nix-tools
-      den.aspects.zed
-      den.aspects.fonts
-      den.aspects.zsa.voyager
-      den.aspects.shell.zsh
       den.aspects.shell.fish
+      den.aspects.shell.zsh
       den.aspects.tui.atuin
       den.aspects.tui.zoxide
-      den.aspects.ai.claude
+      den.aspects.zed
+      den.aspects.zsa.voyager
     ];
 
     # Home Manager configuration for alberth
