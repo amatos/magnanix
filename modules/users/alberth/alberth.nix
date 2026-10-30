@@ -43,6 +43,7 @@ in
       den.aspects.tui.zoxide
       den.aspects.zed
       den.aspects.zsa.voyager
+      den.aspects.alberth.darwinCustomizations
     ];
 
     # Home Manager configuration for alberth
