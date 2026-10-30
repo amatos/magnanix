@@ -75,5 +75,23 @@
     "light": "Dracula Light (Alucard",
     "mode": "system"
   },
-  "ui_font_size": 16
+  "ui_font_size": 16,
+  "agent": {
+    "favorite_models": [],
+    "model_parameters": [],
+    "tool_permissions": {
+      "tools": {
+        "terminal": {
+          "always_allow": [
+            {
+              "pattern": "^nix\\s+eval(\\s|$)"
+            },
+            {
+              "pattern": "^head\\b"
+            }
+          ]
+        }
+      }
+    }
+  }
 }
