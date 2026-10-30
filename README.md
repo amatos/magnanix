@@ -3,7 +3,7 @@
 My nix flake, using the denful pattern for NixOS, nix-darwin, and home-manager, using Determinate Nix.
 
 Configuration is organised with [Den](https://github.com/denful/den), an aspect-oriented Nix framework: a
-feature (an *aspect*) is written once and can configure `nixos`, `darwin` and `homeManager` together. Hosts
+feature (an _aspect_) is written once and can configure `nixos`, `darwin` and `homeManager` together. Hosts
 and users simply pick the aspects they want.
 
 ## Hosts
@@ -41,16 +41,26 @@ modules/
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
 │   ├── homebrew.nix           nix-homebrew (macOS only)
-
 │   ├── home-manager.nix       Home Manager integration for all users
 │   └── nix-darwin.nix         the nix-darwin input
 ├── flake/
 │   └── outputs.nix            the flake's outputs: configurations, packages, checks, dev shell, formatter
 ├── host-features/             opt-in aspects that hosts include (none yet)
 ├── home-features/             opt-in aspects that users include
+│   ├── audio-apps/            audio tools installed as Homebrew casks (macOS)
+│   ├── browsers/              Helium (cask), Orion (Home Manager) and Zen (Home Manager module)
+│   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
+│   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
+│   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
+│   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
+│   ├── atuin.nix              shell history search
+│   ├── claude.nix             Claude Code, the Claude desktop app and usage trackers
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
+│   ├── fonts.nix              fonts: Nix packages plus the Ioskeley Mono cask (macOS)
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
-│   └── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
+│   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
+│   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
 │   ├── _darwin_template.nix   copy this to add a macOS host
 │   └── _nix_template.nix      copy this to add a NixOS host
@@ -88,14 +98,14 @@ A user's aspect carries a `meta` attribute set. It is defined in a `let` binding
 `inherit meta;`, so it can be used inside the aspect itself and read by features through
 `den.aspects.<user>.meta`. `alberth` uses:
 
-| Attribute        | Purpose                                                              |
-| ---------------- | -------------------------------------------------------------------- |
-| `username`       | the account name                                                     |
-| `fullName`       | display name for the OS account                                      |
-| `email`          | primary email address                                                |
-| `authorizedKeys` | SSH public keys allowed to log in (NixOS)                            |
-| `gpgKey`         | long GPG key ID; sets `default-key` (optional)                       |
-| `gpgFingerprint` | full 40-character fingerprint of the key                             |
+| Attribute        | Purpose                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `username`       | the account name                                                                      |
+| `fullName`       | display name for the OS account                                                       |
+| `email`          | primary email address                                                                 |
+| `authorizedKeys` | SSH public keys allowed to log in (NixOS)                                             |
+| `gpgKey`         | long GPG key ID; sets `default-key` (optional)                                        |
+| `gpgFingerprint` | full 40-character fingerprint of the key                                              |
 | `gpgPublicKey`   | path to the exported public key (`.pub.asc`); imported with ultimate trust (optional) |
 
 The `gpg` feature only sets `default-key` and imports a public key when `gpgKey` and `gpgPublicKey` exist, so users
@@ -113,6 +123,27 @@ GPG Suite's, and `gpg-agent.conf` and `dirmngr.conf` are left to GPG Suite; Home
 inputs) in one `sharedSettings` binding. nix-darwin takes them as `determinateNix.customSettings` and NixOS as
 `nix.settings`; both end up in `/etc/nix/nix.custom.conf`. Put a setting in `sharedSettings` if it applies to all
 hosts, or directly in the `darwin` / `nixos` block if it applies to one platform.
+
+On macOS, Determinate owns the Nix installation, which switches nix-darwin's own `nix.*` management off
+(`nix.enable = false`). Do not use `nix.gc`, `nix.optimise` or `nix.settings` in a `darwin` block; they have no
+effect or fail an assertion. Use `determinateNix.customSettings` for Nix settings and
+`determinateNix.determinateNixd.garbageCollector.strategy` for garbage collection instead.
+
+### macOS defaults
+
+`modules/home-features/darwin/` holds one aspect per System Settings area, under `den.aspects.darwin.*`:
+`controlCenter`, `dock`, `finder`, `loginWindow`, `menuExtraClock`, `nsGlobalDomain`, `screencapture`,
+`screenSaver`, `softwareUpdate` and `trackpad`. Each sets `system.defaults.*` through the `darwin` class (and
+`CustomUserPreferences` for keys nix-darwin has no option for). `darwin.nix` bundles them as
+`den.aspects.alberth.darwinCustomizations`, which `alberth` includes.
+
+- Some aspects take the `user` argument (`dock`, `screencapture`) to build paths such as `/Users/<name>/Downloads`.
+- `screencapture` creates its target directory (`~/Pictures/Screenshots/unsorted`) in a `postActivation` script,
+  because nix-darwin doesn't and macOS ignores a missing location.
+- The Dock's `persistent-apps` list is declarative: manual Dock changes are overwritten on the next switch.
+  Orion comes from Home Manager (`~/Applications/Home Manager Apps`); Helium, Zed and Claude are Homebrew casks;
+  Ghostty is installed by hand.
+- New files must be tracked by git (`git add`) before a plain `.#` flake reference can see them.
 
 ## Applying the configuration
 
@@ -228,15 +259,15 @@ into a shell from the user's aspect; `alberth` includes `shell.zsh` and `shell.f
 den.aspects.alberth.includes = [ den.aspects.shell.zsh den.aspects.shell.fish ];
 ```
 
-| Aspect                     | File                          | What it does                                                           |
-| -------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| `shell.zsh`                | `zsh.nix`                     | Home Manager `programs.zsh`                                            |
-| `shell.fish`               | `fish.nix`                    | Home Manager `programs.fish`, plus system-level fish on NixOS and macOS |
-| `shell.bash`               | `bash.nix`                    | Home Manager `programs.bash` (defined, but no user includes it yet)    |
-| `shell.starship`           | `starship.nix`                | Home Manager `programs.starship` with a default `starship.toml`; the prompt for every shell |
-| `shell.shellAliases`       | `shell-aliases.nix`           | aliases shared by the shells, and per-OS `environment.shellAliases`    |
-| `shell.posixFunctions`     | `shell-functions-posix.nix`   | shared functions for zsh and bash                                      |
-| `shell.fishFunctions`      | `shell-functions-fish.nix`    | the same functions, written for fish                                   |
+| Aspect                 | File                        | What it does                                                                                |
+| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------- |
+| `shell.zsh`            | `zsh.nix`                   | Home Manager `programs.zsh`                                                                 |
+| `shell.fish`           | `fish.nix`                  | Home Manager `programs.fish`, plus system-level fish on NixOS and macOS                     |
+| `shell.bash`           | `bash.nix`                  | Home Manager `programs.bash` (defined, but no user includes it yet)                         |
+| `shell.starship`       | `starship.nix`              | Home Manager `programs.starship` with a default `starship.toml`; the prompt for every shell |
+| `shell.shellAliases`   | `shell-aliases.nix`         | aliases shared by the shells, and per-OS `environment.shellAliases`                         |
+| `shell.posixFunctions` | `shell-functions-posix.nix` | shared functions for zsh and bash                                                           |
+| `shell.fishFunctions`  | `shell-functions-fish.nix`  | the same functions, written for fish                                                        |
 
 Each shell aspect includes the aliases, functions and `shell.starship` aspects it needs, so including `shell.zsh` is
 enough.
@@ -264,6 +295,9 @@ enough.
   plugins. Fish is also enabled at system level on NixOS (where it becomes the default user shell) and on macOS.
   OS-specific aliases and functions live next to that (xclip clipboard aliases and PulseAudio and DNS resets on
   NixOS; `pbcopy` aliases and `tail-exit-node-fix` on macOS).
+- **Starship prompt:** the shell indicator is on, so each prompt shows which shell you're in: 🐚 bash, 🦓 zsh,
+  🐟 fish, 🪟 PowerShell, and ❓ for anything else. The hostname is trimmed at the first `.` (`host.example.com`
+  shows as `host`).
 - **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`),
   and fish also loads `op` completions.
 - **Aliases and functions:** the common aliases (`rm`/`mv`/`cp` with `-i`, the `ssh*` variants, `git-log`,
@@ -302,8 +336,10 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 - `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
 - Fill in the empty `base` blocks and the per-host aspects.
 - Build every host for real (`darwin-rebuild build`, `nixos-rebuild build`). `magnus` is already running a
-  nix-darwin system from this flake; `darwintron` and `nixostron` have not been built yet.
-
+  nix-darwin system from this flake. `magnus` and `darwintron` evaluate cleanly; `nixostron` does not yet
+  (it fails on the missing root filesystem and boot loader above), so it can't be built.
+- Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
+  `nix-darwin-settings.nix` that set them was never wired in and has been removed.
 
 ## License
 
