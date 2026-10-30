@@ -30,6 +30,7 @@ in
 
       den.aspects._1password
       den.aspects.ai.claude
+      den.aspects.browsers
       den.aspects.direnv
       den.aspects.fonts
       den.aspects.gpg
