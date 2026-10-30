@@ -31,6 +31,7 @@ in
       den.aspects._1password
       den.aspects.ai.claude
       den.aspects.alberth.darwinCustomizations
+      den.aspects.alberth.ssh
       den.aspects.browsers
       den.aspects.direnv
       den.aspects.fonts
