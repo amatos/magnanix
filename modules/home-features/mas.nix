@@ -1,6 +1,6 @@
 # Mac App Store command line interface. macOS only; a no-op on NixOS hosts.
 {
-  den.aspects.mas = {
+  den.aspects.macos.mas = {
     homeManager =
       { pkgs, lib, ... }:
       {
