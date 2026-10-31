@@ -146,6 +146,48 @@
         # settings.json allows comments.
         json5 = pkgs.python3Packages.toPythonApplication pkgs.python3Packages.json5;
 
+        defaultSettingsFile = (pkgs.formats.json { }).generate "zed-default-settings" defaultSettings;
+
+        mergeSettings = pkgs.writeShellScript "zed-merge-settings" ''
+          set -euo pipefail
+          export PATH=${lib.makeBinPath [ pkgs.coreutils ]}
+          jq=${lib.getExe pkgs.jq}
+          file=${lib.escapeShellArg settingsFile}
+          defaults=${defaultSettingsFile}
+
+          mkdir -p "$(dirname "$file")"
+
+          if [[ ! -s "$file" ]]; then
+            "$jq" . "$defaults" > "$file"
+            exit 0
+          fi
+
+          # An existing file that fails to parse must fail activation rather
+          # than be replaced by the defaults.
+          if ! current="$(${lib.getExe json5} --as-json "$file")" || [[ -z "$current" ]]; then
+            echo "Could not parse $file; refusing to merge." >&2
+            exit 1
+          fi
+
+          merged="$("$jq" -n \
+            --slurpfile defaults "$defaults" \
+            --slurpfile current <(printf '%s' "$current") \
+            '$defaults[0] * $current[0]')"
+
+          # Compare semantically (sorted keys, compact) so formatting and key
+          # order never count as a change. If the file already has every default,
+          # leave it byte-for-byte untouched.
+          if [[ "$("$jq" -cS . <<<"$merged")" == "$("$jq" -cS . <<<"$current")" ]]; then
+            exit 0
+          fi
+
+          tmp="$(mktemp "$file.XXXXXX")"
+          trap 'rm -f -- "$tmp"' EXIT
+          "$jq" . <<<"$merged" > "$tmp"
+          chmod --reference="$file" -- "$tmp"
+          mv -f -- "$tmp" "$file"
+        '';
+
         # Files to open with Zed. macOS (duti) associates by extension; Linux
         # (xdg.mimeApps) associates by MIME type.
         associations = [
@@ -181,18 +223,16 @@
 
         # Runs after the symlink exists. Creates the tracked file from the skeleton
         # if it's missing; otherwise fills in missing keys (file wins on conflicts).
-        home.activation.zedSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] (
-          lib.hm.generators.mkImpureConfigMerger {
-            inherit pkgs;
-            format = "json";
-            empty = "{}";
-            jqOperation = "$static * $dynamic";
-            path = settingsFile;
-            staticSettings = (pkgs.formats.json { }).generate "zed-default-settings" defaultSettings;
-            reader = "${lib.getExe json5} --as-json";
-            verboseMsg = "Filling in missing Zed defaults in ${settingsFile}";
-          }
-        );
+        # The file is only rewritten when the merge actually adds something, so
+        # Zed's own formatting (trailing commas, key order) survives a switch
+        # and doesn't show up as a spurious git diff.
+        home.activation.zedSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+          if [[ -v DRY_RUN ]]; then
+            echo ${lib.escapeShellArg "Would fill in missing Zed defaults in ${settingsFile}"}
+          else
+            ${mergeSettings}
+          fi
+        '';
 
         # macOS: the `zed` cask (bundle id dev.zed.Zed). Failures aren't fatal so a
         # missing cask on first activation doesn't abort the switch.
