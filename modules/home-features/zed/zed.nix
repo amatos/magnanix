@@ -1,4 +1,12 @@
+{ inputs, ... }:
 {
+  # Official Delta flake (Linux binaries only: x86_64-linux and aarch64-linux).
+  # Follows our nixpkgs so Delta uses the host's glibc/graphics stack.
+  flake-file.inputs.delta = {
+    url = "github:zed-industries/delta-nix";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+
   den.aspects.zed = {
     darwin.homebrew.casks = [
       "zed"
@@ -160,8 +168,14 @@
         ];
       in
       {
-        # duti is macOS-only; on Linux Zed comes from nixpkgs (no cask there).
-        home.packages = lib.optionals isDarwin [ pkgs.duti ] ++ lib.optionals isLinux [ pkgs.zed-editor ];
+        # duti is macOS-only; on Linux Zed comes from nixpkgs and Delta from its
+        # official flake (no casks there).
+        home.packages =
+          lib.optionals isDarwin [ pkgs.duti ]
+          ++ lib.optionals isLinux [
+            pkgs.zed-editor
+            inputs.delta.packages.${pkgs.stdenv.hostPlatform.system}.delta
+          ];
 
         xdg.configFile."zed/settings.json".source = config.lib.file.mkOutOfStoreSymlink settingsFile;
 

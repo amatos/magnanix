@@ -15,6 +15,10 @@
       inputs;
 
   inputs = {
+    delta = {
+      url = "github:zed-industries/delta-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     den = {
       url = "github:denful/den";
     };
