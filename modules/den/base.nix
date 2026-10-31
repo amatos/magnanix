@@ -4,7 +4,19 @@
   den.aspects.base = {
     # Sets the OS hostname from the Den host name, which must match
     # `scutil --get LocalHostName` (macOS) or `hostname` (NixOS).
-    includes = [ den.batteries.hostname ];
+    # The aspects below are shared by all hosts and their users.
+    includes = [
+      den.batteries.hostname
+
+      den.aspects.gpg
+      den.aspects.nix-tools
+      den.aspects.shell.bash
+      den.aspects.shell.fish
+      den.aspects.shell.zsh
+      den.aspects.tui.atuin
+      den.aspects.tui.trash
+      den.aspects.tui.zoxide
+    ];
 
     # Shared by all hosts (`os` lands in `darwin` on macOS and `nixos` on NixOS)
     os = { };

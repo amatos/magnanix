@@ -36,15 +36,9 @@ in
       den.aspects.claude
       den.aspects.direnv
       den.aspects.fonts
-      den.aspects.gpg
       den.aspects.macos.audioApps
       den.aspects.macos.mas
-      den.aspects.nix-tools
-      den.aspects.shell.fish
-      den.aspects.shell.zsh
       den.aspects.tex
-      den.aspects.tui.atuin
-      den.aspects.tui.zoxide
       den.aspects.zed
       den.aspects.zsa.voyager
     ];
