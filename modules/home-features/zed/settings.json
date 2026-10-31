@@ -1,4 +1,14 @@
 {
+  "proxy": "",
+  "agent_servers": {
+    "claude-acp": {
+      "default_config_options": {
+        "mode": "auto"
+      },
+      "type": "registry"
+    }
+  },
+  "cli_default_open_behavior": "existing_window",
   "auto_indent": "syntax_aware",
   "auto_install_extensions": {
     "colored-zed-icons-theme": true,
@@ -77,6 +87,13 @@
   },
   "ui_font_size": 16,
   "agent": {
+    "play_sound_when_agent_done": "when_hidden",
+    "sandbox_permissions": {
+      "network_hosts": [
+        "*.github.com",
+        "github.com"
+      ]
+    },
     "favorite_models": [],
     "model_parameters": [],
     "tool_permissions": {
@@ -88,6 +105,9 @@
             },
             {
               "pattern": "^head\\b"
+            },
+            {
+              "pattern": "^nix-instantiate\\b"
             }
           ]
         }
