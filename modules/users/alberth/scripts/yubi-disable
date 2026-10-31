@@ -1,0 +1,16 @@
+#!/usr/bin/env zsh
+
+YKMANNIX=/Users/alberth/.nix-profile/bin/ykman
+YKMANBREW=/opt/homebrew/bin/ykman
+
+if [ -e $YKMANNIX ]; then
+    YKMAN=$YKMANNIX
+elif [ -e $YKMANBREW ]; then
+    YKMAN=$YKMANBREW
+else
+    echo "ykman not found"
+    exit 1
+fi
+
+[ -e $YKMAN ] && $YKMAN -d 32146072 config usb -d openpgp -f && echo "YubiKey disabled" || echo "ykman not found" && exit 1
+/run/current-system/sw/bin/gpg-connect-agent "scd serialno" "learn --force" /bye
