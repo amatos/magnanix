@@ -20,13 +20,33 @@
     (
       { host, ... }:
       {
-        ${host.class}.home-manager = {
-          useGlobalPkgs = true;
-          useUserPackages = true;
-          extraSpecialArgs = {
-            inherit inputs;
+        ${host.class} =
+          { pkgs, ... }:
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              extraSpecialArgs = {
+                inherit inputs;
+              };
+
+              # When a managed file collides with an existing, unmanaged file,
+              # get the existing one out of the way instead of aborting the
+              # switch: move it to the trash if a trash command is available,
+              # otherwise delete it. Home Manager calls this unquoted with the
+              # conflicting path as $1, so it must be a single executable.
+              backupCommand = pkgs.writeShellScript "home-manager-backup-command" ''
+                PATH="${lib.makeBinPath [ pkgs.trash-cli ]}:$PATH:/usr/bin:/run/current-system/sw/bin"
+                if command -v trash >/dev/null; then
+                  exec trash "$1"
+                elif command -v trash-put >/dev/null; then
+                  exec trash-put "$1"
+                else
+                  exec rm -rf -- "$1"
+                fi
+              '';
+            };
           };
-        };
       }
     )
   ];
