@@ -1,10 +1,11 @@
-# Tart: macOS/Linux VMs on Apple Silicon. macOS only.
-{
+{ den, ... }: {
   den.aspects.tui.macos.tart = {
     includes = [
       (den.batteries.unfree [
         "tart"
       ])
+    ];
+
     darwin =
       { pkgs, ... }:
       {
