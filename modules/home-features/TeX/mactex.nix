@@ -1,5 +1,5 @@
 {
-  den.aspects.tex = { pkgs, lib, ... }: {
+  den.aspects.tex.mactex = { pkgs, lib, ... }: {
     homeManager = {
       home.sessionPath = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ "/Library/TeX/texbin" ];
     };
