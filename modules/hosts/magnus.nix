@@ -18,6 +18,7 @@
       den.aspects.fonts
       den.aspects.macos.audioApps
       den.aspects.tex
+      den.aspects.tui.macos.tart
       den.aspects.zed
       den.aspects.zsa.voyager
     ];
