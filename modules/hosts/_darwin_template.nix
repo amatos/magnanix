@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ den, inputs, ... }:
 {
   den.hosts.aarch64-darwin.CHANGE_HOSTNAME = {
     users.CHANGE_USERNAME = { };
@@ -13,4 +13,7 @@
       system.stateVersion = 7;
     };
   };
+
+  # CHANGE_USERNAME is the primary user on CHANGE_HOSTNAME (system.primaryUser on macOS, wheel on NixOS).
+  den.aspects.CHANGE_HOSTNAME.provides.CHANGE_USERNAME.includes = [ den.batteries.primary-user ];
 }

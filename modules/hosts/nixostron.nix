@@ -1,4 +1,4 @@
-{ ... }:
+{ den, ... }:
 {
   # NOTE: assumes nixostron is x86_64-linux. Den sets nixpkgs.hostPlatform from
   # this key, so change it here if the machine is aarch64-linux.
@@ -11,4 +11,7 @@
       system.stateVersion = "26.05";
     };
   };
+
+  # alberth is the primary user on nixostron (system.primaryUser on macOS, wheel on NixOS).
+  den.aspects.nixostron.provides.alberth.includes = [ den.batteries.primary-user ];
 }

@@ -25,8 +25,8 @@
 
         # Zed's settings.json is tracked in this repo and symlinked into place, so
         # Zed can write to it and every change shows up as a normal git diff.
-        repoDir = "${config.home.homeDirectory}/Projects/magnanix";
-        settingsFile = "${repoDir}/modules/users/${config.home.username}/configs/zed/settings.json";
+        # The checkout location comes from the shared `magnanix.repoDir` option.
+        settingsFile = "${config.magnanix.repoDir}/modules/users/${config.home.username}/configs/zed/settings.json";
 
         # Skeleton: defaults merged *under* the tracked file on every switch. Keys
         # already in the file win, so changes made in Zed stick; keys missing from

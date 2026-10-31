@@ -1,5 +1,7 @@
 { den, ... }: {
-  den.aspects.alberth.darwinCustomizations = {
+  # macOS system defaults, included in every host through `den.aspects.base`
+  # (the `darwin` class is ignored on NixOS hosts).
+  den.aspects.darwin.customizations = {
     includes = [
       den.aspects.darwin.controlCenter
       den.aspects.darwin.dock

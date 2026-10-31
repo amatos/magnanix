@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ den, inputs, ... }:
 {
   den.hosts.aarch64-darwin.magnus = {
     users.alberth = { };
@@ -9,8 +9,24 @@
 
   # Configuration specific to magnus
   den.aspects.magnus = {
+    # System-level apps for this machine. Users that include
+    # `den.batteries.host-aspects` also get the `homeManager` parts of these.
+    includes = [
+      den.aspects._1password
+      den.aspects.browsers
+      den.aspects.claude
+      den.aspects.fonts
+      den.aspects.macos.audioApps
+      den.aspects.tex
+      den.aspects.zed
+      den.aspects.zsa.voyager
+    ];
+
     darwin = {
       system.stateVersion = 7;
     };
   };
+
+  # alberth is the primary user on magnus.
+  den.aspects.magnus.provides.alberth.includes = [ den.batteries.primary-user ];
 }

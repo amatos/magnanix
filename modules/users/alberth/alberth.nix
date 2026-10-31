@@ -26,21 +26,16 @@ in
     # home.username / home.homeDirectory for Home Manager.
     includes = [
       den.batteries.define-user
-      den.batteries.primary-user
 
-      den.aspects._1password
-      den.aspects.alberth.darwinCustomizations
+      # Forwards the `homeManager` parts of the host's aspects (the apps listed in
+      # each host file's `includes`) into alberth's home. Host aspects only
+      # deliver their system-level config on their own.
+      den.batteries.host-aspects
+
       den.aspects.alberth.scripts
       den.aspects.alberth.ssh
-      den.aspects.browsers
-      den.aspects.claude
       den.aspects.direnv
-      den.aspects.fonts
-      den.aspects.macos.audioApps
       den.aspects.macos.mas
-      den.aspects.tex
-      den.aspects.zed
-      den.aspects.zsa.voyager
     ];
 
     # Home Manager configuration for alberth

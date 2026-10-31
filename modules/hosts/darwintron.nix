@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ den, inputs, ... }:
 {
   den.hosts.aarch64-darwin.darwintron = {
     users.alberth = { };
@@ -13,4 +13,7 @@
       system.stateVersion = 7;
     };
   };
+
+  # alberth is the primary user on darwintron (system.primaryUser on macOS, wheel on NixOS).
+  den.aspects.darwintron.provides.alberth.includes = [ den.batteries.primary-user ];
 }

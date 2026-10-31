@@ -1,4 +1,4 @@
-{ ... }:
+{ den, ... }:
 {
   # NOTE: assumes CHANGE_HOSTNAME is x86_64-linux. Den sets nixpkgs.hostPlatform from
   # this key, so change it here if the machine is aarch64-linux.
@@ -11,4 +11,7 @@
       system.stateVersion = "26.05";
     };
   };
+
+  # CHANGE_USERNAME is the primary user on CHANGE_HOSTNAME (system.primaryUser on macOS, wheel on NixOS).
+  den.aspects.CHANGE_HOSTNAME.provides.CHANGE_USERNAME.includes = [ den.batteries.primary-user ];
 }
