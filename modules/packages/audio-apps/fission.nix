@@ -1,5 +1,5 @@
 {
-  den.aspects.audio.fission = {
+  den.aspects.audio.macos.fission = {
     darwin = {
       homebrew.casks = [ "fission" ];
     };

@@ -1,5 +1,5 @@
 {
-  den.aspects.tex.texstudio = {
+  den.aspects.tex.macos.texstudio = {
     darwin = {
       homebrew.casks = [
         "texstudio"

@@ -1,5 +1,5 @@
 {
-  den.aspects.audio.soundsource = {
+  den.aspects.audio.macos.soundsource = {
     darwin = {
       homebrew.casks = [ "soundsource" ];
     };

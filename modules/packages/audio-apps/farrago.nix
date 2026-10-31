@@ -1,5 +1,5 @@
 {
-  den.aspects.audio.farrago = {
+  den.aspects.audio.macos.farrago = {
     darwin = {
       homebrew.casks = [ "farrago" ];
     };

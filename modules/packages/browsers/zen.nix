@@ -8,7 +8,7 @@
   };
 
   den.aspects.browsers.zen.homeManager = { pkgs, lib, ... }: {
-    imports = [ inputs.zen-browser.homeModules.beta ]; # or .twilight / .default; check the flake's README
+    imports = [ inputs.zen-browser.homeModules.default ]; # or .twilight / .beta; check the flake's README
     programs.zen-browser = {
       enable = true;
 

@@ -1,5 +1,5 @@
 {
-  den.aspects.audio.focusriteControl = {
+  den.aspects.audio.macos.focusriteControl = {
     darwin = {
       homebrew.casks = [ "focusrite-control-2" ];
     };

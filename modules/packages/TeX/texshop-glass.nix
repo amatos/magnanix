@@ -1,5 +1,5 @@
 {
-  den.aspects.tex.texshop = {
+  den.aspects.tex.macos.texshop = {
     darwin =
       { pkgs, ... }:
       let

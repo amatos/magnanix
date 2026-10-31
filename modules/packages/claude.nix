@@ -1,5 +1,5 @@
 { den, ... }: {
-  den.aspects.ai.claude = {
+  den.aspects.claude = {
     includes = [
       (den.provides.unfree [
         "claude-code"

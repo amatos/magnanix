@@ -29,11 +29,11 @@ in
       den.batteries.primary-user
 
       den.aspects._1password
-      den.aspects.ai.claude
       den.aspects.alberth.darwinCustomizations
       den.aspects.alberth.scripts
       den.aspects.alberth.ssh
       den.aspects.browsers
+      den.aspects.claude
       den.aspects.direnv
       den.aspects.fonts
       den.aspects.gpg
