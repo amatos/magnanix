@@ -3,7 +3,7 @@
   # sops-nix for encrypted secrets, at both system and Home Manager level.
   #
   # Secret files (see .sops.yaml for who can decrypt each one):
-  #   secrets/common.yaml          shared by every host
+  #   secrets/common.yaml          for secrets shared between hosts; only magnus can decrypt it for now
   #   secrets/hosts/<host>.yaml    one per host, the system's default secrets file
   #   secrets/users/<user>.yaml    one per user, the Home Manager default secrets file
   #
