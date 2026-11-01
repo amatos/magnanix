@@ -69,6 +69,7 @@ modules/
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
 │   ├── nushell.nix            Nushell
+│   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
 │   ├── setapp.nix             Setapp cask (macOS)
 │   ├── skim.nix               Skim PDF reader (macOS)
 │   ├── spamsieve.nix          SpamSieve cask (macOS)
@@ -181,6 +182,38 @@ effect or fail an assertion. Use `determinateNix.customSettings` for Nix setting
   Orion comes from Home Manager (`~/Applications/Home Manager Apps`); Helium, Zed and Claude are Homebrew casks;
   iTerm is installed by hand.
 - New files must be tracked by git (`git add`) before a plain `.#` flake reference can see them.
+
+### OrbStack
+
+`den.aspects.orbstack` (`modules/packages/orbstack.nix`, included by `magnus`) installs OrbStack from nixpkgs and
+keeps its containers and machines on their own APFS volume:
+
+- On every switch (`extraActivation`), the `container-data-volume` script adds an APFS volume named
+  `Container Data` to `disk3` (the internal container) if it doesn't exist yet, unlocks and mounts it at
+  `/Volumes/Container Data` if needed, encrypts it if it isn't encrypted yet, and enables ownership on it. If this
+  fails, for example because `disk3` isn't an APFS container, it prints a warning and the rest of the switch
+  carries on.
+- A `postActivation` script then creates `/Volumes/Container Data/OrbStack/<user>` (mode 700) for each of the
+  host's users.
+- Home Manager sets `data_dir` in `~/.orbstack/vmconfig.json` to that directory, keeping the file's other keys.
+  This is the setting behind the app's Settings > Storage > Data location; `orb config` has no key for it.
+  OrbStack picks it up the next time it starts.
+
+The volume is FileVault-encrypted the same way the Nix installer encrypts the `Nix Store` volume: a random
+passphrase is stored in the System keychain (account `Container Data`, service = the volume's UUID) before the
+volume is encrypted with it. The volume is locked after every reboot, so the `org.nixos.container-data-volume`
+launchd daemon runs the same script at boot to unlock and mount it (log: `/var/log/container-data-volume.log`).
+
+> [!NOTE]
+> After the first switch, the System keychain item (account `Container Data`) is the only copy of the volume's
+> key. If it's deleted, the volume can't be unlocked and OrbStack's data on it is lost. Save the passphrase
+> somewhere safe, such as 1Password:
+>
+> ```sh
+> sudo security find-generic-password -a "Container Data" -w /Library/Keychains/System.keychain
+> ```
+
+Existing OrbStack data in `~/.orbstack/data` is not moved (activation warns if it exists).
 
 ## Applying the configuration
 
