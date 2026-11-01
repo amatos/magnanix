@@ -68,8 +68,6 @@ in
     user = {
       createHome = true;
       description = meta.fullName;
-
-      # initialPassword = "id";
     };
 
     # Login shell: Nix's zsh (not macOS's /bin/zsh). The zsh aspect enables
@@ -99,16 +97,34 @@ in
         '';
       };
 
-    # extraGroups and openssh are NixOS-only users.users options
+    # extraGroups, openssh and hashedPasswordFile are NixOS-only users.users options
     # (not supported by nix-darwin's users.users submodule).
-    nixos.users.users.${meta.username} = {
-      extraGroups = [
-        "dialout" # Or else: Permission denied: ‘/dev/ttyUSB0’
-        "input"
-        "tty"
-      ];
+    nixos =
+      { config, ... }:
+      {
+        # Login password, the same on every NixOS host: a yescrypt hash
+        # (`mkpasswd -m yescrypt`) under `alberth_password` in secrets/common.yaml.
+        # neededForUsers decrypts it before the user accounts are created. base sets
+        # users.mutableUsers = false, so this password wins over `passwd` changes.
+        #
+        # Never manage this password on macOS: nix-darwin has no password option, and
+        # changing it with `dscl` breaks the login keychain and the FileVault token.
+        sops.secrets.alberth_password = {
+          sopsFile = ../../../secrets/common.yaml;
+          neededForUsers = true;
+        };
 
-      openssh.authorizedKeys.keys = meta.authorizedKeys;
-    };
+        users.users.${meta.username} = {
+          extraGroups = [
+            "dialout" # Or else: Permission denied: ‘/dev/ttyUSB0’
+            "input"
+            "tty"
+          ];
+
+          hashedPasswordFile = config.sops.secrets.alberth_password.path;
+
+          openssh.authorizedKeys.keys = meta.authorizedKeys;
+        };
+      };
   };
 }

@@ -39,7 +39,7 @@ modules/
 ├── den/                       the framework and features shared by all hosts
 │   ├── flake-file.nix         flake-file setup: description, outputs expression, nixpkgs/import-tree/flake-file inputs
 │   ├── den.nix                imports Den's flake module (and the den input)
-│   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features))
+│   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features)); flake-only users on NixOS
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
 │   ├── homebrew.nix           nix-homebrew (macOS only)
@@ -293,6 +293,18 @@ den.aspects.alberth.homeManager.sops.secrets.my_user_secret = { };
 
 The decrypted value is at `config.sops.secrets.<name>.path`.
 
+### alberth's password
+
+`alberth`'s login password on NixOS is `alberth_password` in `secrets/common.yaml`, a yescrypt hash used as
+`users.users.alberth.hashedPasswordFile`. It is declared with `neededForUsers`, so it is decrypted before the
+accounts are created. Generate the hash with `nix shell nixpkgs#mkpasswd -c mkpasswd -m yescrypt` and paste
+it in with `sops secrets/common.yaml`. Any NixOS host `alberth` is on must be a recipient of `common.yaml`.
+
+The flake's password takes priority. `base` sets `users.mutableUsers = false` on every NixOS host, so each switch
+resets the password and `passwd` can't change it. Every user on a NixOS host therefore needs a password option or
+SSH keys; `ephemeral` has the throwaway password `ephemeral` and darwintron-vm's access key. macOS passwords are never managed here: nix-darwin has no password option, and
+changing one with `dscl` breaks the login keychain and the FileVault token.
+
 ## Testing changes on darwintron
 
 `darwintron` is a disposable [Tart](https://tart.run) VM on `magnus` for trying a change before it lands. It is
@@ -400,13 +412,13 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 
 ## TODO
 
-- Replace the `host_nixostron` placeholder age key in `.sops.yaml` (it currently reuses magnus's key), add an
-  `ephemeral_nixostron` key to the `ephemeral.yaml` rule, and give `ephemeral` a way to log in on `nixostron`.
+- Replace the `host_nixostron` placeholder age key in `.sops.yaml` (it currently reuses magnus's key), and add an
+  `ephemeral_nixostron` key to the `ephemeral.yaml` rule.
 - Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`,
   `secrets/hosts/nixostron.yaml` and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.
 - `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
-- Fill in the empty `os`, `darwin` and `nixos` blocks in `base`, or remove them.
+- Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
 - Build `nixostron`. `magnus` and `darwintron` build; `nixostron` fails evaluation on the missing root filesystem
   and boot loader above.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old

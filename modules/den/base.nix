@@ -30,11 +30,19 @@
     # Shared by all hosts (`os` lands in `darwin` on macOS and `nixos` on NixOS)
     os = { };
 
-    # macOS-only baseline
+    # macOS-only baseline: den.aspects.base.darwin, applied only on nix-darwin hosts.
+    # Put options here that nix-darwin has and NixOS lacks.
     darwin = { };
 
-    # NixOS-only baseline
-    nixos = { };
+    # NixOS-only baseline: den.aspects.base.nixos, applied only on NixOS hosts.
+    # Put options here that NixOS has and nix-darwin lacks.
+    nixos = {
+      # Accounts and passwords come only from the flake: each switch resets them, and
+      # `passwd` can't change them. Every user on a NixOS host needs a password option
+      # (hashedPassword or hashedPasswordFile) or SSH keys to log in; NixOS refuses to
+      # build if no admin account can. nix-darwin has no such option.
+      users.mutableUsers = false;
+    };
   };
 
   den.default.includes = [ den.aspects.base ];
