@@ -353,8 +353,8 @@ its own file:
 - **Starship prompt:** the shell indicator is on, so each prompt shows which shell you're in: 🐚 bash, 🦓 zsh,
   🐟 fish, 🪟 PowerShell, and ❓ for anything else. The hostname is trimmed at the first `.` (`host.example.com`
   shows as `host`).
-- **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`),
-  and fish also loads `op` completions.
+- **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`).
+  The `_1password` aspect adds `op` completions to bash, zsh and fish, so they only load on hosts that include it.
 - **Aliases and functions:** the common aliases (`rm`/`mv`/`cp` with `-i`, the `ssh*` variants, `git-log`,
   `git-author`) apply to zsh and fish. The functions cover GPG and YubiKey resets, Docker cleanup, Tailscale
   and DNS fixes, network info, and a zoxide and fzf directory jumper (`zox`). They are written once for POSIX

@@ -40,7 +40,6 @@
             };
 
             interactiveShellInit = ''
-              op completion fish | source
               if test -f ${config.xdg.configHome}/op/plugins.sh
                 bass source ${config.xdg.configHome}/op/plugins.sh
               end

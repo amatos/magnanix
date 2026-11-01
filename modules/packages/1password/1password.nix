@@ -25,6 +25,19 @@
       )
     ];
 
+    homeManager.programs.bash.initExtra = ''
+      source <(op completion bash)
+    '';
+
+    homeManager.programs.fish.interactiveShellInit = ''
+      op completion fish | source
+    '';
+
+    homeManager.programs.zsh.initContent = ''
+      eval "$(op completion zsh)"
+      compdef _op op
+    '';
+
     darwin = {
       programs = {
         _1password = {
