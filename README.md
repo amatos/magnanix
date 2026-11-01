@@ -34,11 +34,12 @@ flake.lock                     pinned inputs
 .sops.yaml                     sops recipients and creation rules
 secrets/                       encrypted secrets (common, per host, per user, darwintron's bootstrap keys)
 pkgs/darwintron-vm.sh          the `darwintron-vm` script from the dev shell
+pkgs/texpile.nix               the Texpile package (update steps at the top of the file)
 modules/
 ├── den/                       the framework and features shared by all hosts
 │   ├── flake-file.nix         flake-file setup: description, outputs expression, nixpkgs/import-tree/flake-file inputs
 │   ├── den.nix                imports Den's flake module (and the den input)
-│   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, Nix tools, atuin, trash, zoxide
+│   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features))
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
 │   ├── homebrew.nix           nix-homebrew (macOS only)
@@ -49,25 +50,35 @@ modules/
 │   └── outputs.nix            the flake's outputs: configurations, packages, checks, dev shell, formatter
 ├── packages/                  opt-in aspects that hosts, users or `base` include
 │   ├── 1password/             1Password and its CLI (macOS and NixOS)
-│   ├── audio-apps/            audio tools installed as Homebrew casks (macOS)
-│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager) and Zen (Home Manager module)
+│   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
+│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
-│   ├── TeX/                   latexmk config, texlab, TeXstudio, TeXShop and MacTeX
+│   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── atuin.nix              shell history search
-│   ├── claude.nix             Claude Code, the Claude desktop app and usage trackers
+│   ├── claude.nix             Claude Code, its global rules, the Claude desktop app and usage trackers
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts: Nix packages plus the Ioskeley Mono cask (macOS)
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
+│   ├── imagemagick.nix        ImageMagick
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   ├── nushell.nix            Nushell
+│   ├── skim.nix               Skim PDF reader (macOS)
+│   ├── spamsieve.nix          SpamSieve cask (macOS)
 │   ├── steam.nix              Steam (cask on macOS, `programs.steam` on NixOS)
+│   ├── sudo.nix               sudo-rs with passwordless wheel (NixOS), Touch ID for sudo (macOS)
+│   ├── supasidebar.nix        SupaSidebar cask (macOS)
 │   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
+│   ├── tealdeer.nix           tealdeer `tldr` client with automatic cache updates
 │   ├── trash.nix              trash-cli
+│   ├── tzdata.nix             system time zone (NixOS)
+│   ├── yazi.nix               yazi file manager with its plugins and keybindings
+│   ├── yubikey.nix            YubiKey Manager, and pcscd on NixOS
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
 │   ├── _darwin_template.nix   copy this to add a macOS host
@@ -93,8 +104,9 @@ The aspects in `modules/den/` apply to every host. Optional features live in `mo
 where something includes them. An aspect's name doesn't have to match its path (`modules/packages/tart.nix` defines
 `den.aspects.tui.macos.tart`), so check the file for the name. There are three places to include one:
 
-- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `nix-tools`, `tui.atuin`,
-  `tui.trash` and `tui.zoxide`.
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `imagemagick`,
+  `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
+  `tui.zoxide`.
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
 
   ```nix
@@ -224,7 +236,8 @@ and that `nix run .#write-flake` leaves `flake.nix` and `flake.lock` unchanged. 
 3. For secrets, add the host's age key (and the user's per-machine key) and a creation rule to `.sops.yaml`, then
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
-4. Include the host's apps from `den.aspects.<hostname>` (see [Features](#features)).
+4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
+   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`.
 5. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user
