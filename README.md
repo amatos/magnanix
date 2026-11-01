@@ -68,6 +68,7 @@ modules/
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
 │   ├── nushell.nix            Nushell
+│   ├── setapp.nix             Setapp cask (macOS)
 │   ├── skim.nix               Skim PDF reader (macOS)
 │   ├── spamsieve.nix          SpamSieve cask (macOS)
 │   ├── steam.nix              Steam (cask on macOS, `programs.steam` on NixOS)
