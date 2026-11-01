@@ -18,6 +18,7 @@
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.audio
+      den.aspects.steam
       den.aspects.tex
       den.aspects.tui.macos.tart
       den.aspects.zed
