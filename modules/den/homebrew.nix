@@ -2,7 +2,7 @@
 {
   # nix-homebrew installs and manages Homebrew itself on macOS. Only the `darwin`
   # class is defined, so NixOS hosts are unaffected.
-  den.aspects.homebrew = {
+  den.aspects.macos.homebrew = {
     darwin.imports = [ inputs.nix-homebrew.darwinModules.nix-homebrew ];
 
     includes = [
@@ -25,5 +25,5 @@
   # nix-homebrew installs and manages Homebrew itself on macOS
   flake-file.inputs.nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
-  den.default.includes = [ den.aspects.homebrew ];
+  den.default.includes = [ den.aspects.macos.homebrew ];
 }

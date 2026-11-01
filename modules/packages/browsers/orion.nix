@@ -1,5 +1,5 @@
 { den, ... }: {
-  den.aspects.browsers.orion = {
+  den.aspects.browsers.macos.orion = {
     includes = [
       (den.batteries.unfree [ "orion-browser" ])
     ];

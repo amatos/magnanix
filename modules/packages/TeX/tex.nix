@@ -4,7 +4,7 @@
       den.aspects.tex.latexmk
       den.aspects.tex.macos.mactex
       den.aspects.tex.macos.texshop
-      den.aspects.tex.macos.texstudio
+      den.aspects.tex.texstudio
       den.aspects.tex.texlab
       den.aspects.tex.texpile
     ];

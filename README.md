@@ -52,7 +52,7 @@ modules/
 ├── packages/                  opt-in aspects that hosts, users or `base` include
 │   ├── 1password/             1Password and its CLI (macOS and NixOS)
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
-│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension
+│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
@@ -98,7 +98,7 @@ modules/
     └── ephemeral/             den.aspects.ephemeral, the test user on darwintron and nixostron
 ```
 
-The `base`, `determinate`, `sops` and `homebrew` aspects are added to every host through `den.default.includes`.
+The `base`, `determinate`, `sops` and `macos.homebrew` aspects are added to every host through `den.default.includes`.
 Per-host settings go in `den.aspects.<host>`, and per-user settings in `den.aspects.<user>` (its `homeManager`
 attribute is the user's Home Manager configuration).
 
@@ -106,7 +106,10 @@ attribute is the user's Home Manager configuration).
 
 The aspects in `modules/den/` apply to every host. Optional features live in `modules/packages/` and apply only
 where something includes them. An aspect's name doesn't have to match its path (`modules/packages/tart.nix` defines
-`den.aspects.tui.macos.tart`), so check the file for the name. There are three places to include one:
+`den.aspects.tui.macos.tart`), so check the file for the name. An aspect that only does something on macOS has
+`macos` as the next-to-last part of its name (`macos.mas`, `audio.macos.airfoil`), except the
+[macOS defaults](#macos-defaults) under `darwin.*`, whose group name already says so. There are three places to
+include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `imagemagick`,
   `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and

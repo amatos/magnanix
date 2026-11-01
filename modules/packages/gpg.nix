@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.gpg = {
-    # `homebrew.enable` and `nix-homebrew` are set by the `homebrew` aspect
+    # `homebrew.enable` and `nix-homebrew` are set by the `macos.homebrew` aspect
     # (modules/den/homebrew.nix), which is included for every host.
     darwin = {
       homebrew.casks = [ "gpg-suite@nightly" ];
