@@ -208,6 +208,7 @@
               "/System/Applications/System Settings.app"
               "/System/Applications/Preview.app"
               "/Applications/iTerm.app"
+              "${home}/Applications/Home Manager Apps/Ghostty.app"
               "/Applications/Zed.app"
               "/Applications/Claude.app"
             ];
