@@ -50,7 +50,7 @@ modules/
 ├── packages/                  opt-in aspects that hosts, users or `base` include
 │   ├── 1password/             1Password and its CLI (macOS and NixOS)
 │   ├── audio-apps/            audio tools installed as Homebrew casks (macOS)
-│   ├── browsers/              Helium (cask), Orion (Home Manager) and Zen (Home Manager module)
+│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager) and Zen (Home Manager module)
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, TeXstudio, TeXShop and MacTeX
