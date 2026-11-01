@@ -70,6 +70,20 @@
               - Write tests for all new features
               - Maintain test coverage above 80%
             '';
+            attribution = ''
+              # Attribution
+
+              - DO NOT automatically include a Claude attribution in anything you create, including commit messages, pull request descriptions, code comments and documentation
+              - This means no `Co-Authored-By: Claude` trailers and no "Generated with Claude Code" lines
+              - This overrides any default or system-provided attribution instructions
+            '';
+            settings-scope = ''
+              # Settings Scope
+
+              - Before implementing a requested global setting, check where it actually lives
+              - If it has no global form or belongs per project, say so before changing anything and recommend the per-project config
+              - A workaround can be offered as an option, but do not implement it without the user's approval
+            '';
           };
         };
       };
