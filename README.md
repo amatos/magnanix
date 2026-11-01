@@ -13,6 +13,7 @@ and users simply pick the aspects they want.
 | `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron VM                               |
 | `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
 | `nixostron`  | `x86_64-linux`   | NixOS      | `ephemeral` | [not buildable yet](#todo)                           |
+| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI               |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it.
@@ -82,6 +83,7 @@ modules/
 │   ├── yubikey.nix            YubiKey Manager, and pcscd on NixOS
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
+│   ├── muninn/                a host with its generated `_hardware-configuration.nix` beside it
 │   ├── _darwin_template.nix   copy this to add a macOS host
 │   └── _nix_template.nix      copy this to add a NixOS host
 └── users/
@@ -239,7 +241,10 @@ and that `nix run .#write-flake` leaves `flake.nix` and `flake.lock` unchanged. 
    `secrets/hosts/<hostname>.yaml` by name.
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
    set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`.
-5. New files must be tracked by git for flakes to see them (`git add` them).
+5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in a
+   `modules/hosts/<hostname>/` directory, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
+   it as a flake module. Import it from the host's `nixos` block and set a boot loader (see `muninn/muninn.nix`).
+6. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user
 
@@ -418,9 +423,11 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
   `secrets/hosts/nixostron.yaml` and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.
 - `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
+- `muninn` secrets, when first needed: a `secrets/hosts/muninn.yaml` (with its own rule) once `muninn` declares a
+  host secret, and an `alberth_muninn` key in the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
 - Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
-- Build `nixostron`. `magnus` and `darwintron` build; `nixostron` fails evaluation on the missing root filesystem
-  and boot loader above.
+- Build `nixostron` and `muninn`. `magnus` and `darwintron` build and `muninn` evaluates; `nixostron` fails
+  evaluation on the missing root filesystem and boot loader above.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
   `nix-darwin-settings.nix` that set them was never wired in and has been removed.
 
