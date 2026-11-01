@@ -97,7 +97,7 @@ let
               -s "$uuid"
               -l "$name encryption password"
               -D "Encrypted volume password"
-              -j "Added by magnanix (den.aspects.orbstack) to unlock the volume"
+              -j "Added by magnanix (den.aspects.macos.orbstack) to unlock the volume"
               -T /System/Library/CoreServices/APFSUserAgent
               -T /System/Library/CoreServices/CSUserAgent
               -T /usr/bin/security
@@ -127,7 +127,7 @@ in
   # OrbStack: Docker containers and Linux machines on macOS. The nixpkgs package
   # is darwin-only (an Apple silicon build) and unfree, so only the `darwin`
   # class installs anything.
-  den.aspects.orbstack = {
+  den.aspects.macos.orbstack = {
     includes = [
       (den.batteries.unfree [
         "orbstack"

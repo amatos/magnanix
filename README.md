@@ -185,8 +185,8 @@ effect or fail an assertion. Use `determinateNix.customSettings` for Nix setting
 
 ### OrbStack
 
-`den.aspects.orbstack` (`modules/packages/orbstack.nix`, included by `magnus`) installs OrbStack from nixpkgs and
-keeps its containers and machines on their own APFS volume:
+`den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`, included by `magnus`) installs OrbStack from nixpkgs
+and keeps its containers and machines on their own APFS volume:
 
 - On every switch (`extraActivation`), the `container-data-volume` script adds an APFS volume named
   `Container Data` to `disk3` (the internal container) if it doesn't exist yet, unlocks and mounts it at

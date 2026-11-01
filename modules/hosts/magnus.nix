@@ -18,7 +18,7 @@
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.audio
-      den.aspects.orbstack
+      den.aspects.macos.orbstack
       den.aspects.steam
       den.aspects.tex
       den.aspects.tui.macos.tart
