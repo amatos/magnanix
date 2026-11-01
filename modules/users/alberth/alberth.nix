@@ -35,6 +35,7 @@ in
       den.aspects.alberth.scripts
       den.aspects.alberth.ssh
       den.aspects.direnv
+      den.aspects.gpg
       den.aspects.macos.mas
     ];
 

@@ -109,6 +109,23 @@ in
                 }
             )
 
+            # Builds and tests the disposable darwintron Tart VM. tart itself comes from
+            # the system profile (magnus), because it is unfree.
+            (pkgs.writeShellApplication {
+              name = "darwintron-vm";
+              runtimeInputs = [
+                pkgs.age
+                pkgs.git
+                pkgs.jq
+                pkgs.sops
+                pkgs.ssh-to-age
+                pkgs.sshpass
+              ];
+              # Its commands are single-quoted on purpose: they expand on the guest.
+              excludeShellChecks = [ "SC2016" ];
+              text = builtins.readFile ../../pkgs/darwintron-vm.sh;
+            })
+
             # Tools for creating and editing secrets
             pkgs.sops
             pkgs.age

@@ -9,7 +9,6 @@
       den.batteries.hostname
 
       den.aspects.darwin.customizations
-      den.aspects.gpg
       den.aspects.nix-tools
       den.aspects.shell.bash
       den.aspects.shell.fish

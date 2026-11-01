@@ -250,6 +250,34 @@ den.aspects.alberth.homeManager.sops.secrets.my_user_secret = { };
 
 The decrypted value is at `config.sops.secrets.<name>.path`.
 
+## Testing changes on darwintron
+
+`darwintron` is a disposable [Tart](https://tart.run) VM on `magnus` for trying a change before it lands. It is
+deliberately minimal: to test something, add its aspect to `modules/hosts/darwintron.nix` on a branch. Its primary
+user is `ephemeral`, whose secrets hold fake values, and it can't read `common.yaml` or `alberth.yaml`.
+
+Run these inside `nix develop` on `magnus`. Only committed code is tested.
+
+```sh
+darwintron-vm seed                # once: macOS, Determinate Nix and the ephemeral user
+darwintron-vm baseline            # after main moves: the seed with main applied
+darwintron-vm test my-branch      # switch a clone to my-branch, check, reboot, roll back, delete
+darwintron-vm test my-branch --fresh   # the same from the seed, as a first install
+darwintron-vm test my-branch --keep    # keep the VM afterwards; then `ssh` and `destroy`
+```
+
+A failed test keeps its VM for inspection. `darwintron-vm ssh` opens a shell on it and `darwintron-vm destroy`
+deletes it. Each test checks the canary secrets, the login shell and the hostname, and prints an `nvd` diff when
+starting from the baseline.
+
+The VM keeps one identity however often it is rebuilt. `secrets/bootstrap/darwintron.yaml` holds its private keys,
+encrypted to the YubiKeys and `alberth_magnus`. The script decrypts them on `magnus`, pipes them in over SSH before
+activation, and removes them before saving an image, so neither image contains them. The public halves are
+`host_darwintron` and `ephemeral_darwintron` in `.sops.yaml`.
+
+The image is pinned by digest at the top of `pkgs/darwintron-vm.sh`. YubiKeys, 1Password, the App Store and audio
+hardware can't be tested in the VM.
+
 ## Shells
 
 Shell configuration lives in `modules/home-features/shells/`, one aspect per shell plus shared pieces. A user opts
@@ -329,9 +357,8 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 
 ## TODO
 
-- Replace the placeholder age keys in `.sops.yaml` (`host_darwintron`, `host_nixostron`, `alberth_darwintron`,
-  `alberth_nixostron` currently reuse magnus's keys), enable the matching recipients in the `common.yaml` and
-  `alberth.yaml` rules, and run `sops updatekeys` on the secret files.
+- Replace the `host_nixostron` placeholder age key in `.sops.yaml` (it currently reuses magnus's key), add an
+  `ephemeral_nixostron` key to the `ephemeral.yaml` rule, and give `ephemeral` a way to log in on `nixostron`.
 - Replace the example content in `secrets/*.yaml` with real secrets and declare them as `sops.secrets.<name>`.
 - `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
 - Fill in the empty `base` blocks and the per-host aspects.
