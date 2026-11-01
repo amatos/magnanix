@@ -8,6 +8,7 @@
     includes = [
       den.batteries.hostname
 
+      den.aspects.cliutils
       den.aspects.darwin.customizations
       den.aspects.ghostty.terminfo
       den.aspects.nix-tools

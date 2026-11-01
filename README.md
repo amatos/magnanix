@@ -58,6 +58,7 @@ modules/
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── atuin.nix              shell history search
 │   ├── claude.nix             Claude Code, the Claude desktop app and usage trackers
+│   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts: Nix packages plus the Ioskeley Mono cask (macOS)
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
@@ -91,7 +92,7 @@ The aspects in `modules/den/` apply to every host. Optional features live in `mo
 where something includes them. An aspect's name doesn't have to match its path (`modules/packages/tart.nix` defines
 `den.aspects.tui.macos.tart`), so check the file for the name. There are three places to include one:
 
-- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `nix-tools`, `tui.atuin`,
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `nix-tools`, `tui.atuin`,
   `tui.trash` and `tui.zoxide`.
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
 
