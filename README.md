@@ -65,6 +65,7 @@ modules/
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   ├── steam.nix              Steam (cask on macOS, `programs.steam` on NixOS)
 │   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
 │   ├── trash.nix              trash-cli
 │   └── zoxide.nix             zoxide directory jumper

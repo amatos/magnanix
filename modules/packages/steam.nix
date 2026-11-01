@@ -1,11 +1,19 @@
+{ den, ... }:
 {
   den.aspects.steam = {
+    includes = [
+      (den.batteries.unfree [
+        "steam"
+        "steam-unwrapped"
+      ])
+    ];
+
     darwin = {
       homebrew.casks = [ "steam" ];
     };
 
-    nixos = { pkgs, ... }: {
-      packages = [ pkgs.steam ];
+    nixos = {
+      programs.steam.enable = true;
     };
   };
 }
