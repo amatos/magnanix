@@ -24,13 +24,40 @@ creation_rules:
   # System secrets for one host
   - path_regex: secrets/hosts/magnus\.yaml$
     key_groups:
-      - age: [*yubikey0634d1c4, *yubikey2ab5ff2f, *yubikeybe7a2b66, *yubikey49705840, *yubikey7cb1cad0, *yubikeyb4d67c6f, *host_magnus]
+      - age:
+          [
+            *yubikey0634d1c4,
+            *yubikey2ab5ff2f,
+            *yubikeybe7a2b66,
+            *yubikey49705840,
+            *yubikey7cb1cad0,
+            *yubikeyb4d67c6f,
+            *host_magnus,
+          ]
   - path_regex: secrets/hosts/darwintron\.yaml$
     key_groups:
-      - age: [*yubikey0634d1c4, *yubikey2ab5ff2f, *yubikeybe7a2b66, *yubikey49705840, *yubikey7cb1cad0, *yubikeyb4d67c6f, *host_darwintron]
+      - age:
+          [
+            *yubikey0634d1c4,
+            *yubikey2ab5ff2f,
+            *yubikeybe7a2b66,
+            *yubikey49705840,
+            *yubikey7cb1cad0,
+            *yubikeyb4d67c6f,
+            *host_darwintron,
+          ]
   - path_regex: secrets/hosts/nixostron\.yaml$
     key_groups:
-      - age: [*yubikey0634d1c4, *yubikey2ab5ff2f, *yubikeybe7a2b66, *yubikey49705840, *yubikey7cb1cad0, *yubikeyb4d67c6f, *host_nixostron]
+      - age:
+          [
+            *yubikey0634d1c4,
+            *yubikey2ab5ff2f,
+            *yubikeybe7a2b66,
+            *yubikey49705840,
+            *yubikey7cb1cad0,
+            *yubikeyb4d67c6f,
+            *host_nixostron,
+          ]
 
   # System secrets shared by every host. Holds alberth_password, so every NixOS host
   # alberth is on must be listed here (macOS hosts can decrypt it but never use it).
