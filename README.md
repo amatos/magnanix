@@ -8,13 +8,13 @@ and users simply pick the aspects they want.
 
 ## Hosts
 
-| Host         | Platform         | Kind       |
-| ------------ | ---------------- | ---------- |
-| `magnus`     | `aarch64-darwin` | nix-darwin |
-| `darwintron` | `aarch64-darwin` | nix-darwin |
-| `nixostron`  | `x86_64-linux`   | NixOS      |
+| Host         | Platform         | Kind       | User        | Notes                                                |
+| ------------ | ---------------- | ---------- | ----------- | ---------------------------------------------------- |
+| `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron VM                               |
+| `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
+| `nixostron`  | `x86_64-linux`   | NixOS      | `ephemeral` | [not buildable yet](#todo)                           |
 
-Each host has the user `alberth`. A host's name must match `scutil --get LocalHostName` (macOS) or
+A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it.
 
 ## Layout
@@ -32,25 +32,28 @@ flake.lock                     pinned inputs
 .envrc                         direnv: `use flake` (loads the dev shell), disables Nix's Sentry reporter
 .githooks/pre-commit           formatting and flake.nix up-to-date checks (enabled by the dev shell)
 .sops.yaml                     sops recipients and creation rules
-secrets/                       encrypted secrets (common, per host, per user)
+secrets/                       encrypted secrets (common, per host, per user, darwintron's bootstrap keys)
+pkgs/darwintron-vm.sh          the `darwintron-vm` script from the dev shell
 modules/
 ├── den/                       the framework and features shared by all hosts
 │   ├── flake-file.nix         flake-file setup: description, outputs expression, nixpkgs/import-tree/flake-file inputs
 │   ├── den.nix                imports Den's flake module (and the den input)
-│   ├── base.nix               baseline for every host (includes the hostname battery)
+│   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, Nix tools, atuin, trash, zoxide
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
 │   ├── homebrew.nix           nix-homebrew (macOS only)
 │   ├── home-manager.nix       Home Manager integration for all users
-│   └── nix-darwin.nix         the nix-darwin input
+│   ├── nix-darwin.nix         the nix-darwin input
+│   └── repo-dir.nix           `magnanix.repoDir`: the path of the live checkout, for out-of-store symlinks
 ├── flake/
 │   └── outputs.nix            the flake's outputs: configurations, packages, checks, dev shell, formatter
-├── host-features/             opt-in aspects that hosts include (none yet)
-├── home-features/             opt-in aspects that users include
+├── packages/                  opt-in aspects that hosts, users or `base` include
+│   ├── 1password/             1Password and its CLI (macOS and NixOS)
 │   ├── audio-apps/            audio tools installed as Homebrew casks (macOS)
 │   ├── browsers/              Helium (cask), Orion (Home Manager) and Zen (Home Manager module)
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
+│   ├── TeX/                   latexmk config, texlab, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── atuin.nix              shell history search
@@ -60,15 +63,21 @@ modules/
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
+│   ├── trash.nix              trash-cli
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
 │   ├── _darwin_template.nix   copy this to add a macOS host
 │   └── _nix_template.nix      copy this to add a NixOS host
 └── users/
     ├── _user_template/        copy this to add a user
-    └── alberth/               den.aspects.alberth
-        ├── alberth.nix        the user's aspect and metadata
-        └── F41BDBF6171A3BB4.pub.asc   alberth's GPG public key
+    ├── alberth/               den.aspects.alberth
+    │   ├── alberth.nix        the user's aspect and metadata
+    │   ├── scripts.nix        installs `scripts/` into `~/.local/bin`
+    │   ├── ssh.nix            SSH client config using the 1Password agent
+    │   ├── configs/zed/       the tracked Zed `settings.json`
+    │   └── F41BDBF6171A3BB4.pub.asc   alberth's GPG public key
+    └── ephemeral/             den.aspects.ephemeral, the test user on darwintron and nixostron
 ```
 
 The `base`, `determinate`, `sops` and `homebrew` aspects are added to every host through `den.default.includes`.
@@ -77,17 +86,26 @@ attribute is the user's Home Manager configuration).
 
 ### Features
 
-The aspects in `modules/den/` apply to every host. Optional features live in their own directories and apply only
-where something includes them:
+The aspects in `modules/den/` apply to every host. Optional features live in `modules/packages/` and apply only
+where something includes them. An aspect's name doesn't have to match its path (`modules/packages/tart.nix` defines
+`den.aspects.tui.macos.tart`), so check the file for the name. There are three places to include one:
 
-- `modules/home-features/` holds features a user opts into, such as `gpg`. Include one from the user's aspect:
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `nix-tools`, `tui.atuin`,
+  `tui.trash` and `tui.zoxide`.
+- The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
+
+  ```nix
+  den.aspects.magnus.includes = [ den.aspects.browsers ];
+  ```
+
+  A host aspect delivers only its system-level config on its own. The `homeManager` parts reach the host's users
+  only if the user includes `den.batteries.host-aspects`, as `alberth` and `ephemeral` do.
+
+- The user's aspect, for what follows that user to every host, such as `gpg`:
 
   ```nix
   den.aspects.alberth.includes = [ den.aspects.gpg ];
   ```
-
-- `modules/host-features/` is for features a host opts into, included the same way from `den.aspects.<host>`.
-  It is empty for now.
 
 A feature can target several classes at once. `gpg`, for example, sets Home Manager options (`homeManager`) and
 installs the GPG Suite cask (`darwin`). Its Home Manager part reads the user's metadata, so it adapts to each user.
@@ -131,18 +149,19 @@ effect or fail an assertion. Use `determinateNix.customSettings` for Nix setting
 
 ### macOS defaults
 
-`modules/home-features/darwin/` holds one aspect per System Settings area, under `den.aspects.darwin.*`:
+`modules/packages/darwin/` holds one aspect per System Settings area, under `den.aspects.darwin.*`:
 `controlCenter`, `dock`, `finder`, `loginWindow`, `menuExtraClock`, `nsGlobalDomain`, `screencapture`,
 `screenSaver`, `softwareUpdate` and `trackpad`. Each sets `system.defaults.*` through the `darwin` class (and
 `CustomUserPreferences` for keys nix-darwin has no option for). `darwin.nix` bundles them as
-`den.aspects.alberth.darwinCustomizations`, which `alberth` includes.
+`den.aspects.darwin.customizations`, which `base` includes, so they apply to every macOS host.
 
-- Some aspects take the `user` argument (`dock`, `screencapture`) to build paths such as `/Users/<name>/Downloads`.
+- `dock` and `screencapture` build paths such as `/Users/<name>/Downloads` from `system.primaryUser`, which each
+  host sets with `den.batteries.primary-user`.
 - `screencapture` creates its target directory (`~/Pictures/Screenshots/unsorted`) in a `postActivation` script,
   because nix-darwin doesn't and macOS ignores a missing location.
 - The Dock's `persistent-apps` list is declarative: manual Dock changes are overwritten on the next switch.
   Orion comes from Home Manager (`~/Applications/Home Manager Apps`); Helium, Zed and Claude are Homebrew casks;
-  Ghostty is installed by hand.
+  iTerm is installed by hand.
 - New files must be tracked by git (`git add`) before a plain `.#` flake reference can see them.
 
 ## Applying the configuration
@@ -156,6 +175,8 @@ nix develop --command apply-configuration
 
 - On macOS it runs `sudo darwin-rebuild switch --flake ".#$(scutil --get LocalHostName)"`.
 - On NixOS it runs `sudo nixos-rebuild switch --flake ".#$(hostname)"`.
+
+Each host also has an `nh` wrapper, for example `nix run .#magnus -- switch`.
 
 To build without activating:
 
@@ -200,14 +221,18 @@ and that `nix run .#write-flake` leaves `flake.nix` and `flake.lock` unchanged. 
 3. For secrets, add the host's age key (and the user's per-machine key) and a creation rule to `.sops.yaml`, then
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
-4. New files must be tracked by git for flakes to see them (`git add` them).
+4. Include the host's apps from `den.aspects.<hostname>` (see [Features](#features)).
+5. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user
 
 1. Copy `modules/users/_user_template/` to `modules/users/<username>/`.
 2. Replace `CHANGE_USERNAME` and set `home.stateVersion`.
 3. Add the user to a host with `den.hosts.<system>.<host>.users.<username> = { };`.
-4. Optionally add a `meta` set (see [User metadata](#user-metadata)) and include features from `home-features/`.
+4. Include `den.batteries.host-aspects` if the user should get the `homeManager` parts of the host's apps.
+5. Optionally add a `meta` set (see [User metadata](#user-metadata)) and include features from `modules/packages/`.
+6. For secrets, add the user's per-machine age key and a creation rule to `.sops.yaml`, then create
+   `secrets/users/<username>.yaml`.
 
 ## Secrets
 
@@ -217,8 +242,9 @@ Secrets are encrypted with [sops](https://github.com/getsops/sops) using age. `.
 - each machine's SSH host key converted to age (`ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub`),
 - a per-machine age key for Home Manager (`age-keygen -y ~/.config/sops-nix/key.txt`).
 
-`secrets/common.yaml` is shared by all hosts, `secrets/hosts/<host>.yaml` is per host, and
-`secrets/users/<user>.yaml` is per user. After changing the recipients, re-encrypt the existing files with
+`secrets/common.yaml` is for secrets shared between hosts (only `magnus` can decrypt it for now),
+`secrets/hosts/<host>.yaml` is per host, `secrets/users/<user>.yaml` is per user, and
+`secrets/bootstrap/darwintron.yaml` holds darwintron's private keys. After changing the recipients, re-encrypt the existing files with
 `sops updatekeys <file>`. The dev shell provides `sops`, `age`, `age-plugin-yubikey` and `ssh-to-age`.
 
 To create a file, write plaintext and encrypt it in place (`sops` can't open an empty file):
@@ -262,7 +288,7 @@ Run these inside `nix develop` on `magnus`. Only committed code is tested.
 darwintron-vm seed                # once: macOS, Determinate Nix and the ephemeral user
 darwintron-vm baseline            # after main moves: the seed with main applied
 darwintron-vm test my-branch      # switch a clone to my-branch, check, reboot, roll back, delete
-darwintron-vm test my-branch --fresh   # the same from the seed, as a first install
+darwintron-vm test my-branch --fresh   # from the seed, as a first install (nothing to diff or roll back)
 darwintron-vm test my-branch --keep    # keep the VM afterwards; then `ssh` and `destroy`
 ```
 
@@ -280,28 +306,28 @@ hardware can't be tested in the VM.
 
 ## Shells
 
-Shell configuration lives in `modules/home-features/shells/`, one aspect per shell plus shared pieces. A user opts
-into a shell from the user's aspect; `alberth` includes `shell.zsh` and `shell.fish`:
+Shell configuration lives in `modules/packages/shells/`, one aspect per shell plus shared pieces. The `base` aspect
+includes `shell.zsh`, `shell.fish` and `shell.bash`, so every host and user gets all three:
 
 ```nix
-den.aspects.alberth.includes = [ den.aspects.shell.zsh den.aspects.shell.fish ];
+den.aspects.base.includes = [ den.aspects.shell.bash den.aspects.shell.fish den.aspects.shell.zsh ];
 ```
 
 | Aspect                 | File                        | What it does                                                                                |
 | ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------- |
 | `shell.zsh`            | `zsh.nix`                   | Home Manager `programs.zsh`                                                                 |
 | `shell.fish`           | `fish.nix`                  | Home Manager `programs.fish`, plus system-level fish on NixOS and macOS                     |
-| `shell.bash`           | `bash.nix`                  | Home Manager `programs.bash` (defined, but no user includes it yet)                         |
+| `shell.bash`           | `bash.nix`                  | Home Manager `programs.bash`                                                                |
 | `shell.starship`       | `starship.nix`              | Home Manager `programs.starship` with a default `starship.toml`; the prompt for every shell |
 | `shell.shellAliases`   | `shell-aliases.nix`         | aliases shared by the shells, and per-OS `environment.shellAliases`                         |
 | `shell.posixFunctions` | `shell-functions-posix.nix` | shared functions for zsh and bash                                                           |
 | `shell.fishFunctions`  | `shell-functions-fish.nix`  | the same functions, written for fish                                                        |
 
-Each shell aspect includes the aliases, functions and `shell.starship` aspects it needs, so including `shell.zsh` is
-enough.
+Each shell aspect includes the aliases, functions and `shell.starship` aspects it needs.
 
 **Login shell.** `alberth`'s login shell is Nix's zsh on every host, set in `modules/users/alberth/alberth.nix`
-(including `shell.zsh` also enables `programs.zsh` at system level, which the setting requires):
+(`shell.zsh` also enables `programs.zsh` at system level, which the setting requires). `ephemeral` does the same in
+its own file:
 
 - **NixOS:** `users.users.alberth.shell = pkgs.zsh`. This overrides the fish default that `shell.fish` sets with
   `users.defaultUserShell`.
@@ -337,7 +363,7 @@ enough.
 ## Direnv
 
 `.envrc` contains `use flake`, so with [direnv](https://direnv.net) the dev shell loads automatically in this
-directory (run `direnv allow` once). The `direnv` feature (`modules/home-features/direnv.nix`, included by `alberth`)
+directory (run `direnv allow` once). The `direnv` feature (`modules/packages/direnv.nix`, included by `alberth`)
 installs direnv through Home Manager with nix-direnv and shell integration enabled.
 
 `.envrc` also sets `NIX_SENTRY_ENDPOINT=""` before `use flake`. Determinate Nix starts a Crashpad-based Sentry
@@ -359,12 +385,13 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 
 - Replace the `host_nixostron` placeholder age key in `.sops.yaml` (it currently reuses magnus's key), add an
   `ephemeral_nixostron` key to the `ephemeral.yaml` rule, and give `ephemeral` a way to log in on `nixostron`.
-- Replace the example content in `secrets/*.yaml` with real secrets and declare them as `sops.secrets.<name>`.
+- Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`,
+  `secrets/hosts/nixostron.yaml` and `secrets/users/alberth.yaml` with real secrets and declare them as
+  `sops.secrets.<name>`.
 - `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
-- Fill in the empty `base` blocks and the per-host aspects.
-- Build every host for real (`darwin-rebuild build`, `nixos-rebuild build`). `magnus` is already running a
-  nix-darwin system from this flake. `magnus` and `darwintron` evaluate cleanly; `nixostron` does not yet
-  (it fails on the missing root filesystem and boot loader above), so it can't be built.
+- Fill in the empty `os`, `darwin` and `nixos` blocks in `base`, or remove them.
+- Build `nixostron`. `magnus` and `darwintron` build; `nixostron` fails evaluation on the missing root filesystem
+  and boot loader above.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
   `nix-darwin-settings.nix` that set them was never wired in and has been removed.
 
