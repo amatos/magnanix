@@ -7,6 +7,15 @@
   # Configuration specific to CHANGE_HOSTNAME (hardware-configuration.nix, boot loader,
   # filesystems, ...)
   den.aspects.CHANGE_HOSTNAME = {
+    includes = [
+      den.aspects._1password
+      den.aspects.browsers
+      den.aspects.fonts
+      den.aspects.ghostty
+      den.aspects.audio
+      den.aspects.zed
+    ];
+
     nixos = {
       system.stateVersion = "26.05";
     };

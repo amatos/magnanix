@@ -9,6 +9,15 @@
 
   # Configuration specific to CHANGE_HOSTNAME
   den.aspects.CHANGE_HOSTNAME = {
+    includes = [
+      den.aspects._1password
+      den.aspects.browsers
+      den.aspects.fonts
+      den.aspects.ghostty
+      den.aspects.audio
+      den.aspects.zed
+    ];
+
     darwin = {
       system.stateVersion = 7;
     };

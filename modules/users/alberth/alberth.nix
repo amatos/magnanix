@@ -37,6 +37,9 @@ in
       den.aspects.direnv
       den.aspects.gpg
       den.aspects.macos.mas
+      den.aspects.macos.supaSideBar
+      den.aspects.macos.spamsieve
+      den.aspects.macos.skim
     ];
 
     # Home Manager configuration for alberth

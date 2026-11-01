@@ -10,11 +10,11 @@
         nvd # diff package versions between NixOS generations
         nix-output-monitor # pretty build output (nom) — dependency tree, progress
         manix # fast Nix documentation/options search
-        alejandra
-        nixfmt
-        nh
-        nil
-        nixd
+        alejandra # opinionated Nix code formatter
+        nixfmt # official Nix code formatter (RFC 166 style)
+        nh # friendlier wrapper for nixos/darwin/home-manager rebuilds and GC
+        nil # Nix language server (LSP)
+        nixd # Nix language server with option and package evaluation
 
         # ── Tier 2 — better workflow ───────────────────────────────────────────
         nix-inspect # TUI for exploring Nix config (ranger-like, fuzzy search)

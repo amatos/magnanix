@@ -6,6 +6,7 @@
       den.aspects.tex.macos.texshop
       den.aspects.tex.macos.texstudio
       den.aspects.tex.texlab
+      den.aspects.tex.texpile
     ];
   };
 }
