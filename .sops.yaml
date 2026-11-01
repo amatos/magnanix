@@ -14,6 +14,7 @@ keys:
   - &host_darwintron age1h3tkml7fsqlfrpww4vefqmyd95k074sduyh0jz28k32dxvwkp5cqtzqvug
   # This is a placeholder.  replace with the real value when available.
   - &host_nixostron age1kmemkv7z7am3ve7fhlmg7xjw3gd67tqpxqjzcugncrl37penq9zsj3v8zv
+  - &host_muninn age16vynhfk26c2z9tq6xh53skcwm4lqfwx5qr2cwjng3hlgj8hssp9qyncpnm
   # Home Manager: per-machine user keys (`age-keygen -y ~/.config/sops-nix/key.txt`)
   - &alberth_magnus age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
   # The private half lives in secrets/bootstrap/darwintron.yaml and is injected into each VM.
@@ -43,6 +44,7 @@ creation_rules:
           - *yubikey7cb1cad0
           - *yubikeyb4d67c6f
           - *host_magnus
+          - *host_muninn
           # - *host_nixostron
 
   # Home Manager secrets for alberth, on every machine
