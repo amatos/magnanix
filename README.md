@@ -60,6 +60,7 @@ modules/
 │   ├── claude.nix             Claude Code, the Claude desktop app and usage trackers
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts: Nix packages plus the Ioskeley Mono cask (macOS)
+│   ├── ghostty.nix            Ghostty terminal (Home Manager)
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)

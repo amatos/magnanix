@@ -16,6 +16,7 @@
       den.aspects.browsers
       den.aspects.claude
       den.aspects.fonts
+      den.aspects.ghostty
       den.aspects.macos.audioApps
       den.aspects.tex
       den.aspects.tui.macos.tart

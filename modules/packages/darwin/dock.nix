@@ -180,7 +180,7 @@
             #   - User apps: ~/Applications/
             #
             # Here: Orion comes from Home Manager (copyApps); Helium, Zed and Claude are
-            # Homebrew casks; Ghostty is installed manually.
+            # Homebrew casks.
 
             # ========================================================================
             # Left side of Dock (before separator) - Main apps
