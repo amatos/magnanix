@@ -1,7 +1,7 @@
 {
-  den.aspects.tex.macos.mactex = { pkgs, lib, ... }: {
-    homeManager = {
-      home.sessionPath = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ "/Library/TeX/texbin" ];
+  den.aspects.tex.macos.mactex = {
+    homeManager = { pkgs, lib, ... }: {
+      home.sessionPath = lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ "/Library/TeX/texbin" ];
     };
 
     darwin = {
