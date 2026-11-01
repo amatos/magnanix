@@ -103,7 +103,7 @@ A user's aspect carries a `meta` attribute set. It is defined in a `let` binding
 | `username`       | the account name                                                                      |
 | `fullName`       | display name for the OS account                                                       |
 | `email`          | primary email address                                                                 |
-| `authorizedKeys` | SSH public keys allowed to log in (NixOS)                                             |
+| `authorizedKeys` | SSH public keys allowed to log in (all hosts)                                         |
 | `gpgKey`         | long GPG key ID; sets `default-key` (optional)                                        |
 | `gpgFingerprint` | full 40-character fingerprint of the key                                              |
 | `gpgPublicKey`   | path to the exported public key (`.pub.asc`); imported with ultimate trust (optional) |

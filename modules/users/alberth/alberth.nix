@@ -5,8 +5,8 @@ let
   # including attribute names, without risking infinite recursion.
   meta = {
     authorizedKeys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILfxNl1S0Fvzh2aOAG6FuIwB96eqnUqY1nl2p2jSnTOD"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJmQ75w1oH1osbRwMjjem52/8Oc8YYbmTbMxSIEw9Xy8 alberth@darwintron"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILfxNl1S0Fvzh2aOAG6FuIwB96eqnUqY1nl2p2jSnTOD internal"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDkzNer1Wht+A3qapGFtp8LzrxamOWbfV1sP4J5lW8qI alberth@darwintron"
     ];
 
     email = "alberth@matos.cc";
@@ -41,12 +41,24 @@ in
 
     # Home Manager configuration for alberth
     homeManager =
-      { pkgs, ... }:
+      { lib, pkgs, ... }:
       {
         # Set to the release alberth's Home Manager was first set up with
         home.stateVersion = "26.05";
 
         home.packages = [ pkgs.htop ];
+
+        # A real file rather than home.file: that would be a symlink into /nix/store,
+        # which sshd's StrictModes rejects because the store is group-writable.
+        home.activation.authorizedKeys =
+          let
+            authorizedKeys = pkgs.writeText "authorized_keys" (lib.concatLines meta.authorizedKeys);
+          in
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            run mkdir -p "$HOME/.ssh"
+            run chmod 700 "$HOME/.ssh"
+            run install -m 600 ${authorizedKeys} "$HOME/.ssh/authorized_keys"
+          '';
       };
 
     user = {
