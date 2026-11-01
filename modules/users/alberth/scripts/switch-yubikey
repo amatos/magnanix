@@ -16,6 +16,7 @@
 # Running any decrypt, auth or sign will now ask to insert second YubiKey
 # To switch to the first YubiKey at any time run this script to force GPG
 # to point key stubs to the currently inserted YubiKey
-read -p "Insert YubiKey to use ... " ignore
+printf 'Insert YubiKey to use ... '
+read -r _
 echo "Switching GPG to backup YubiKey ..."
 gpg-connect-agent "scd serialno" "learn --force" /bye
