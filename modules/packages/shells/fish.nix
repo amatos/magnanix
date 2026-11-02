@@ -144,9 +144,6 @@
           fish = {
             enable = true;
             shellAliases = {
-              build-darwin = "build-nix";
-              switch-darwin = "switch-nix";
-
               clipboard = "pbcopy";
               paste = "pbpaste";
 
