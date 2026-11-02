@@ -93,6 +93,7 @@ modules/
     ├── _user_template/        copy this to add a user
     ├── alberth/               den.aspects.alberth
     │   ├── alberth.nix        the user's aspect and metadata
+    │   ├── dock.nix           the macOS Dock: settings and persistent apps
     │   ├── scripts.nix        installs `scripts/` into `~/.local/bin`
     │   ├── shell-aliases.nix  alberth's aliases for bash, zsh and fish, such as `deploy-magnanix`
     │   ├── ssh.nix            SSH client config using the 1Password agent
@@ -175,11 +176,13 @@ effect or fail an assertion. Use `determinateNix.customSettings` for Nix setting
 ### macOS defaults
 
 `modules/packages/darwin/` holds one aspect per System Settings area, under `den.aspects.darwin.*`:
-`controlCenter`, `dock`, `finder`, `loginWindow`, `menuExtraClock`, `nsGlobalDomain`, `screencapture`,
+`controlCenter`, `finder`, `loginWindow`, `menuExtraClock`, `nsGlobalDomain`, `screencapture`,
 `screenSaver`, `softwareUpdate` and `trackpad`. Each sets `system.defaults.*` through the `darwin` class (and
 `CustomUserPreferences` for keys nix-darwin has no option for). `darwin.nix` bundles them as
 `den.aspects.darwin.customizations`, which `base` includes, so they apply to every macOS host.
 
+- `den.aspects.alberth.macos.dock` (`modules/users/alberth/dock.nix`) is the exception: it follows alberth rather
+  than applying to every macOS host, so hosts without alberth keep the default Dock.
 - `dock` and `screencapture` build paths such as `/Users/<name>/Downloads` from `system.primaryUser`, which each
   host sets with `den.batteries.primary-user`.
 - `screencapture` creates its target directory (`~/Pictures/Screenshots/unsorted`) in a `postActivation` script,

@@ -32,6 +32,7 @@ in
       # deliver their system-level config on their own.
       den.batteries.host-aspects
 
+      den.aspects.alberth.macos.dock
       den.aspects.alberth.scripts
       den.aspects.alberth.shellAliases
       den.aspects.alberth.ssh

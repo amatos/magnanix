@@ -4,7 +4,6 @@
   den.aspects.darwin.customizations = {
     includes = [
       den.aspects.darwin.controlCenter
-      den.aspects.darwin.dock
       den.aspects.darwin.finder
       den.aspects.darwin.menuExtraClock
       den.aspects.darwin.nsGlobalDomain

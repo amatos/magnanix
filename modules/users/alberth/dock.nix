@@ -1,7 +1,8 @@
 {
-  den.aspects.darwin.dock = {
-    # The Dock is a machine-wide default applied to the host's primary user
-    # (`system.primaryUser`, set per host via `den.batteries.primary-user`).
+  den.aspects.alberth.macos.dock = {
+    # alberth's Dock. nix-darwin applies it to the host's primary user
+    # (`system.primaryUser`, set per host via `den.batteries.primary-user`), so
+    # this only makes sense on hosts where that is alberth.
     darwin =
       { config, ... }:
       let
