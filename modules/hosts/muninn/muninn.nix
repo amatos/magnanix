@@ -1,12 +1,6 @@
-{
-  den,
-  inputs,
-  lib,
-  ...
-}:
+{ den, ... }:
 let
-  computerName = "Muninn";
-  hostName = lib.toLower computerName;
+  hostName = "muninn";
   certbotOwners = "alberth@matos.cc";
 in
 {

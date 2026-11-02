@@ -16,7 +16,10 @@ and users simply pick the aspects they want.
 | `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache  |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
-`hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it.
+`hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
+`den.hosts.<system>.<host>.hostName`, which defaults to the host's name. A macOS host also sets its display name in
+its `darwin` block, as `magnus` does with `networking.computerName = "Magnus"`. OS options like `networking` only
+work inside a `darwin` or `nixos` block; at the top level of a host file they are flake-parts options and fail.
 
 ## Layout
 
@@ -37,6 +40,7 @@ flake.lock                     pinned inputs
 secrets/                       encrypted secrets (common, per host, per user, darwintron's bootstrap keys)
 pkgs/darwintron-vm.sh          the `darwintron-vm` script from the dev shell
 pkgs/texpile.nix               the Texpile package (update steps at the top of the file)
+pkgs/python/                   Python packages, such as the certbot-dns-luadns certbot plugin
 modules/
 ├── den/                       the framework and features shared by all hosts
 │   ├── flake-file.nix         flake-file setup: description, outputs expression, nixpkgs/import-tree/flake-file inputs
@@ -61,6 +65,7 @@ modules/
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── attic.nix              Attic binary cache server (NixOS; see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
+│   ├── certbot.nix            Let's Encrypt certificates through LuaDNS (macOS and NixOS; see [TLS certificates](#tls-certificates))
 │   ├── claude.nix             Claude Code, its global rules, the Claude desktop app and usage trackers
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
@@ -326,6 +331,38 @@ No host uses the cache yet. That needs the cache's URL (`http://muninn.home.mato
 `muninn.ts.matos.cc` one off the LAN) and public key in `extra-substituters` and `extra-trusted-public-keys`, in
 `sharedSettings` in `modules/den/determinate.nix`.
 
+## TLS certificates
+
+`den.aspects.certbot` (`modules/packages/certbot.nix`, included by `magnus` and `muninn`) gets Let's Encrypt
+certificates with certbot and the LuaDNS DNS plugin (`pkgs/python/certbot-dns-luadns.nix`), so a host needs no
+open ports to prove it owns a name. A host lists its names in its `darwin` or `nixos` block:
+
+```nix
+local.certbot = {
+  email = "alberth@matos.cc";   # required when fqdns isn't empty
+  fqdns = [ "muninn.home.matos.cc" "muninn.ts.matos.cc" ];
+};
+```
+
+`magnus` and `muninn` each request `<host>.home.matos.cc` and `<host>.ts.matos.cc`.
+
+- **Issuing:** a service started at boot (launchd on macOS, systemd on NixOS) requests each listed name that has no
+  certificate yet, and retries every 15 minutes until all succeed. Names that already have one are skipped.
+  A wildcard's certificate is named after its base domain, so `example.com` and `*.example.com` can't both be listed.
+- **Renewing:** `certbot renew` runs daily (03:00 on macOS) and only renews certificates that are due.
+- **Reading them:** certbot keeps its files in `/etc/letsencrypt`, readable only by root. After each issue or
+  renewal, a hook copies the certificate and key to `/etc/letsencrypt-certs/<name>/`, owned by the primary user on
+  macOS and readable by the `cert-readers` group (every normal user) on NixOS. Point services at those copies.
+
+The LuaDNS credentials are `certbot_luadns` in `secrets/common.yaml`: an INI file with `dns_luadns_email` and
+`dns_luadns_token`. A host using certbot must be a recipient of `common.yaml`.
+
+To request a certificate by hand instead (it is only copied to `/etc/letsencrypt-certs` from its first renewal):
+
+```sh
+sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot_luadns -d example.com
+```
+
 ## Adding a host
 
 1. Copy `modules/hosts/_darwin_template.nix` or `_nix_template.nix` to `modules/hosts/<hostname>.nix`.
@@ -358,7 +395,7 @@ Secrets are encrypted with [sops](https://github.com/getsops/sops) using age. `.
 - each machine's SSH host key converted to age (`ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub`),
 - a per-machine age key for Home Manager (`age-keygen -y ~/.config/sops-nix/key.txt`).
 
-`secrets/common.yaml` is for secrets shared between hosts (only `magnus` can decrypt it for now),
+`secrets/common.yaml` is for secrets shared between hosts (`magnus` and `muninn` can decrypt it),
 `secrets/hosts/<host>.yaml` is per host, `secrets/users/<user>.yaml` is per user, and
 `secrets/bootstrap/darwintron.yaml` holds darwintron's private keys. After changing the recipients, re-encrypt the existing files with
 `sops updatekeys <file>`. The dev shell provides `sops`, `age`, `age-plugin-yubikey` and `ssh-to-age`.
