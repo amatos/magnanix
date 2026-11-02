@@ -1,0 +1,74 @@
+# Weekly flake input update. Opens (or refreshes) one pull request that updates
+# flake.lock and regenerates flake.nix, so the pre-commit hook and the
+# check-flake-file check stay green. See "Updating inputs" in the README.
+#
+# Pull requests opened with the default GITHUB_TOKEN don't trigger other
+# workflows. Add a fine-grained token with Contents and Pull requests
+# read/write on this repo as the GH_TOKEN_FOR_UPDATES secret so CI runs on the
+# PR; without it the PR is still opened, but CI only runs after you close and
+# reopen it.
+name: Update flake inputs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 6" # Saturdays 06:00 UTC, leaving the weekend to test it
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-flake-lock
+  cancel-in-progress: false
+
+# An explicit `bash` runs steps with `-eo pipefail`, so a failing
+# `nix flake update` isn't hidden by `tee`.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Update flake.lock
+        run: nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
+
+      # flake.nix is generated: write-flake rewrites it from the modules and
+      # adds `follows` for nested inputs found in the new lock.
+      - name: Regenerate flake.nix
+        run: nix run .#write-flake
+
+      - name: Write the pull request body
+        run: |
+          # Single quotes keep the Markdown backticks literal.
+          # shellcheck disable=SC2016
+          {
+            echo 'Automated `nix flake update`, followed by `nix run .#write-flake`.'
+            echo
+            echo '```'
+            grep -v '^warning: updating lock file' "$RUNNER_TEMP/update.log" || true
+            echo '```'
+            echo
+            echo 'Before merging:'
+            echo
+            echo '- [ ] CI builds magnus and darwintron'
+            echo '- [ ] `darwintron-vm test update-flake-lock` passes on magnus'
+          } > "$RUNNER_TEMP/pr-body.md"
+
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GH_TOKEN_FOR_UPDATES || github.token }}
+          branch: update-flake-lock
+          delete-branch: true
+          add-paths: |
+            flake.lock
+            flake.nix
+          commit-message: "chore(flake): update inputs"
+          title: "chore(flake): update inputs"
+          body-path: ${{ runner.temp }}/pr-body.md
