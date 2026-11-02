@@ -1,10 +1,21 @@
-{ den, inputs, ... }:
+{
+  den,
+  inputs,
+  lib,
+  ...
+}:
+let
+  computerName = "Magnus";
+  hostName = lib.toLower computerName;
+  certbotOwners = "alberth@matos.cc";
+in
 {
   den.hosts.aarch64-darwin.magnus = {
     users.alberth = { };
     # Den's default darwin builder reads `inputs.darwin`; this flake names the
     # input `nix-darwin`.
     instantiate = inputs.nix-darwin.lib.darwinSystem;
+    inherit hostName;
   };
 
   # Configuration specific to magnus
@@ -14,6 +25,7 @@
     includes = [
       den.aspects._1password
       den.aspects.browsers
+      den.aspects.certbot
       den.aspects.claude
       den.aspects.fonts
       den.aspects.ghostty
@@ -28,6 +40,15 @@
 
     darwin = {
       system.stateVersion = 7;
+      networking.computerName = computerName;
+
+      local.certbot = {
+        email = "${certbotOwners}";
+        fqdns = [
+          "${hostName}.home.matos.cc"
+          "${hostName}.ts.matos.cc"
+        ];
+      };
     };
   };
 

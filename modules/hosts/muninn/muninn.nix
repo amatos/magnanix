@@ -1,14 +1,28 @@
-{ den, ... }:
+{
+  den,
+  inputs,
+  lib,
+  ...
+}:
+let
+  computerName = "Muninn";
+  hostName = lib.toLower computerName;
+  certbotOwners = "alberth@matos.cc";
+in
 {
   # Den sets nixpkgs.hostPlatform from this key; it matches the x86_64-linux in
   # _hardware-configuration.nix.
-  den.hosts.x86_64-linux.muninn.users.alberth = { };
+  den.hosts.x86_64-linux.muninn = {
+    users.alberth = { };
+    inherit hostName;
+  };
 
   # Configuration specific to muninn
   den.aspects.muninn = {
     includes = [
       den.aspects._1password
       den.aspects.browsers
+      den.aspects.certbot
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.audio
@@ -39,6 +53,14 @@
       };
 
       system.stateVersion = "26.05";
+
+      local.certbot = {
+        email = "${certbotOwners}";
+        fqdns = [
+          "${hostName}.home.matos.cc"
+          "${hostName}.ts.matos.cc"
+        ];
+      };
     };
   };
 
