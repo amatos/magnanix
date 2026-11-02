@@ -93,6 +93,7 @@ modules/
     ├── alberth/               den.aspects.alberth
     │   ├── alberth.nix        the user's aspect and metadata
     │   ├── scripts.nix        installs `scripts/` into `~/.local/bin`
+    │   ├── shell-aliases.nix  alberth's aliases for bash, zsh and fish, such as `deploy-magnanix`
     │   ├── ssh.nix            SSH client config using the 1Password agent
     │   ├── configs/zed/       the tracked Zed `settings.json`
     │   └── F41BDBF6171A3BB4.pub.asc   alberth's GPG public key
@@ -232,6 +233,10 @@ nix develop --command apply-configuration
 - On NixOS it runs `sudo nixos-rebuild switch --flake ".#$(hostname)"`.
 
 Each host also has an `nh` wrapper, for example `nix run .#magnus -- switch`.
+
+`alberth`'s `deploy-magnanix` alias (`modules/users/alberth/shell-aliases.nix`) deploys the checkout at
+`magnanix.repoDir`: it runs `git pull --ff-only` there, then the current host's `nh` wrapper with `switch`.
+Deploy from `main` after CI passes; the alias pulls whichever branch is checked out.
 
 To build without activating:
 

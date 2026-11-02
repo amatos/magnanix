@@ -33,6 +33,7 @@ in
       den.batteries.host-aspects
 
       den.aspects.alberth.scripts
+      den.aspects.alberth.shellAliases
       den.aspects.alberth.ssh
       den.aspects.direnv
       den.aspects.gpg
