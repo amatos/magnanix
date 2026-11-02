@@ -13,6 +13,9 @@
       den.aspects.ghostty
       den.aspects.audio
       den.aspects.zed
+
+      # Binary cache for the other machines on the LAN
+      den.aspects.attic.server
     ];
 
     nixos = {

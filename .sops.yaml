@@ -58,6 +58,18 @@ creation_rules:
             *yubikeyb4d67c6f,
             *host_nixostron,
           ]
+  - path_regex: secrets/hosts/muninn\.yaml$
+    key_groups:
+      - age:
+          [
+            *yubikey0634d1c4,
+            *yubikey2ab5ff2f,
+            *yubikeybe7a2b66,
+            *yubikey49705840,
+            *yubikey7cb1cad0,
+            *yubikeyb4d67c6f,
+            *host_muninn,
+          ]
 
   # System secrets shared by every host. Holds alberth_password, so every NixOS host
   # alberth is on must be listed here (macOS hosts can decrypt it but never use it).

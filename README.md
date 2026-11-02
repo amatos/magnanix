@@ -13,7 +13,7 @@ and users simply pick the aspects they want.
 | `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron VM                               |
 | `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
 | `nixostron`  | `x86_64-linux`   | NixOS      | `ephemeral` | [not buildable yet](#todo)                           |
-| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI               |
+| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache  |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it.
@@ -59,6 +59,7 @@ modules/
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
+│   ├── attic.nix              Attic binary cache server (NixOS; see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
 │   ├── claude.nix             Claude Code, its global rules, the Claude desktop app and usage trackers
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
@@ -286,6 +287,42 @@ PR, add a fine-grained personal access token limited to this repository, with re
 and Pull requests, as the `GH_TOKEN_FOR_UPDATES` repository secret. Without it, close and reopen the PR to start
 CI.
 
+## Binary cache
+
+`muninn` runs an [Attic](https://github.com/zhaofengli/attic) binary cache server, from `den.aspects.attic.server`
+(`modules/packages/attic.nix`). It serves port 8080 (open in `muninn`'s firewall) under two names:
+`muninn.home.matos.cc` on the LAN and `muninn.ts.matos.cc` over Tailscale. It rejects requests addressed to any
+other name, such as an IP address. The URLs it hands out (for `attic push`, for example) use whichever of the two
+names the client used, so a client off the LAN can use the Tailscale name throughout. The data and its
+SQLite database live in `/var/lib/atticd`. Objects that were neither pushed nor downloaded in the last 3 months
+are garbage-collected.
+
+The server signs its access tokens with `atticd_env` in `secrets/hosts/muninn.yaml`, an environment file that
+sets `ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64`. Replacing it invalidates every token issued with it. To rotate it,
+generate a key with `openssl genrsa -traditional 4096 | openssl base64 -A` and paste it in with
+`sops secrets/hosts/muninn.yaml`.
+
+Caches and tokens are created with commands, not from the flake. After the first switch on `muninn`, run this
+there once:
+
+```sh
+# An admin token; keep it in 1Password
+atticd-atticadm make-token --sub alberth --validity "1y" \
+  --pull '*' --push '*' --delete '*' --create-cache '*' --configure-cache '*' \
+  --configure-cache-retention '*' --destroy-cache '*'
+
+attic login muninn http://muninn.home.matos.cc:8080/ <admin-token>
+attic cache create magnanix --public   # anyone on the LAN can pull; pushing needs a token
+attic cache info magnanix              # prints the public key that clients trust
+```
+
+A machine that only pushes gets a narrower token, such as
+`atticd-atticadm make-token --sub magnus --validity "1y" --pull magnanix --push magnanix`.
+
+No host uses the cache yet. That needs the cache's URL (`http://muninn.home.matos.cc:8080/magnanix`, or the
+`muninn.ts.matos.cc` one off the LAN) and public key in `extra-substituters` and `extra-trusted-public-keys`, in
+`sharedSettings` in `modules/den/determinate.nix`.
+
 ## Adding a host
 
 1. Copy `modules/hosts/_darwin_template.nix` or `_nix_template.nix` to `modules/hosts/<hostname>.nix`.
@@ -487,8 +524,8 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
   `secrets/hosts/nixostron.yaml` and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.
 - `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
-- `muninn` secrets, when first needed: a `secrets/hosts/muninn.yaml` (with its own rule) once `muninn` declares a
-  host secret, and an `alberth_muninn` key in the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
+- `muninn`: add an `alberth_muninn` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
+- Point the other hosts at the Attic cache on `muninn` once it exists (see [Binary cache](#binary-cache)).
 - Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
 - Build `nixostron` and `muninn`. `magnus` and `darwintron` build and `muninn` evaluates; `nixostron` fails
   evaluation on the missing root filesystem and boot loader above.
