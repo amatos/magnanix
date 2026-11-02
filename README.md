@@ -43,7 +43,7 @@ modules/
 │   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features)); flake-only users on NixOS
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
-│   ├── homebrew.nix           nix-homebrew (macOS only)
+│   ├── homebrew.nix           nix-homebrew (macOS only); undeclared formulae and casks are zapped on switch
 │   ├── home-manager.nix       Home Manager integration for all users
 │   ├── nix-darwin.nix         the nix-darwin input
 │   └── repo-dir.nix           `magnanix.repoDir`: the path of the live checkout, for out-of-store symlinks

@@ -11,7 +11,13 @@
         { user, ... }:
         {
           darwin = {
-            homebrew.enable = true;
+            homebrew = {
+              enable = true;
+              # Homebrew is fully declarative: on every switch, `brew bundle` uninstalls
+              # any formula or cask not declared here, together with its app data
+              # (`zap`), so removing a cask from the config removes it from the machine.
+              onActivation.cleanup = "zap";
+            };
             nix-homebrew = {
               enable = true;
               user = user.userName;
