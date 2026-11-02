@@ -305,6 +305,16 @@ Secrets are encrypted with [sops](https://github.com/getsops/sops) using age. `.
 `secrets/bootstrap/darwintron.yaml` holds darwintron's private keys. After changing the recipients, re-encrypt the existing files with
 `sops updatekeys <file>`. The dev shell provides `sops`, `age`, `age-plugin-yubikey` and `ssh-to-age`.
 
+sops only uses a YubiKey when it is given the key's age-plugin-yubikey identity, so the dev shell sets
+`SOPS_AGE_KEY_CMD="age-plugin-yubikey --identity"`: every `sops` run asks the plugin for the identities of the
+YubiKeys plugged in at the time. Outside the dev shell, add them to sops's key file instead (the identity only
+points at the key on the YubiKey, so it isn't secret):
+
+```sh
+age-plugin-yubikey --identity >> "$HOME/Library/Application Support/sops/age/keys.txt"   # macOS
+age-plugin-yubikey --identity >> ~/.config/sops/age/keys.txt                               # Linux
+```
+
 To create a file, write plaintext and encrypt it in place (`sops` can't open an empty file):
 
 ```sh

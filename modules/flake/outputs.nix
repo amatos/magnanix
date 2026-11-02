@@ -139,6 +139,10 @@ in
             self.formatter.${system}
           ];
 
+          # sops only uses a YubiKey when given its age-plugin-yubikey identity, so ask the
+          # plugin for the identities of whichever YubiKeys are plugged in.
+          env.SOPS_AGE_KEY_CMD = "age-plugin-yubikey --identity";
+
           # Enable the tracked pre-commit hook (.githooks/pre-commit)
           shellHook = ''
             if git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
