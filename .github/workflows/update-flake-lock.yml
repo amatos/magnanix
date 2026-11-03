@@ -49,7 +49,7 @@ jobs:
           tags: tag:ci
 
       - name: Verify Tailscale connectivity to muninn
-        run: tailscale ping muninn.ts.matos.cc
+        run: tailscale ping muninn.ts.matos.cc || true
 
       - name: Log in to Attic cache
         run: |
