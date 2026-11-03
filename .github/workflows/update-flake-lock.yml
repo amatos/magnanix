@@ -51,6 +51,9 @@ jobs:
       - name: Verify Tailscale connectivity to muninn
         run: tailscale ping muninn.ts.matos.cc || true
 
+      - name: Install attic-client
+        run: nix profile install nixpkgs#attic-client
+
       - name: Log in to Attic cache
         run: |
           attic login --server https://muninn.ts.matos.cc:8080 ci \
