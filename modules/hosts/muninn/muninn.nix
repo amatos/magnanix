@@ -14,15 +14,11 @@ in
   # Configuration specific to muninn
   den.aspects.muninn = {
     includes = [
-      den.aspects._1password
       den.aspects.bluetooth
-      den.aspects.browsers
       den.aspects.certbot
       den.aspects.fonts
-      den.aspects.ghostty
       den.aspects.audio
       den.aspects.tailscale
-      den.aspects.zed
 
       # Binary cache for the other machines on the LAN
       den.aspects.attic.server
