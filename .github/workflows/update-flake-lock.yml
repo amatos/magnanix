@@ -59,7 +59,7 @@ jobs:
 
       - name: Log in to Attic cache
         run: |
-          attic login ci https://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
+          attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
 
       - name: Use Attic cache for builds
         run: |
