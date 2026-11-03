@@ -7,6 +7,10 @@
 # read/write on this repo as the GH_TOKEN_FOR_UPDATES secret so CI runs on the
 # PR; without it the PR is still opened, but CI only runs after you close and
 # reopen it.
+#
+# Tailscale access: the action joins the tailnet via Workload Identity Federation
+# (GitHub OIDC token) with tag:ci, allowing access to the muninn Attic cache on
+# muninn.ts.matos.cc:8080. Requires Tailscale ACL to permit tag:ci -> muninn:8080.
 name: Update flake inputs
 
 on:
@@ -17,6 +21,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write # Required for Tailscale Workload Identity Federation
 
 concurrency:
   group: update-flake-lock
@@ -36,6 +41,25 @@ jobs:
 
       - uses: DeterminateSystems/determinate-nix-action@v3
 
+      - name: Join Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+
+      - name: Verify Tailscale connectivity to muninn
+        run: tailscale ping muninn.ts.matos.cc
+
+      - name: Log in to Attic cache
+        run: |
+          attic login --server https://muninn.ts.matos.cc:8080 ci \
+            ${{ secrets.ATTIC_TOKEN }}
+
+      - name: Use Attic cache for builds
+        run: |
+          attic use magnus
+
       - name: Update flake.lock
         run: nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
 
@@ -43,6 +67,11 @@ jobs:
       # adds `follows` for nested inputs found in the new lock.
       - name: Regenerate flake.nix
         run: nix run .#write-flake
+
+      - name: Push build outputs to cache
+        if: success()
+        run: |
+          attic push magnus ./result 2>&1 || true
 
       - name: Write the pull request body
         run: |
