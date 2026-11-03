@@ -15,6 +15,7 @@ in
   den.aspects.muninn = {
     includes = [
       den.aspects._1password
+      den.aspects.bluetooth
       den.aspects.browsers
       den.aspects.certbot
       den.aspects.fonts

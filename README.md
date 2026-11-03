@@ -65,6 +65,7 @@ modules/
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── attic.nix              Attic binary cache server (NixOS; see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
+│   ├── bluetooth.nix          Bluetooth (NixOS)
 │   ├── certbot.nix            Let's Encrypt certificates through LuaDNS (macOS and NixOS; see [TLS certificates](#tls-certificates))
 │   ├── claude.nix             Claude Code, its global rules, the Claude desktop app and usage trackers
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
@@ -424,7 +425,7 @@ sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
-   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`.
+   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`, plus `bluetooth` on NixOS.
 5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in a
    `modules/hosts/<hostname>/` directory, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
    it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`). The boot loader comes from `base`

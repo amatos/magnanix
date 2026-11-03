@@ -9,6 +9,7 @@
   den.aspects.CHANGE_HOSTNAME = {
     includes = [
       den.aspects._1password
+      den.aspects.bluetooth
       den.aspects.browsers
       den.aspects.fonts
       den.aspects.ghostty
