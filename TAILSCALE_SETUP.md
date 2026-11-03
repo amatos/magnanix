@@ -17,16 +17,26 @@ The CI workflow now:
 
 ## Setup (4 steps, ~5 minutes)
 
-### Step 1: Create Tailscale OIDC Credential
+### Step 1: Create Tailscale OIDC Credential (Part A: Settings)
 
 1. Go to [Tailscale Admin Console → Settings → OAuth clients](https://login.tailscale.com/admin/settings/oauth)
-2. Click **Create new credential** → **OIDC federated identity credential**
-3. Configure:
-   - **Scopes:** `Devices` → `auth_keys` (writable)
-   - **Tags:** `tag:ci`
-   - **OIDC issuer:** `https://token.actions.githubusercontent.com`
-   - **OIDC subject:** `repo:amatos/magnanix:ref:refs/heads/main`
-4. Copy the **Client ID** (you'll need this for Step 2)
+2. Click **+ Add credential**
+3. Select **OpenID Connect** (should be the default selection on the right)
+4. Fill in the form:
+   - **Description:** `GitHub runner ci` (or similar)
+   - **Issuer:** Select `GitHub` from the dropdown (Issuer URL auto-fills to `https://token.actions.githubusercontent.com`)
+   - **Subject:** `repo:amatos/magnanix:ref:refs/heads/main`
+5. Click **Continue** to proceed to Step 1B (Scopes)
+
+### Step 1B: Create Tailscale OIDC Credential (Part B: Scopes)
+
+On the Scopes screen:
+
+1. Under **Devices**, check `auth_keys` (writable) — this allows the credential to create ephemeral devices
+2. Click the **Tags** section and add: `tag:ci`
+3. Click **Create credential**
+
+Once created, you'll see the **Client ID**. Copy it — you'll need it for Step 2.
 
 ### Step 2: Add GitHub Secrets
 
@@ -35,7 +45,7 @@ The CI workflow now:
 
 | Secret Name | Value |
 |---|---|
-| `TS_OAUTH_CLIENT_ID` | Client ID from Step 1 |
+| `TS_OAUTH_CLIENT_ID` | Client ID from Step 1B |
 | `TS_AUDIENCE` | `https://api.tailscale.com` |
 | `ATTIC_TOKEN` | Generate in Step 3 |
 
@@ -114,16 +124,16 @@ Workflow completes, ephemeral node logs out
 ## Troubleshooting
 
 ### "invalid OIDC token"
-- **Cause:** OIDC subject in Tailscale credential doesn't match your repo
-- **Fix:** Update credential OIDC subject to `repo:amatos/magnanix:ref:refs/heads/main`
+- **Cause:** Subject in Tailscale credential doesn't match your repo path
+- **Fix:** Verify Subject is exactly `repo:amatos/magnanix:ref:refs/heads/main` in your credential settings
 
 ### "failed to connect to muninn.ts.matos.cc:8080"
 - **Cause:** ACL not applied, or muninn offline
 - **Fix:** Check ACL is saved in Tailscale console; verify muninn is connected
 
 ### "requested tags [tag:ci] are invalid"
-- **Cause:** Credential missing `tag:ci` or doesn't have `auth_keys` scope
-- **Fix:** Recreate credential with correct tags and scope
+- **Cause:** Credential missing `tag:ci` tag or doesn't have `auth_keys` scope
+- **Fix:** Edit the credential in Tailscale console and ensure both are set
 
 ### "invalid authentication token"
 - **Cause:** `ATTIC_TOKEN` is empty, wrong, or expired
