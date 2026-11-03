@@ -20,10 +20,14 @@ in
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.audio
+      den.aspects.tailscale
       den.aspects.zed
 
       # Binary cache for the other machines on the LAN
       den.aspects.attic.server
+
+      # SMTP smart relay to Fastmail for the LAN and the tailnet
+      den.aspects.mail.relay
     ];
 
     nixos = {
@@ -47,6 +51,12 @@ in
       };
 
       system.stateVersion = "26.05";
+
+      # The LAN NIC and Tailscale: where the SMTP relay's port 25 is open.
+      local.mail.relay.interfaces = [
+        "enp0s31f6"
+        "tailscale0"
+      ];
 
       local.certbot = {
         email = "${certbotOwners}";

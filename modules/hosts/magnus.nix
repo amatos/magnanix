@@ -32,6 +32,7 @@ in
       den.aspects.audio
       den.aspects.macos.orbstack
       den.aspects.steam
+      den.aspects.tailscale
       den.aspects.tex
       den.aspects.tui.macos.tart
       den.aspects.zed

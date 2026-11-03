@@ -13,7 +13,7 @@ and users simply pick the aspects they want.
 | `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron VM                               |
 | `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
 | `nixostron`  | `x86_64-linux`   | NixOS      | `ephemeral` | [not buildable yet](#todo)                           |
-| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache  |
+| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
@@ -73,6 +73,7 @@ modules/
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick
+│   ├── mail.nix               Postfix: outgoing mail through the LAN's SMTP relay, and the relay itself (see [Mail](#mail))
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
 │   ├── nushell.nix            Nushell
@@ -83,6 +84,7 @@ modules/
 │   ├── steam.nix              Steam (cask on macOS, `programs.steam` on NixOS)
 │   ├── sudo.nix               sudo-rs with passwordless wheel (NixOS), Touch ID for sudo (macOS)
 │   ├── supasidebar.nix        SupaSidebar cask (macOS)
+│   ├── tailscale.nix          Tailscale: tailscaled (NixOS), the App Store app (macOS); also picks the mail relay
 │   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
 │   ├── tealdeer.nix           tealdeer `tldr` client with automatic cache updates
 │   ├── trash.nix              trash-cli
@@ -121,7 +123,7 @@ where something includes them. An aspect's name doesn't have to match its path (
 include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `imagemagick`,
-  `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
+  `mail`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
   `tui.zoxide`.
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
 
@@ -331,6 +333,54 @@ No host uses the cache yet. That needs the cache's URL (`http://muninn.home.mato
 `muninn.ts.matos.cc` one off the LAN) and public key in `extra-substituters` and `extra-trusted-public-keys`, in
 `sharedSettings` in `modules/den/determinate.nix`.
 
+## Mail
+
+Every host sends mail (cron output, `sendmail`, `mail`) through the network's SMTP smart relay, using
+`den.aspects.mail` (`modules/packages/mail.nix`), which `base` includes. The relay is muninn, which passes the
+mail on to Fastmail (see [The relay](#the-relay)). Other hosts only send; nothing on them listens for mail from the
+network.
+
+- **Relay:** `smtp.home.matos.cc`, or `smtp.ts.matos.cc` on hosts that include `den.aspects.tailscale` (`magnus`
+  and `muninn`). The `tailscale` aspect makes the switch by setting `local.mail.relayHost`. Mail goes to port 25
+  without authentication, using STARTTLS when the relay offers it. Both names are CNAMEs for muninn, managed
+  outside this flake.
+- **Addresses:** every sender address is rewritten to `alberth@matos.cc`, and local mail for `root` (and
+  `postmaster`) is forwarded there.
+- **NixOS** runs Postfix from `services.postfix`, with no `smtpd` on port 25 (except on the relay).
+- **macOS** keeps Apple's Postfix. Each switch sets `relayhost`, `sender_canonical_maps`, `smtp_tls_security_level`
+  and `alias_maps` in `/etc/postfix/main.cf` with `postconf -e` and leaves the rest of the file alone. A macOS update
+  can reset `main.cf`; the next switch puts the keys back.
+
+To test it, run `printf 'Subject: test\n\ntest\n' | sendmail root` and check that the queue is empty with `mailq`.
+On NixOS, `journalctl -u postfix` shows why a message is stuck.
+
+On macOS, the `tailscale` aspect installs the App Store app through `homebrew.masApps`, so you have to be signed in
+to the App Store. On NixOS, log in to the tailnet once with `sudo tailscale up`.
+
+### The relay
+
+`den.aspects.mail.relay` (in `mail.nix`, included by `muninn`) turns the host's own Postfix into the relay:
+
+- **Accepts** mail without authentication from the LAN (`10.0.4.0/22`), the tailnet (`100.64.0.0/10`,
+  `fd7a:115c:a1e0::/48`) and the host itself, and relays it for no one else. It listens on port 25 (STARTTLS
+  optional) and on port 465 (implicit TLS required). Both ports are open only on the interfaces in
+  `local.mail.relay.interfaces` (`enp0s31f6` and `tailscale0` on muninn).
+- **Rewrites** the envelope sender and `From:` header of everything it relays to `alberth@matos.cc`, including mail
+  from devices like the printer, router and NAS, because Fastmail only accepts senders that are the account's
+  identities.
+- **Sends** everything, its own mail included, to `smtp.fastmail.com:465` with implicit TLS, checking Fastmail's
+  certificate, and logs in as `alberth@matos.cc` with an app password.
+- **Uses the `smtp.home.matos.cc` certificate for TLS** on both ports. It requests that certificate through
+  `local.certbot.fqdns`, along with `smtp.ts.matos.cc`, so the host must include `certbot`. Clients connecting by
+  either name get the `smtp.home.matos.cc` certificate. The Nix hosts don't check it, but a device on port 465 that
+  verifies the name has to use `smtp.home.matos.cc`. Until certbot has issued the certificate, port 25 accepts
+  mail without TLS (and logs a warning), and port 465 fails.
+
+The app password is `fastmail_smtp_password` in `secrets/hosts/muninn.yaml`, which only muninn and the YubiKeys can
+decrypt. sops-nix writes it into Postfix's SASL password table at `/run/secrets/rendered/postfix-sasl-passwords`
+(root only) and restarts Postfix when it changes. To replace it, create a new app password in Fastmail's settings
+(Privacy & Security), paste it in with `sops secrets/hosts/muninn.yaml`, and switch muninn.
+
 ## TLS certificates
 
 `den.aspects.certbot` (`modules/packages/certbot.nix`, included by `magnus` and `muninn`) gets Let's Encrypt
@@ -344,7 +394,8 @@ local.certbot = {
 };
 ```
 
-`magnus` and `muninn` each request `<host>.home.matos.cc` and `<host>.ts.matos.cc`.
+`magnus` and `muninn` each request `<host>.home.matos.cc` and `<host>.ts.matos.cc`. The SMTP relay adds
+`smtp.home.matos.cc` and `smtp.ts.matos.cc` on muninn.
 
 - **Issuing:** a service started at boot (launchd on macOS, systemd on NixOS) requests each listed name that has no
   certificate yet, and retries every 15 minutes until all succeed. Names that already have one are skipped.

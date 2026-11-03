@@ -12,6 +12,7 @@
       den.aspects.darwin.customizations
       den.aspects.ghostty.terminfo
       den.aspects.imagemagick
+      den.aspects.mail
       den.aspects.nix-tools
       den.aspects.nushell
       den.aspects.shell.bash
