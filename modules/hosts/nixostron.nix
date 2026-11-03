@@ -7,10 +7,6 @@
   # Configuration specific to nixostron (hardware-configuration.nix, boot loader,
   # filesystems, ...)
   den.aspects.nixostron = {
-    includes = [
-      den.aspects.systemdBoot
-    ];
-
     nixos = {
       system.stateVersion = "26.05";
     };

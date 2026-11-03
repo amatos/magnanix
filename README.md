@@ -125,7 +125,8 @@ include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `imagemagick`,
   `mail`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
-  `tui.zoxide`.
+  `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
+  partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
 
   ```nix
@@ -423,11 +424,11 @@ sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
-   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`. The NixOS template also includes
-   `systemdBoot`, which boots with systemd-boot and needs the UEFI system partition mounted at `/boot`.
+   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`.
 5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in a
    `modules/hosts/<hostname>/` directory, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
-   it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`).
+   it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`). The boot loader comes from `base`
+   (`systemdBoot`).
 6. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user
