@@ -55,8 +55,7 @@ jobs:
         run: |
           # Disable FlakeHub substituter to avoid auth issues
           # (we'll use the regular nixpkgs from cache.nixos.org instead)
-          echo "extra-substituters =" >> /etc/nix/nix.conf
-          nix profile install nixpkgs#attic-client
+          nix --option extra-substituters "" profile install nixpkgs#attic-client
 
       - name: Log in to Attic cache
         run: |
