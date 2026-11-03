@@ -14,6 +14,7 @@
       den.aspects.imagemagick
       den.aspects.mail
       den.aspects.nix-tools
+      den.aspects.nixosKernel # NixOS-only: defines just the `nixos` class
       den.aspects.nushell
       den.aspects.shell.bash
       den.aspects.shell.fish
