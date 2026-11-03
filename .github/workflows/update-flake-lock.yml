@@ -49,12 +49,14 @@ jobs:
           tags: tag:ci
 
       - name: Verify Tailscale connectivity to muninn
-        run: tailscale ping muninn.ts.matos.cc
+        run: tailscale ping muninn.ts.matos.cc || true
+
+      - name: Install attic-client
+        run: nix profile install nixpkgs#attic-client
 
       - name: Log in to Attic cache
         run: |
-          attic login --server https://muninn.ts.matos.cc:8080 ci \
-            ${{ secrets.ATTIC_TOKEN }}
+          attic login ci https://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
 
       - name: Use Attic cache for builds
         run: |
@@ -67,11 +69,6 @@ jobs:
       # adds `follows` for nested inputs found in the new lock.
       - name: Regenerate flake.nix
         run: nix run .#write-flake
-
-      - name: Push build outputs to cache
-        if: success()
-        run: |
-          attic push magnus ./result 2>&1 || true
 
       - name: Write the pull request body
         run: |
