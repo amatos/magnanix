@@ -84,6 +84,7 @@ modules/
 │   ├── steam.nix              Steam (cask on macOS, `programs.steam` on NixOS)
 │   ├── sudo.nix               sudo-rs with passwordless wheel (NixOS), Touch ID for sudo (macOS)
 │   ├── supasidebar.nix        SupaSidebar cask (macOS)
+│   ├── systemdBoot.nix        systemd-boot (UEFI) and a tmpfs /tmp cleared on boot (NixOS)
 │   ├── tailscale.nix          Tailscale: tailscaled (NixOS), the App Store app (macOS); also picks the mail relay
 │   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
 │   ├── tealdeer.nix           tealdeer `tldr` client with automatic cache updates
@@ -422,10 +423,11 @@ sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
-   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`.
+   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`. The NixOS template also includes
+   `systemdBoot`, which boots with systemd-boot and needs the UEFI system partition mounted at `/boot`.
 5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in a
    `modules/hosts/<hostname>/` directory, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
-   it as a flake module. Import it from the host's `nixos` block and set a boot loader (see `muninn/muninn.nix`).
+   it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`).
 6. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user
@@ -614,12 +616,13 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 - Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`,
   `secrets/hosts/nixostron.yaml` and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.
-- `nixostron`: add a root filesystem, a boot loader and `hardware-configuration.nix`, and confirm the platform.
+- `nixostron`: add a root filesystem and `hardware-configuration.nix` (with the ESP at `/boot`, for
+  `systemdBoot`), and confirm the platform.
 - `muninn`: add an `alberth_muninn` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
 - Point the other hosts at the Attic cache on `muninn` once it exists (see [Binary cache](#binary-cache)).
 - Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
 - Build `nixostron` and `muninn`. `magnus` and `darwintron` build and `muninn` evaluates; `nixostron` fails
-  evaluation on the missing root filesystem and boot loader above.
+  evaluation on the missing root filesystem above.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
   `nix-darwin-settings.nix` that set them was never wired in and has been removed.
 

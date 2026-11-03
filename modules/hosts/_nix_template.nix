@@ -13,6 +13,7 @@
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.audio
+      den.aspects.systemdBoot
       den.aspects.zed
     ];
 
