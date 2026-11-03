@@ -10,6 +10,7 @@
 
       den.aspects.cliutils
       den.aspects.darwin.customizations
+      den.aspects.fwupd
       den.aspects.ghostty.terminfo
       den.aspects.imagemagick
       den.aspects.mail
