@@ -1,30 +1,16 @@
 {
   den.aspects.alberth.ssh = {
-    homeManager =
-      { config, pkgs, ... }:
-      let
-        onePassPath =
-          if pkgs.stdenv.hostPlatform.isDarwin then
-            "\"${config.home.homeDirectory}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock\""
-          else
-            "${config.home.homeDirectory}/.1password/agent.sock";
-      in
-      {
-        programs.ssh = {
-          enable = true;
-          enableDefaultConfig = false;
-          includes = [ "${config.home.homeDirectory}/.ssh/1Password/config" ];
-          settings = {
-            "github.com" = {
-              HostName = "github.com";
-              User = "git";
-            };
-
-            "*" = {
-              IdentityAgent = onePassPath;
-            };
-          };
+    # The 1Password agent (IdentityAgent) comes from den.aspects._1password, so it
+    # is only set on hosts that run 1Password.
+    homeManager = {
+      programs.ssh = {
+        enable = true;
+        enableDefaultConfig = false;
+        settings."github.com" = {
+          HostName = "github.com";
+          User = "git";
         };
       };
+    };
   };
 }

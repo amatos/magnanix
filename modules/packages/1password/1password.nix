@@ -25,18 +25,42 @@
       )
     ];
 
-    homeManager.programs.bash.initExtra = ''
-      source <(op completion bash)
-    '';
+    homeManager =
+      { config, pkgs, ... }:
+      let
+        home = config.home.homeDirectory;
 
-    homeManager.programs.fish.interactiveShellInit = ''
-      op completion fish | source
-    '';
+        # Where the 1Password app serves its SSH agent (Settings > Developer >
+        # Use the SSH agent). The macOS path has a space, so it is quoted for ssh_config.
+        agentSocket =
+          if pkgs.stdenv.hostPlatform.isDarwin then
+            "\"${home}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock\""
+          else
+            "${home}/.1password/agent.sock";
+      in
+      {
+        programs.bash.initExtra = ''
+          source <(op completion bash)
+        '';
 
-    homeManager.programs.zsh.initContent = ''
-      eval "$(op completion zsh)"
-      compdef _op op
-    '';
+        programs.fish.interactiveShellInit = ''
+          op completion fish | source
+        '';
+
+        programs.zsh.initContent = ''
+          eval "$(op completion zsh)"
+          compdef _op op
+        '';
+
+        # Route SSH through the 1Password agent, on hosts that include this aspect.
+        # This doesn't enable programs.ssh; it only takes effect for users whose
+        # own config does (alberth's ssh aspect). The include is 1Password's SSH
+        # bookmarks file; ssh skips it while it doesn't exist.
+        programs.ssh = {
+          includes = [ "${home}/.ssh/1Password/config" ];
+          settings."*".IdentityAgent = agentSocket;
+        };
+      };
 
     darwin = {
       programs = {

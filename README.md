@@ -55,7 +55,7 @@ modules/
 ├── flake/
 │   └── outputs.nix            the flake's outputs: configurations, packages, checks, dev shell, formatter
 ├── packages/                  opt-in aspects that hosts, users or `base` include
-│   ├── 1password/             1Password and its CLI (macOS and NixOS)
+│   ├── 1password/             1Password and its CLI (macOS and NixOS), and its SSH agent for users who enable `programs.ssh`
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
@@ -105,7 +105,7 @@ modules/
     │   ├── dock.nix           the macOS Dock: settings and persistent apps
     │   ├── scripts.nix        installs `scripts/` into `~/.local/bin`
     │   ├── shell-aliases.nix  alberth's aliases for bash, zsh and fish, such as `deploy-magnanix`
-    │   ├── ssh.nix            SSH client config using the 1Password agent
+    │   ├── ssh.nix            SSH client config (the 1Password agent is added by `_1password` where the host has it)
     │   ├── configs/zed/       the tracked Zed `settings.json`
     │   └── F41BDBF6171A3BB4.pub.asc   alberth's GPG public key
     └── ephemeral/             den.aspects.ephemeral, the test user on darwintron and nixostron
