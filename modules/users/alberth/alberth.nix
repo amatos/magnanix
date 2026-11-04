@@ -55,6 +55,14 @@ in
 
         home.packages = [ pkgs.htop ];
 
+        # Licensed theme pack (see modules/den/dracula-pro.nix). Access comes from
+        # alberth's GitHub account, so the URL alone gives nobody else anything.
+        # Only cloned on hosts with an app that uses it (Ghostty), not on muninn.
+        magnanix.draculaPro = {
+          enable = true;
+          repo = "git@github.com:dracula-pro/dracula-pro.git";
+        };
+
         # A real file rather than home.file: that would be a symlink into /nix/store,
         # which sshd's StrictModes rejects because the store is group-writable.
         home.activation.authorizedKeys =
