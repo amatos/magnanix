@@ -1,7 +1,7 @@
 # CI/CD Build for magnanix
 #
 # Builds flake outputs for multiple platforms:
-# - aarch64-darwin: magnus, darwintron (on macos-15)
+# - aarch64-darwin: magnus, darwintron (on macos-26)
 # - x86_64-linux: muninn NixOS config (on ubuntu-latest)
 # - aarch64-linux: devShells.aarch64-linux.default (on ubuntu-24.04-arm)
 #
@@ -23,7 +23,7 @@ concurrency:
 jobs:
   build-darwin:
     name: Build darwin (aarch64-darwin)
-    runs-on: macos-15
+    runs-on: macos-26
     permissions:
       contents: read
       id-token: write
