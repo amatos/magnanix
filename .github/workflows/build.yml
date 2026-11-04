@@ -1,0 +1,172 @@
+# CI/CD Build for magnanix
+#
+# Builds flake outputs for multiple platforms:
+# - aarch64-darwin: magnus, darwintron (on macos-15)
+# - x86_64-linux: muninn NixOS config (on ubuntu-latest)
+# - aarch64-linux: devShells.aarch64-linux.default (on ubuntu-24.04-arm)
+#
+# All builds push results to muninn's Attic cache via Tailscale OIDC.
+#
+name: CI/CD Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-darwin:
+    name: Build darwin (aarch64-darwin)
+    runs-on: macos-15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v12
+
+      - name: Set up Magic Nix Cache
+        uses: DeterminateShells/magic-nix-cache-action@v8
+
+      - name: Join Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+
+      - name: Verify Tailscale connectivity to muninn
+        run: tailscale ping muninn.ts.matos.cc || true
+
+      - name: Install attic-client
+        run: |
+          nix --option extra-substituters "" profile install nixpkgs#attic-client
+
+      - name: Log in to Attic cache
+        run: |
+          attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
+
+      - name: Use Attic cache for builds
+        run: |
+          attic use magnanix
+
+      - name: Build magnus (aarch64-darwin)
+        run: |
+          nix build .#darwinConfigurations.magnus.system \
+            --accept-flake-config \
+            --max-jobs auto
+
+      - name: Build darwintron (aarch64-darwin)
+        run: |
+          nix build .#darwinConfigurations.darwintron.system \
+            --accept-flake-config \
+            --max-jobs auto
+
+      - name: Push to Attic cache
+        if: always()
+        run: |
+          attic push magnanix result* || true
+
+  build-linux-x86:
+    name: Build linux (x86_64-linux)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Set up Magic Nix Cache
+        uses: DeterminateShells/magic-nix-cache-action@v8
+
+      - name: Join Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+
+      - name: Verify Tailscale connectivity to muninn
+        run: tailscale ping muninn.ts.matos.cc || true
+
+      - name: Install attic-client
+        run: |
+          nix --option extra-substituters "" profile install nixpkgs#attic-client
+
+      - name: Log in to Attic cache
+        run: |
+          attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
+
+      - name: Use Attic cache for builds
+        run: |
+          attic use magnanix
+
+      - name: Build muninn (x86_64-linux)
+        run: |
+          nix build .#nixosConfigurations.muninn.config.system.build.toplevel \
+            --accept-flake-config \
+            --max-jobs auto
+
+      - name: Push to Attic cache
+        if: always()
+        run: |
+          attic push magnanix result* || true
+
+  build-linux-aarch64:
+    name: Build linux (aarch64-linux)
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Set up Magic Nix Cache
+        uses: DeterminateShells/magic-nix-cache-action@v8
+
+      - name: Join Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+
+      - name: Verify Tailscale connectivity to muninn
+        run: tailscale ping muninn.ts.matos.cc || true
+
+      - name: Install attic-client
+        run: |
+          nix --option extra-substituters "" profile install nixpkgs#attic-client
+
+      - name: Log in to Attic cache
+        run: |
+          attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
+
+      - name: Use Attic cache for builds
+        run: |
+          attic use magnanix
+
+      - name: Build devShells.aarch64-linux.default
+        run: |
+          nix build .#devShells.aarch64-linux.default \
+            --accept-flake-config \
+            --max-jobs auto
+
+      - name: Push to Attic cache
+        if: always()
+        run: |
+          attic push magnanix result* || true
