@@ -29,6 +29,13 @@ in
   # The server is `muninn.home.matos.cc` by default; the `tailscale` aspect
   # switches it to `muninn.ts.matos.cc`, the same way it switches the mail relay.
   den.aspects.attic.client = {
+    homeManager = { pkgs, ... }: {
+      # `attic` CLI for pushing to the cache. Available to every user via `base`
+      # (included in all hosts). Login state (`~/.config/attic/config.toml`) lives
+      # in the user's home, not system-wide.
+      home.packages = [ pkgs.attic-client ];
+    };
+
     os =
       { lib, ... }:
       {
@@ -94,10 +101,6 @@ in
         };
 
         networking.firewall.allowedTCPPorts = [ port ];
-
-        # The `attic` client, for creating the cache on the server itself.
-        # `atticd-atticadm` (issuing tokens) comes with services.atticd.
-        environment.systemPackages = [ pkgs.attic-client ];
       };
   };
 }
