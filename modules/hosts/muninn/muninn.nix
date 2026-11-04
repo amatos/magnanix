@@ -58,14 +58,6 @@ in
           "${hostName}.ts.matos.cc"
         ];
       };
-
-      # Ensure atticd_env secret is properly declared and decrypted
-      sops.secrets.atticd_env = {
-        restartUnits = [ "atticd.service" ];
-        mode = "0400";
-        owner = "atticd";
-        group = "atticd";
-      };
     };
   };
 
