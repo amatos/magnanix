@@ -55,7 +55,8 @@ modules/
 ├── flake/
 │   └── outputs.nix            the flake's outputs: configurations, packages, checks, dev shell, formatter
 ├── packages/                  opt-in aspects that hosts, users or `base` include
-│   ├── 1password/             1Password and its CLI (macOS and NixOS), and its SSH agent for users who enable `programs.ssh`
+│   ├── 1password/             1Password and its CLI (macOS and NixOS), and its SSH agent for users who enable `programs.ssh`; `macos._1password` adds 1Password for Safari (App Store)
+│   ├── appstore/              Mac App Store apps (`macos.*`), one aspect per app or per group of apps (see [App Store apps](#app-store-apps))
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
@@ -74,6 +75,7 @@ modules/
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick
+│   ├── magnet.nix             Magnet window manager, from the App Store (macOS)
 │   ├── mail.nix               Postfix: outgoing mail through the LAN's SMTP relay, and the relay itself (see [Mail](#mail))
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
@@ -233,6 +235,38 @@ launchd daemon runs the same script at boot to unlock and mount it (log: `/var/l
 > ```
 
 Existing OrbStack data in `~/.orbstack/data` is not moved (activation warns if it exists).
+
+### App Store apps
+
+Mac App Store apps are installed by `brew bundle` through `mas` (`homebrew.masApps`), which needs you signed in to
+the App Store. Each app, or group of related apps, is a `den.aspects.macos.*` aspect in `modules/packages/appstore/`;
+`magnus` includes all of them. Safari extensions have to be turned on in Safari > Settings > Extensions after the
+first switch.
+
+Groups:
+
+| Aspect                   | Apps                                                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `macos.iwork`            | Pages, Keynote, Numbers                                                                                                                                      |
+| `macos.microsoftOffice`  | Microsoft Word, Excel and PowerPoint; OneDrive                                                                                                               |
+| `macos.appleDeveloper`   | Xcode, TestFlight, Developer, Swift Playground                                                                                                               |
+| `macos.flexibits`        | Fantastical, Cardhop                                                                                                                                         |
+| `macos.pixelmator`       | Pixelmator Pro, Photomator                                                                                                                                   |
+| `macos.safariExtensions` | Auto HD FPS for YouTube, Kagi for Safari, Obsidian Web Clipper, Privacy.com for Safari, Sink It, StopTheMadness Pro, Turn Off the Lights for Safari, Vinegar |
+| `macos.boardGames`       | Goban, Gomoku                                                                                                                                                |
+
+Single apps: `acorn` (Acorn), `amphetamine` (Amphetamine), `autoMounter` (AutoMounter), `backgroundSwitcher`
+(John's Background Switcher), `bookShelves` (BookShelves), `broadcasts` (Broadcasts), `codePeek` (Code Peek+),
+`contactsSync` (Contacts Sync), `crystalFetch` (CrystalFetch), `darkroom` (Darkroom), `dropover` (Dropover), `due`
+(Due), `endel` (Endel), `flixFixer` (Flix Fixer), `gemini` (Gemini), `hyperduck` (Hyperduck), `hyperspace`
+(Hyperspace), `iris` (Iris), `ivory` (Ivory), `languageTool` (LanguageTool), `ledgerWallet` (Ledger Wallet), `mela`
+(Mela), `nepTunes` (NepTunes), `pastel` (Pastel), `reeder` (Reeder), `simpleComic` (Simple Comic), `stecker`
+(Stecker), `texStage` (TexStage), `things` (Things), `transmit` (Transmit), `velja` (Velja), `windowsApp` (Windows
+App) and `zavala` (Zavala), all under `macos.`.
+
+Elsewhere: `macos._1password` (1Password for Safari, `modules/packages/1password/`), `macos.magnet` (Magnet,
+`modules/packages/magnet.nix`) and `tailscale` (Tailscale, `modules/packages/tailscale.nix`) also install App Store
+apps.
 
 ## Applying the configuration
 
