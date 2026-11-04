@@ -33,9 +33,6 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v12
 
-      - name: Set up Magic Nix Cache
-        uses: DeterminateShells/magic-nix-cache-action@v8
-
       - name: Join Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -87,9 +84,6 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
 
-      - name: Set up Magic Nix Cache
-        uses: DeterminateShells/magic-nix-cache-action@v8
-
       - name: Join Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -134,9 +128,6 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
-
-      - name: Set up Magic Nix Cache
-        uses: DeterminateShells/magic-nix-cache-action@v8
 
       - name: Join Tailscale
         uses: tailscale/github-action@v4
