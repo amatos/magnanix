@@ -1,16 +1,17 @@
-# Weekly flake input update. Opens (or refreshes) one pull request that updates
-# flake.lock and regenerates flake.nix, so the pre-commit hook and the
-# check-flake-file check stay green. See "Updating inputs" in the README.
+# Weekly flake input update
 #
-# Pull requests opened with the default GITHUB_TOKEN don't trigger other
+# Automatically updates flake.lock and regenerates flake.nix every Saturday.
+# Opens a pull request for review before merging.
+#
+# Uses Tailscale OIDC to authenticate with muninn's Attic cache on
+# muninn.ts.matos.cc:8080. Requires Tailscale ACL to permit tag:ci -> muninn:8080.
+#
+# Note: Pull requests opened with the default GITHUB_TOKEN don't trigger other
 # workflows. Add a fine-grained token with Contents and Pull requests
 # read/write on this repo as the GH_TOKEN_FOR_UPDATES secret so CI runs on the
 # PR; without it the PR is still opened, but CI only runs after you close and
 # reopen it.
 #
-# Tailscale access: the action joins the tailnet via Workload Identity Federation
-# (GitHub OIDC token) with tag:ci, allowing access to the muninn Attic cache on
-# muninn.ts.matos.cc:8080. Requires Tailscale ACL to permit tag:ci -> muninn:8080.
 name: Update flake inputs
 
 on:
@@ -37,9 +38,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Join Tailscale
         uses: tailscale/github-action@v4
@@ -53,15 +55,15 @@ jobs:
 
       - name: Install attic-client
         run: |
-          # Disable FlakeHub substituter to avoid auth issues
-          # (we'll use the regular nixpkgs from cache.nixos.org instead)
           nix --option extra-substituters "" profile install nixpkgs#attic-client
 
       - name: Log in to Attic cache
+        continue-on-error: true
         run: |
           attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
 
       - name: Use Attic cache for builds
+        continue-on-error: true
         run: |
           attic use magnanix
 
@@ -90,7 +92,8 @@ jobs:
             echo '- [ ] `darwintron-vm test update-flake-lock` passes on magnus'
           } > "$RUNNER_TEMP/pr-body.md"
 
-      - uses: peter-evans/create-pull-request@v8
+      - name: Create or update pull request
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GH_TOKEN_FOR_UPDATES || github.token }}
           branch: update-flake-lock
