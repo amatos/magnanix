@@ -47,7 +47,7 @@
       url = "github:zhaofengli/nix-homebrew";
     };
     nixpkgs = {
-      url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
+      url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     };
     sops-nix = {
       url = "github:Mic92/sops-nix";
