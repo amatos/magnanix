@@ -37,6 +37,7 @@ in
       den.aspects.alberth.shellAliases
       den.aspects.alberth.ssh
       den.aspects.direnv
+      den.aspects.github
       den.aspects.gpg
       den.aspects.macos.mas
       den.aspects.macos.setapp
