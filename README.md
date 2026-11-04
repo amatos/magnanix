@@ -686,3 +686,54 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 ## License
 
 See [LICENSE](LICENSE).
+
+## Continuous Integration
+
+magnanix uses [GitHub Actions](https://docs.github.com/en/actions) to automatically build the flake outputs across three platforms and cache the results in muninn's Attic binary cache server.
+
+### The build.yml workflow
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) runs on every push to `main` and on pull requests (including PRs from forks). It builds:
+
+- **aarch64-darwin:** `darwinConfigurations.magnus` and `darwinConfigurations.darwintron` (system closures)
+- **x86_64-linux:** `nixosConfigurations.muninn` (system closure)
+- **aarch64-linux:** `devShells.aarch64-linux.default` (development shell; full system builds deferred)
+
+Each job:
+1. Joins the Tailscale network via **Workload Identity Federation** (ephemeral GitHub OIDC token)
+2. Authenticates to the Attic cache with a scoped CI token
+3. Configures Nix to use the cache as a substituter
+4. Builds the assigned flake output
+5. Pushes results back to the cache via `attic watch-store`
+
+**For main-branch pushes:** Build outputs are cached on muninn and available to all machines for substitution.
+
+**For pull requests:** Builds run the same way, but:
+- PRs from the main repo (not forks) can push to the cache
+- PRs from forks do not push (extra safety; OIDC token is still scoped)
+
+### Runners
+
+All runners are GitHub-hosted (no self-hosted infrastructure):
+
+| Platform       | Runner                | Cost        | Notes                                         |
+|---|---|---|---|
+| aarch64-darwin | `macos-15`            | Free*       | 8 vCPU Apple Silicon, 24 GB RAM. ~40–60 min. |
+| x86_64-linux   | `ubuntu-latest`       | Free        | 4 vCPU, 16 GB RAM. ~10–20 min.               |
+| aarch64-linux  | `ubuntu-24.04-arm`    | Free        | 4 vCPU Graviton, 16 GB RAM. ~5–10 min.       |
+
+*Public repos have no GitHub Actions multiplier on macOS runners.
+
+### Cache security
+
+- **Ephemeral tokens:** GitHub's OIDC token is valid only ~5 minutes per workflow run and cannot be reused.
+- **Scoped network access:** Tailscale ACL restricts `tag:ci` to `muninn.ts.matos.cc:8080` only.
+- **Scoped Attic token:** CI token can only pull and push to the `magnanix` cache, with 1-year TTL.
+
+### Setup & troubleshooting
+
+See [TAILSCALE_SETUP.md](TAILSCALE_SETUP.md) for detailed instructions on enabling GitHub Actions to access the cache. The setup requires:
+- A Tailscale OIDC credential (subject wildcard: `repo:amatos:367718/magnanix@1435869087:*`)
+- Three GitHub Action secrets: `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE`, `ATTIC_TOKEN`
+- An ACL rule allowing `tag:ci → muninn:8080`
+

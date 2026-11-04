@@ -25,7 +25,7 @@ The CI workflow now:
 4. Fill in the form:
    - **Description:** `GitHub runner ci` (or similar)
    - **Issuer:** Select `GitHub` from the dropdown (Issuer URL auto-fills to `https://token.actions.githubusercontent.com`)
-   - **Subject:** `repo:amatos/magnanix:ref:refs/heads/main`
+   - **Subject:** `repo:amatos:367718/magnanix@1435869087:*`
 5. Click **Continue** to proceed to Step 1B (Scopes)
 
 ### Step 1B: Create Tailscale OIDC Credential (Part B: Scopes)
@@ -125,7 +125,7 @@ Workflow completes, ephemeral node logs out
 
 ### "invalid OIDC token"
 - **Cause:** Subject in Tailscale credential doesn't match your repo path
-- **Fix:** Verify Subject is exactly `repo:amatos/magnanix:ref:refs/heads/main` in your credential settings
+- **Fix:** Verify Subject is exactly `repo:amatos:367718/magnanix@1435869087:*` in your credential settings
 
 ### "failed to connect to muninn.ts.matos.cc:8080"
 - **Cause:** ACL not applied, or muninn offline

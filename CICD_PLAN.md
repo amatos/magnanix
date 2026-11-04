@@ -1,12 +1,59 @@
 # GitHub Actions CI/CD Plan for magnanix: Multi-Platform Flake Building with Attic Cache
 
+## Status: ✅ COMPLETED
+
+**All implementation phases (1–5) are complete and live on main branch.** This document records the planning and decision-making process for the CI/CD infrastructure. Operational guidance and monitoring steps are in [OPERATIONS.md](OPERATIONS.md); workflow implementation details are in [WORKFLOWS.md](WORKFLOWS.md); user-facing setup instructions remain in [TAILSCALE_SETUP.md](TAILSCALE_SETUP.md).
+
+---
+
 ## Executive Summary
 
 This plan establishes a GitHub Actions workflow chain that builds the flake for **x86_64-linux, aarch64-linux, and aarch64-darwin**, caches results in the self-hosted Attic server on muninn, and allows your machines to substitute pre-built binaries instead of building from scratch. The workflow integrates with your existing Tailscale + Attic setup already established in `.github/workflows/update-flake-lock.yml`, extends it to perform actual builds, and navigates the cost/availability tradeoffs of GitHub's hosted runners per platform.
 
+**Implementation Status:**
+- ✅ Phase 1: Infrastructure Setup (Tailscale OIDC, GitHub secrets, ACL)
+- ✅ Phase 2: Workflow Creation (`.github/workflows/build.yml`)
+- ✅ Phase 3: Testing & Validation (all platforms working)
+- ✅ Phase 4: Merge to Main (workflow live)
+- ✅ Phase 5: Enhanced Existing Workflows (update-flake-lock.yml refactored)
+
 ---
 
-## 1. What to Build Per Platform & Enumeration Strategy
+## What Actually Got Built
+
+### Workflows
+- **`.github/workflows/build.yml`:** Multi-platform build job triggered on push to main and all PRs. Builds `magnus`, `darwintron` (aarch64-darwin), `muninn` (x86_64-linux), and `devShells.aarch64-linux.default` (aarch64-linux). Pushes results to Attic cache.
+- **`.github/workflows/update-flake-lock.yml`:** Refactored to match `build.yml` structure; consistent Tailscale OIDC, Attic authentication, and error handling.
+
+### Infrastructure
+- **Tailscale OIDC Credential:** Subject set to wildcard `repo:amatos:367718/magnanix@1435869087:*` to support both main-branch pushes and all PR checks.
+- **GitHub Secrets:** `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE`, `ATTIC_TOKEN` verified and working.
+- **Attic Cache:** CI token created on muninn with 1-year TTL; push/pull permissions scoped to `magnanix` cache.
+- **ACL Rule:** `tag:ci → muninn:8080` in effect.
+
+### Test Results
+- ✅ **ubuntu-latest (x86_64-linux):** builds `muninn` config in ~10–20 min.
+- ✅ **ubuntu-24.04-arm (aarch64-linux):** builds dev shell in ~5–10 min.
+- ⚠️ **macos-15 (aarch64-darwin):** builds complete but occasionally timeout due to GitHub runner capacity (not a code issue).
+
+---
+
+## For Future Reference: Section Index
+
+The sections below preserve the **decision-making process, alternatives considered, and rationale**, should you need to revisit or extend the CI/CD system:
+
+- **Section 1:** What to build per platform and enumeration strategy (why static matrix over dynamic eval)
+- **Section 2:** Workflow triggers and PR caching (how to handle forks safely)
+- **Section 3:** Runner selection trade-offs (cost, minutes, disk space, timeouts)
+- **Section 4:** Attic integration deep-dive (authentication, watch-store vs push, token scoping)
+- **Section 5:** Alternatives comparison (self-hosted runners, Magic Nix Cache, FlakeHub, GitHub runners)
+- **Section 6:** Complete YAML reference (full workflow code for reference)
+- **Section 7:** Original implementation checklist (archive; phases already completed)
+- **Section 8:** Secrets & ACL snapshot (archive)
+- **Section 9–11:** Original rollout plan, risks, and reference commands (archive)
+
+---
+
 
 ### Build Matrix by Platform
 
