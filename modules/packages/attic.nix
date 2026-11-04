@@ -135,12 +135,9 @@ in
 
         # From secrets/hosts/<host>.yaml. systemd reads the environment file as root
         # before starting atticd's dynamic user, so the default root-only mode works.
-        sops.secrets.atticd_env = {
-          restartUnits = [ "atticd.service" ];
-          mode = "0400";
-          owner = "atticd";
-          group = "atticd";
-        };
+        # Don't set owner/group: atticd uses DynamicUser, so there's no `atticd`
+        # user for sops-install-secrets to look up and activation fails.
+        sops.secrets.atticd_env.restartUnits = [ "atticd.service" ];
 
         networking.firewall.allowedTCPPorts = [ port ];
       };
