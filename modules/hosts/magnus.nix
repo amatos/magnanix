@@ -24,6 +24,7 @@ in
     # `den.batteries.host-aspects` also get the `homeManager` parts of these.
     includes = [
       den.aspects._1password
+      den.aspects.attic.push
       den.aspects.browsers
       den.aspects.certbot
       den.aspects.claude

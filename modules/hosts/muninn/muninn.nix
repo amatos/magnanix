@@ -22,6 +22,8 @@ in
 
       # Binary cache for the other machines on the LAN
       den.aspects.attic.server
+      # Push what muninn builds to it
+      den.aspects.attic.push
 
       # SMTP smart relay to Fastmail for the LAN and the tailnet
       den.aspects.mail.relay

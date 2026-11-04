@@ -63,7 +63,7 @@ modules/
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
-│   ├── attic.nix              Attic binary cache: the server (NixOS) and every host's substituter settings (see [Binary cache](#binary-cache))
+│   ├── attic.nix              Attic binary cache: the server (NixOS), every host's substituter settings, and the push watcher (see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
 │   ├── bluetooth.nix          Bluetooth (NixOS)
 │   ├── certbot.nix            Let's Encrypt certificates through LuaDNS (macOS and NixOS; see [TLS certificates](#tls-certificates))
@@ -329,8 +329,7 @@ attic cache create magnanix --public   # anyone on the LAN can pull; pushing nee
 attic cache info magnanix              # prints the public key that clients trust
 ```
 
-A machine that only pushes gets a narrower token, such as
-`atticd-atticadm make-token --sub magnus --validity "1y" --pull magnanix --push magnanix`.
+A machine that only pushes gets a narrower token (see [Pushing to the cache](#pushing-to-the-cache)).
 
 ### Using the cache
 
@@ -348,8 +347,50 @@ both end up in `/etc/nix/nix.custom.conf`.
 - **Recreating the cache** changes its signing key. Update `publicKey` in `attic.nix` with the output of
   `attic cache info magnanix`, or substitution from it fails signature checks.
 
-Pulling needs no token because the cache is public. Pushing (`attic push magnanix <path>`) needs
+Pulling needs no token because the cache is public. Pushing by hand (`attic push magnanix <path>`) needs
 `attic login` with a push token on that machine.
+
+### Pushing to the cache
+
+`den.aspects.attic.push` (in `attic.nix`, included by `muninn` and `magnus`) runs `attic watch-store` as root,
+which pushes every store path that becomes valid on the host, with its closure, to `magnanix`. That covers both
+builds and downloads, but paths signed by cache.nixos.org are skipped, so in practice it pushes the host's own
+builds and the unfree packages. On NixOS it is the `attic-watch-store` systemd service; on macOS it is the
+`org.nixos.attic-watch-store` launchd daemon, which logs to `/var/log/attic-watch-store.log` (rotated by
+`newsyslog`).
+
+- **Server name:** the same `local.attic.serverHost` the host pulls from, so `muninn.ts.matos.cc` on both hosts.
+  On muninn it reaches its own atticd through that name and starts after `atticd.service`.
+- **Token:** `attic_push_token` in the host's `secrets/hosts/<host>.yaml`, decrypted to
+  `/run/secrets/attic_push_token` (root only). The watcher's client config is generated in the Nix store and
+  reads the token from that file, so nothing runs `attic login`, and the users' own `~/.config/attic` is
+  untouched.
+- **Server away:** if the server can't be reached when it starts, the watcher exits and is restarted: systemd
+  backs off from 10 s to 10 min, launchd retries every minute. A rejected token doesn't stop it; each push
+  fails with an error in the log (`journalctl -u attic-watch-store` on NixOS).
+- **No token yet:** sops-nix fails the build when a declared secret is missing from its file, so the watcher and
+  its secret only exist once the host's file has `attic_push_token`. Until then each build prints an
+  `attic.push: no attic_push_token ...` warning, and the rest of the host builds and switches as usual.
+
+To set it up for a host (`muninn` or `magnus`):
+
+1. On muninn, mint a push token for the host:
+
+   ```sh
+   atticd-atticadm make-token --sub magnus --validity "1y" --pull magnanix --push magnanix
+   ```
+
+2. Add it to the host's secrets as `attic_push_token`, on its own line at the top level (just the token, no
+   quotes or `Bearer`):
+
+   ```sh
+   sops secrets/hosts/magnus.yaml      # attic_push_token: <token>
+   ```
+
+3. Commit, and switch the host. The warning goes away and the watcher starts.
+
+The token expires after a year. To replace it, mint a new one and repeat step 2. On NixOS the switch restarts
+the watcher; on macOS restart it by hand with `sudo launchctl kickstart -k system/org.nixos.attic-watch-store`.
 
 ## Mail
 
