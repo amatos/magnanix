@@ -3,7 +3,7 @@
 # Builds flake outputs for multiple platforms:
 # - aarch64-darwin: magnus, darwintron (on macos-15)
 # - x86_64-linux: muninn NixOS config (on ubuntu-latest)
-# - aarch64-linux: devShells.aarch64-linux.default (on ubuntu-24.04-arm)
+# - aarch64-linux: devShells.aarch64-linux.default (on ubuntu-latest)
 #
 # All builds push results to muninn's Attic cache via Tailscale OIDC.
 #
@@ -119,7 +119,7 @@ jobs:
 
   build-linux-aarch64:
     name: Build linux (aarch64-linux)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
