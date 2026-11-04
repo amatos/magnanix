@@ -63,7 +63,7 @@ modules/
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
-│   ├── attic.nix              Attic binary cache server (NixOS; see [Binary cache](#binary-cache))
+│   ├── attic.nix              Attic binary cache: the server (NixOS) and every host's substituter settings (see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
 │   ├── bluetooth.nix          Bluetooth (NixOS)
 │   ├── certbot.nix            Let's Encrypt certificates through LuaDNS (macOS and NixOS; see [TLS certificates](#tls-certificates))
@@ -86,7 +86,7 @@ modules/
 │   ├── sudo.nix               sudo-rs with passwordless wheel (NixOS), Touch ID for sudo (macOS)
 │   ├── supasidebar.nix        SupaSidebar cask (macOS)
 │   ├── systemdBoot.nix        systemd-boot (UEFI) and a tmpfs /tmp cleared on boot (NixOS)
-│   ├── tailscale.nix          Tailscale: tailscaled (NixOS), the App Store app (macOS); also picks the mail relay
+│   ├── tailscale.nix          Tailscale: tailscaled (NixOS), the App Store app (macOS); also picks the mail relay and Attic server names
 │   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
 │   ├── tealdeer.nix           tealdeer `tldr` client with automatic cache updates
 │   ├── trash.nix              trash-cli
@@ -124,7 +124,7 @@ where something includes them. An aspect's name doesn't have to match its path (
 [macOS defaults](#macos-defaults) under `darwin.*`, whose group name already says so. There are three places to
 include one:
 
-- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `cliutils`, `imagemagick`,
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `imagemagick`,
   `mail`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
   `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
@@ -332,9 +332,24 @@ attic cache info magnanix              # prints the public key that clients trus
 A machine that only pushes gets a narrower token, such as
 `atticd-atticadm make-token --sub magnus --validity "1y" --pull magnanix --push magnanix`.
 
-No host uses the cache yet. That needs the cache's URL (`http://muninn.home.matos.cc:8080/magnanix`, or the
-`muninn.ts.matos.cc` one off the LAN) and public key in `extra-substituters` and `extra-trusted-public-keys`, in
-`sharedSettings` in `modules/den/determinate.nix`.
+### Using the cache
+
+Every host pulls from the cache through `den.aspects.attic.client` (in `attic.nix`), which `base` includes. It
+adds the cache to `extra-substituters` and its public key to `extra-trusted-public-keys`. The cache advertises
+priority 41 and cache.nixos.org 40 (lower wins), so Nix still takes what cache.nixos.org has from there, and gets
+the rest (unfree packages, the flake's own builds) from muninn. On macOS these land in `determinateNix.customSettings`, on NixOS in `nix.settings`;
+both end up in `/etc/nix/nix.custom.conf`.
+
+- **Server name:** `muninn.home.matos.cc` by default; the `tailscale` aspect switches it to
+  `muninn.ts.matos.cc` through `local.attic.serverHost`, the same way it switches the mail relay.
+- **Unreachable cache:** the client also sets `connect-timeout = 5`, so a host that can't reach muninn (off the
+  LAN, or with Tailscale down) loses a few seconds rather than curl's default 300 s before Nix skips the cache.
+  The setting applies to every substituter.
+- **Recreating the cache** changes its signing key. Update `publicKey` in `attic.nix` with the output of
+  `attic cache info magnanix`, or substitution from it fails signature checks.
+
+Pulling needs no token because the cache is public. Pushing (`attic push magnanix <path>`) needs
+`attic login` with a push token on that machine.
 
 ## Mail
 
@@ -621,7 +636,6 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 - `nixostron`: add a root filesystem and `hardware-configuration.nix` (with the ESP at `/boot`, for
   `systemdBoot`), and confirm the platform.
 - `muninn`: add an `alberth_muninn` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
-- Point the other hosts at the Attic cache on `muninn` once it exists (see [Binary cache](#binary-cache)).
 - Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
 - Build `nixostron` and `muninn`. `magnus` and `darwintron` build and `muninn` evaluates; `nixostron` fails
   evaluation on the missing root filesystem above.

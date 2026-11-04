@@ -63,7 +63,7 @@ jobs:
 
       - name: Use Attic cache for builds
         run: |
-          attic use magnus
+          attic use magnanix
 
       - name: Update flake.lock
         run: nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"

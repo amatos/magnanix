@@ -23,8 +23,14 @@
     inputs = {
       # flake-file generates flake.nix, so it has to be an input of it
       flake-file.url = "github:denful/flake-file";
-      # Unstable Nixpkgs (nixpkgs-unstable; use 0 for stable)
-      nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
+      # Unstable Nixpkgs, straight from the nixpkgs-unstable channel branch so
+      # the lock tracks Hydra-cached revisions without waiting on FlakeHub.
+      nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+      # Previously pulled from FlakeHub, which mirrors the same channel but can
+      # lag behind it (that lag once pinned an atuin build that failed on Hydra,
+      # so it had no cached binary). To switch back, use this URL instead
+      # (0.1 = unstable, 0 = stable) and run `nix run .#write-flake`:
+      #   nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
       # import-tree auto-loads every module under ./modules
       import-tree.url = "github:denful/import-tree";
     };
