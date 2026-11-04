@@ -8,6 +8,7 @@
     includes = [
       den.batteries.hostname
 
+      den.aspects.attic.client
       den.aspects.cliutils
       den.aspects.darwin.customizations
       den.aspects.fwupd

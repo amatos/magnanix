@@ -4,13 +4,16 @@
 # `sudo tailscale up` on NixOS, the app's menu on macOS.
 #
 # Hosts on the tailnet send mail through the relay's Tailscale name instead of
-# its LAN one (see mail.nix).
+# its LAN one (see mail.nix), and reach the Attic cache the same way (see
+# attic.nix), so both keep working away from home.
 let
   relayHost = "smtp.ts.matos.cc";
+  atticHost = "muninn.ts.matos.cc";
 in
 {
   den.aspects.tailscale = {
     os.local.mail.relayHost = relayHost;
+    os.local.attic.serverHost = atticHost;
 
     nixos.services.tailscale.enable = true;
 
