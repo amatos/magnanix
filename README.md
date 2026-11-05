@@ -273,7 +273,7 @@ Groups:
 Single apps: `acorn` (Acorn), `amphetamine` (Amphetamine), `autoMounter` (AutoMounter), `backgroundSwitcher`
 (John's Background Switcher), `bookShelves` (BookShelves), `broadcasts` (Broadcasts), `codePeek` (Code Peek+),
 `contactsSync` (Contacts Sync), `crystalFetch` (CrystalFetch), `darkroom` (Darkroom), `dropover` (Dropover), `due`
-(Due), `flixFixer` (Flix Fixer), `gemini` (Gemini), `hyperduck` (Hyperduck), `hyperspace`
+(Due), `flixFixer` (Flix Fixer), `hyperduck` (Hyperduck), `hyperspace`
 (Hyperspace), `iris` (Iris), `ivory` (Ivory), `languageTool` (LanguageTool), `ledgerWallet` (Ledger Wallet), `mela`
 (Mela), `nepTunes` (NepTunes), `paste` (Paste), `pastel` (Pastel), `reeder` (Reeder), `simpleComic` (Simple
 Comic), `stecker` (Stecker), `texStage` (TexStage), `things` (Things), `transmit` (Transmit), `velja` (Velja),

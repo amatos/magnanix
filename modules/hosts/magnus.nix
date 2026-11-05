@@ -49,7 +49,6 @@ in
       den.aspects.macos.due
       den.aspects.macos.flexibits
       den.aspects.macos.flixFixer
-      den.aspects.macos.gemini
       den.aspects.macos.hyperduck
       den.aspects.macos.hyperspace
       den.aspects.macos.iris
