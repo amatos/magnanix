@@ -70,6 +70,7 @@ modules/
 │   ├── bluetooth.nix          Bluetooth (NixOS)
 │   ├── certbot.nix            Let's Encrypt certificates through LuaDNS (macOS and NixOS; see [TLS certificates](#tls-certificates))
 │   ├── claude.nix             Claude Code, its global rules, the Claude desktop app and usage trackers
+│   ├── cleanshot.nix          CleanShot X cask (macOS)
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts: Nix packages plus the Ioskeley Mono cask (macOS)
@@ -82,6 +83,7 @@ modules/
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
 │   ├── nushell.nix            Nushell
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
+│   ├── pixelsnap.nix          PixelSnap 2 cask (macOS)
 │   ├── setapp.nix             Setapp cask (macOS)
 │   ├── skim.nix               Skim PDF reader (macOS)
 │   ├── spamsieve.nix          SpamSieve cask (macOS)
@@ -92,6 +94,7 @@ modules/
 │   ├── tailscale.nix          Tailscale: tailscaled (NixOS), the App Store app (macOS); also picks the mail relay and Attic server names
 │   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
 │   ├── tealdeer.nix           tealdeer `tldr` client with automatic cache updates
+│   ├── topnotch.nix           TopNotch cask (macOS)
 │   ├── trash.nix              trash-cli
 │   ├── tzdata.nix             system time zone (NixOS)
 │   ├── yazi.nix               yazi file manager with its plugins and keybindings
