@@ -8,8 +8,8 @@
     {
       options.magnanix.repoDir = lib.mkOption {
         type = lib.types.str;
-        default = "${config.home.homeDirectory}/Projects/magnanix";
-        defaultText = lib.literalExpression ''"''${config.home.homeDirectory}/Projects/magnanix"'';
+        default = "${config.home.homeDirectory}/Developer/magnanix";
+        defaultText = lib.literalExpression ''"''${config.home.homeDirectory}/Developer/magnanix"'';
         description = "Absolute path of the live checkout of this repo.";
       };
     };

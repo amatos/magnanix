@@ -141,7 +141,7 @@ send_source() {
   # A plain tree rather than a clone: vanilla macOS has no git until the Command Line
   # Tools are installed, and a path flake sees exactly what `git archive` wrote.
   tar -C "$work/src" -cf - . |
-    guest "$user" 'rm -rf ~/Projects/magnanix; mkdir -p ~/Projects/magnanix; tar -xf - -C ~/Projects/magnanix'
+    guest "$user" 'rm -rf ~/Developer/magnanix; mkdir -p ~/Developer/magnanix; tar -xf - -C ~/Developer/magnanix'
 }
 
 apply() {
@@ -149,7 +149,7 @@ apply() {
   # nix-darwin refuses to replace these on its first activation. This can't live in the
   # seed: Determinate's boot hook puts them back.
   guest "$user" 'for f in /etc/bashrc /etc/zshrc; do if [ -e "$f" ] && [ ! -L "$f" ]; then sudo mv "$f" "$f.before-nix-darwin"; fi; done'
-  guest "$user" 'cd ~/Projects/magnanix && NIX_SENTRY_ENDPOINT="" /nix/var/nix/profiles/default/bin/nix develop --command apply-configuration'
+  guest "$user" 'cd ~/Developer/magnanix && NIX_SENTRY_ENDPOINT="" /nix/var/nix/profiles/default/bin/nix develop --command apply-configuration'
 }
 
 check_canaries() {
