@@ -1,7 +1,7 @@
 // Tailscale ACL policy for magnanix
 // Apply by copying the contents to Tailscale Admin Console: Settings > ACLs
 // Or if your Tailscale OAuth client has Policy scope, deploy with:
-//   tailscale acl set tailscale/acl.hujson
+//   tailscale acl set tailscale-policy/acl.hujson
 {
   "acls": [
     // Allow CI runners (tag:ci) to reach muninn's Attic cache

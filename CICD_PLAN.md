@@ -430,7 +430,7 @@ jobs:
 ### Phase 1: Secrets & Infrastructure Verification (1 hour)
 
 - [ ] Verify Tailscale OIDC credential is active in Tailscale Admin Console.
-- [ ] Verify ACL rule in `tailscale/acl.hujson` allows `tag:ci → muninn:8080`.
+- [ ] Verify ACL rule in `tailscale-policy/acl.hujson` allows `tag:ci → muninn:8080`.
 - [ ] Verify GitHub secrets `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` exist in repo settings.
 - [ ] SSH to muninn and generate ATTIC_TOKEN: `sudo atticd-atticadm make-token --sub ci-github --validity "1y" --pull magnanix --push magnanix`.
 - [ ] Add `ATTIC_TOKEN` secret to GitHub repo (Settings → Secrets and variables → Actions).
@@ -485,7 +485,7 @@ jobs:
 
 ### Tailscale ACL
 
-File: `tailscale/acl.hujson`
+File: `tailscale-policy/acl.hujson`
 
 Verify rule exists (should already be there from `update-flake-lock.yml`):
 
