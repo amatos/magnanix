@@ -776,3 +776,8 @@ Don't add a top-level directory named `tailscale/`. On macOS runners, `tailscale
 source by cloning it into `./tailscale` inside the checkout, and the darwin job fails with "destination path
 'tailscale' already exists" if that path is taken.
 
+The darwin job also resets the runner's DNS right after joining the tailnet. On macOS the action points system DNS
+at MagicDNS (`100.100.100.100`), which fails to resolve public names on hosted runners
+([tailscale/github-action#315](https://github.com/tailscale/github-action/issues/315)). That's safe because
+`muninn.ts.matos.cc` is in public DNS, so CI doesn't need MagicDNS to find it.
+
