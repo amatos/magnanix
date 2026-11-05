@@ -753,7 +753,7 @@ All runners are GitHub-hosted (no self-hosted infrastructure):
 
 | Platform       | Runner                | Cost        | Notes                                         |
 |---|---|---|---|
-| aarch64-darwin | `macos-15`            | Free*       | 8 vCPU Apple Silicon, 24 GB RAM. ~40–60 min. |
+| aarch64-darwin | `macos-26`            | Free*       | 3 vCPU Apple M1, 7 GB RAM. ~40–60 min.       |
 | x86_64-linux   | `ubuntu-latest`       | Free        | 4 vCPU, 16 GB RAM. ~10–20 min.               |
 | aarch64-linux  | `ubuntu-24.04-arm`    | Free        | 4 vCPU Graviton, 16 GB RAM. ~5–10 min.       |
 
