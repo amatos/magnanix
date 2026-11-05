@@ -15,6 +15,7 @@
       den.aspects.ghostty.terminfo
       den.aspects.imagemagick
       den.aspects.mail
+      den.aspects.neovim
       den.aspects.nix-tools
       den.aspects.nixosKernel # NixOS-only: defines just the `nixos` class
       den.aspects.nushell
