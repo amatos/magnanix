@@ -2,7 +2,7 @@
 
 ## Status: ✅ COMPLETED
 
-**All implementation phases (1–5) are complete and live on main branch.** This document records the planning and decision-making process for the CI/CD infrastructure. Operational guidance and monitoring steps are in [OPERATIONS.md](OPERATIONS.md); workflow implementation details are in [WORKFLOWS.md](WORKFLOWS.md); user-facing setup instructions remain in [TAILSCALE_SETUP.md](TAILSCALE_SETUP.md).
+**All implementation phases (1–5) are complete and live on main branch.** This document records the planning and decision-making process for the CI/CD infrastructure. User-facing setup instructions are in [TAILSCALE_SETUP.md](TAILSCALE_SETUP.md).
 
 ---
 
@@ -430,7 +430,7 @@ jobs:
 ### Phase 1: Secrets & Infrastructure Verification (1 hour)
 
 - [ ] Verify Tailscale OIDC credential is active in Tailscale Admin Console.
-- [ ] Verify ACL rule in `tailscale-policy/acl.hujson` allows `tag:ci → muninn:8080`.
+- [ ] Verify ACL rule in `documentation/tailscale-policy/acl.hujson` allows `tag:ci → muninn:8080`.
 - [ ] Verify GitHub secrets `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` exist in repo settings.
 - [ ] SSH to muninn and generate ATTIC_TOKEN: `sudo atticd-atticadm make-token --sub ci-github --validity "1y" --pull magnanix --push magnanix`.
 - [ ] Add `ATTIC_TOKEN` secret to GitHub repo (Settings → Secrets and variables → Actions).
@@ -485,7 +485,7 @@ jobs:
 
 ### Tailscale ACL
 
-File: `tailscale-policy/acl.hujson`
+File: `documentation/tailscale-policy/acl.hujson`
 
 Verify rule exists (should already be there from `update-flake-lock.yml`):
 

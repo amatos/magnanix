@@ -38,7 +38,10 @@ flake.lock                     pinned inputs
 .github/workflows/             weekly flake input update PR (see Updating inputs)
 .sops.yaml                     sops recipients and creation rules
 secrets/                       encrypted secrets (common, per host, per user, darwintron's bootstrap keys)
-tailscale-policy/acl.hujson    the tailnet ACL policy, including the `tag:ci` → muninn:8080 rule CI needs (see [Continuous Integration](#continuous-integration))
+documentation/                 project documentation outside this README:
+├── CICD_PLAN.md               planning and decision record for the CI/CD and binary cache setup
+├── TAILSCALE_SETUP.md         setting up Tailscale and Attic access for GitHub Actions
+└── tailscale-policy/acl.hujson  the tailnet ACL policy, including the `tag:ci` → muninn:8080 rule CI needs (see [Continuous Integration](#continuous-integration))
 pkgs/darwintron-vm.sh          the `darwintron-vm` script from the dev shell
 pkgs/texpile.nix               the Texpile package (update steps at the top of the file)
 pkgs/python/                   Python packages, such as the certbot-dns-luadns certbot plugin
@@ -799,10 +802,10 @@ All runners are GitHub-hosted (no self-hosted infrastructure):
 
 ### Setup & troubleshooting
 
-See [TAILSCALE_SETUP.md](TAILSCALE_SETUP.md) for detailed instructions on enabling GitHub Actions to access the cache. The setup requires:
+See [TAILSCALE_SETUP.md](documentation/TAILSCALE_SETUP.md) for detailed instructions on enabling GitHub Actions to access the cache. The setup requires:
 - A Tailscale OIDC credential (subject wildcard: `repo:amatos:367718/magnanix@1435869087:*`)
 - Three GitHub Action secrets: `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE`, `ATTIC_TOKEN`
-- An ACL rule allowing `tag:ci → muninn:8080` (kept in [`tailscale-policy/acl.hujson`](tailscale-policy/acl.hujson))
+- An ACL rule allowing `tag:ci → muninn:8080` (kept in [`documentation/tailscale-policy/acl.hujson`](documentation/tailscale-policy/acl.hujson))
 
 Don't add a top-level directory named `tailscale/`. On macOS runners, `tailscale/github-action` builds Tailscale from
 source by cloning it into `./tailscale` inside the checkout, and the darwin job fails with "destination path
