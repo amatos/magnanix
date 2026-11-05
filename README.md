@@ -56,10 +56,10 @@ modules/
 ├── flake/
 │   └── outputs.nix            the flake's outputs: configurations, packages, checks, dev shell, formatter
 ├── packages/                  opt-in aspects that hosts, users or `base` include
-│   ├── 1password/             1Password and its CLI (macOS and NixOS), and its SSH agent for users who enable `programs.ssh`; `macos._1password` adds 1Password for Safari (App Store)
+│   ├── 1password/             1Password and its CLI (macOS and NixOS), and its SSH agent for users who enable `programs.ssh`; `macos._1password` adds 1Password for Safari (App Store); `macos._1passwordForHelium` installs the native messaging host manifest that Helium's 1Password extension needs to reach the app (macOS)
 │   ├── appstore/              Mac App Store apps (`macos.*`), one aspect per app or per group of apps (see [App Store apps](#app-store-apps))
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
-│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension
+│   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
