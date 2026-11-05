@@ -71,7 +71,7 @@ Once created, you'll see the **Client ID**. Copy it — you'll need it for Step 
 ### Step 4: Apply Tailscale ACL
 
 1. Go to [Tailscale Admin Console → ACLs](https://login.tailscale.com/admin/acls)
-2. Open the `tailscale-policy/acl.hujson` file from this repo
+2. Open the `documentation/tailscale-policy/acl.hujson` file from this repo
 3. Copy the entire JSON content
 4. Paste into the admin console's ACL editor
 5. Click **Save and apply**
@@ -160,7 +160,7 @@ Workflow completes, ephemeral node logs out
 ## Files Modified
 
 - `.github/workflows/update-flake-lock.yml` — Workflow now joins Tailscale + uses Attic
-- `tailscale-policy/acl.hujson` — Version-controlled ACL policy
+- `documentation/tailscale-policy/acl.hujson` — Version-controlled ACL policy
 
 ## References
 
