@@ -47,7 +47,6 @@ in
       den.aspects.macos.darkroom
       den.aspects.macos.dropover
       den.aspects.macos.due
-      den.aspects.macos.endel
       den.aspects.macos.flexibits
       den.aspects.macos.flixFixer
       den.aspects.macos.gemini
