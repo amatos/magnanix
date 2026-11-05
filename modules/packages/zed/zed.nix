@@ -219,6 +219,12 @@
             inputs.delta.packages.${pkgs.stdenv.hostPlatform.system}.delta
           ];
 
+        # Use Zed for $VISUAL; --wait blocks until the file's tab is closed so
+        # callers (git commit, crontab -e, …) see the edited result. On macOS the
+        # cask links the `zed` CLI onto PATH; on Linux nixpkgs names it `zeditor`.
+        home.sessionVariables.VISUAL =
+          if isDarwin then "zed --wait" else "${lib.getExe pkgs.zed-editor} --wait";
+
         xdg.configFile."zed/settings.json".source = config.lib.file.mkOutOfStoreSymlink settingsFile;
 
         # Runs after the symlink exists. Creates the tracked file from the skeleton
