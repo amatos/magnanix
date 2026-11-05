@@ -2,15 +2,12 @@
   den.aspects.fonts = {
     homeManager = { pkgs, ... }: {
       home.packages = with pkgs; [
-        # ioskeley-mono.normal-NF
-        # ioskeley-mono.normal-NL-NF
-        # ioskeley-mono.normal
-        # ioskeley-mono.condensed
-        # ioskeley-mono.normal-term
-        # ioskeley-mono.condensed-NF
-        # ioskeley-mono.semiCondensed
-        # ioskeley-mono.normal-term-NF
-        # ioskeley-mono.condensed-term
+        ioskeley-mono.standard
+        ioskeley-mono.nf
+        ioskeley-mono.nl
+        ioskeley-mono.nl-nf
+        ioskeley-mono.term
+        ioskeley-mono.term-nf
         anonymousPro
         font-awesome
         hack-font
@@ -23,10 +20,5 @@
         nerd-fonts.jetbrains-mono
       ];
     };
-
-    darwin = {
-      homebrew.casks = [ "font-ioskeley-mono" ];
-    };
-
   };
 }

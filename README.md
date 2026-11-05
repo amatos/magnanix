@@ -76,7 +76,7 @@ modules/
 │   ├── cleanshot.nix          CleanShot X cask (macOS)
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
-│   ├── fonts.nix              fonts: Nix packages plus the Ioskeley Mono cask (macOS)
+│   ├── fonts.nix              fonts, all from nixpkgs (Home Manager); see [Fonts](#fonts)
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick
@@ -243,6 +243,13 @@ launchd daemon runs the same script at boot to unlock and mount it (log: `/var/l
 > ```
 
 Existing OrbStack data in `~/.orbstack/data` is not moved (activation warns if it exists).
+
+### Fonts
+
+`den.aspects.fonts` (`modules/packages/fonts.nix`) installs fonts through Home Manager's `home.packages`. Every
+font is currently installed from nixpkgs, and nixpkgs is the preferred source for fonts. Use a Homebrew cask
+(`homebrew.casks` in the aspect's `darwin` class) only for a font with no Nix package. Casks should be the
+exception, not the rule.
 
 ### App Store apps
 
