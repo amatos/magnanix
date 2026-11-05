@@ -80,8 +80,9 @@ modules/
 │   ├── magnet.nix             Magnet window manager, from the App Store (macOS)
 │   ├── mail.nix               Postfix: outgoing mail through the LAN's SMTP relay, and the relay itself (see [Mail](#mail))
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
+│   ├── neovim.nix             Neovim with LazyVim (lazyvim-nix), the default `$EDITOR` (see [Neovim](#neovim))
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
-│   ├── nushell.nix            Nushell
+│   ├── nushell.nix            Nushell (Home Manager), with the session variables and other tools' integrations
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
 │   ├── pixelsnap.nix          PixelSnap 2 cask (macOS)
 │   ├── setapp.nix             Setapp cask (macOS)
@@ -131,7 +132,7 @@ where something includes them. An aspect's name doesn't have to match its path (
 include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `imagemagick`,
-  `mail`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
+  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
   `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
@@ -676,6 +677,10 @@ its own file:
 - **Starship prompt:** the shell indicator is on, so each prompt shows which shell you're in: 🐚 bash, 🦓 zsh,
   🐟 fish, 🪟 PowerShell, and ❓ for anything else. The hostname is trimmed at the first `.` (`host.example.com`
   shows as `host`).
+- **Nushell:** `programs.nushell` writes `config.nu` and `env.nu` (in `~/Library/Application Support/nushell` on
+  macOS), so the atuin, direnv, starship, yazi and zoxide integrations load in it too. `loadSessionVariables` loads
+  the Home Manager session variables (such as `EDITOR`) when Nushell starts without them, for example as the
+  shell a terminal opens directly.
 - **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`).
   The `_1password` aspect adds `op` completions to bash, zsh and fish, so they only load on hosts that include it.
 - **Aliases and functions:** the common aliases (`rm`/`mv`/`cp` with `-i`, the `ssh*` variants, `git-log`,
@@ -683,6 +688,30 @@ its own file:
   and DNS fixes, network info, and a zoxide and fzf directory jumper (`zox`). They are written once for POSIX
   shells and once for fish, so keep the two files in step when adding or changing one. In `shell-functions-posix.nix`
   each entry becomes a shell function; in `shell-functions-fish.nix` it becomes a fish function.
+
+## Neovim
+
+`den.aspects.neovim` (`modules/packages/neovim.nix`, included by `base`) installs Neovim with
+[LazyVim](https://www.lazyvim.org) on every host, through the [lazyvim-nix](https://github.com/pfassina/lazyvim-nix)
+Home Manager module, and sets `EDITOR=nvim`. `vi`, `vim` and `vimdiff` run Neovim too.
+
+- **From Nix, not the network:** plugins, Treesitter parsers, language servers and formatters are all built by
+  Nix, and Mason is disabled, so Neovim starts offline and works on NixOS. A few specs in the aspect fill gaps in
+  lazyvim-nix that would otherwise make lazy.nvim clone plugins from GitHub at startup (lazy.nvim itself,
+  `friendly-snippets`, `catppuccin`). Nix owns the config, so changes made through `:LazyExtras` don't persist; enable
+  extras with `programs.lazyvim.extras` instead. LazyVim's version comes from the `lazyvim-nix` input in `flake.lock`.
+- **Languages:** the `lang.nix`, `json`, `markdown`, `toml` and `yaml` extras. Tools that lazyvim-nix doesn't map to
+  a package (such as `yaml-language-server`, `marksman` and `lua-language-server`) are listed in `extraPackages`;
+  with Mason disabled, a missing language server is an error whenever a file of its type opens.
+- **`EDITOR` and `VISUAL`:** the aspect sets only `EDITOR`. Hosts with Zed set `VISUAL=zed --wait`
+  (`modules/packages/zed/zed.nix`), and most programs (git, crontab, ...) prefer `VISUAL`, so on those hosts they
+  open Zed. Elsewhere `VISUAL` is unset and they use Neovim. Home Manager's `programs.neovim.defaultEditor` stays off
+  because it would also set `VISUAL`, and the two definitions would fail evaluation.
+- **Theme:** users with `magnanix.draculaPro` get Dracula PRO, loaded at runtime from the checkout (never copied
+  into the store): `dracula-pro` on a dark terminal and `dracula-pro-alucard` on a light one, following the
+  `background` Neovim detects from the terminal at startup. Everyone else, and hosts without the checkout, get the
+  free Dracula theme. Neovim doesn't add itself to `draculaPro.usedBy`, so it never triggers the clone, which keeps
+  headless hosts like muninn from trying. Clone the checkout there by hand to get Dracula PRO in Neovim.
 
 ## Direnv
 
