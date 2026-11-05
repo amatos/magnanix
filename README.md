@@ -278,6 +278,11 @@ apps.
 
 ## Applying the configuration
 
+The configuration expects its live checkout at `~/Developer/magnanix` (the `magnanix.repoDir` default in
+`modules/den/repo-dir.nix`): out-of-store symlinks such as Zed's `settings.json` point into it, and the
+`deploy-magnanix` alias pulls there. Clone it there, or set `magnanix.repoDir` in a `homeManager` module for
+that user or host.
+
 Enter the dev shell and run the `apply-configuration` script. It picks the right command for the machine and
 uses the machine's host name:
 
