@@ -265,9 +265,9 @@ Single apps: `acorn` (Acorn), `amphetamine` (Amphetamine), `autoMounter` (AutoMo
 `contactsSync` (Contacts Sync), `crystalFetch` (CrystalFetch), `darkroom` (Darkroom), `dropover` (Dropover), `due`
 (Due), `flixFixer` (Flix Fixer), `gemini` (Gemini), `hyperduck` (Hyperduck), `hyperspace`
 (Hyperspace), `iris` (Iris), `ivory` (Ivory), `languageTool` (LanguageTool), `ledgerWallet` (Ledger Wallet), `mela`
-(Mela), `nepTunes` (NepTunes), `pastel` (Pastel), `reeder` (Reeder), `simpleComic` (Simple Comic), `stecker`
-(Stecker), `texStage` (TexStage), `things` (Things), `transmit` (Transmit), `velja` (Velja), `windowsApp` (Windows
-App) and `zavala` (Zavala), all under `macos.`.
+(Mela), `nepTunes` (NepTunes), `paste` (Paste), `pastel` (Pastel), `reeder` (Reeder), `simpleComic` (Simple
+Comic), `stecker` (Stecker), `texStage` (TexStage), `things` (Things), `transmit` (Transmit), `velja` (Velja),
+`windowsApp` (Windows App) and `zavala` (Zavala), all under `macos.`.
 
 Elsewhere: `macos._1password` (1Password for Safari, `modules/packages/1password/`), `macos.magnet` (Magnet,
 `modules/packages/magnet.nix`) and `tailscale` (Tailscale, `modules/packages/tailscale.nix`) also install App Store

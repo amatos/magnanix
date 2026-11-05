@@ -62,6 +62,7 @@ in
       den.aspects.macos.microsoftOffice
       den.aspects.macos.nepTunes
       den.aspects.macos.orbstack
+      den.aspects.macos.paste
       den.aspects.macos.pastel
       den.aspects.macos.pixelSnap
       den.aspects.macos.pixelmator
