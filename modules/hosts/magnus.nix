@@ -40,6 +40,7 @@ in
       den.aspects.macos.boardGames
       den.aspects.macos.bookShelves
       den.aspects.macos.broadcasts
+      den.aspects.macos.cleanShot
       den.aspects.macos.codePeek
       den.aspects.macos.contactsSync
       den.aspects.macos.crystalFetch
@@ -63,6 +64,7 @@ in
       den.aspects.macos.nepTunes
       den.aspects.macos.orbstack
       den.aspects.macos.pastel
+      den.aspects.macos.pixelSnap
       den.aspects.macos.pixelmator
       den.aspects.macos.reeder
       den.aspects.macos.safariExtensions
@@ -70,6 +72,7 @@ in
       den.aspects.macos.stecker
       den.aspects.macos.texStage
       den.aspects.macos.things
+      den.aspects.macos.topNotch
       den.aspects.macos.transmit
       den.aspects.macos.velja
       den.aspects.macos.windowsApp
