@@ -64,7 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
-│   ├── languages/             one aspect per language with its runtime, tools, LSP and formatter: `python`, `ruby` (see [Ruby](#ruby)), `rust`
+│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python`, `ruby`, `rust`
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
@@ -795,6 +795,32 @@ crash reporter, which aborts on macOS inside sandboxes that deny Mach service re
 terminals), with `bootstrap_check_in ... Permission denied (1100)`. An empty endpoint disables the reporter, so
 `nix` runs normally. The side effect is that Determinate no longer receives Nix crash reports from this directory.
 Outside direnv, prefix the command instead: `NIX_SENTRY_ENDPOINT= nix ...`.
+
+## Rust
+
+The `rust` aspect (`modules/packages/languages/rust.nix`) installs the toolchain through
+[rustup](https://rustup.rs) rather than a fixed nixpkgs `rustc`, so a project's `rust-toolchain.toml` picks its
+own channel, components and targets. rustup's proxies provide `cargo`, `rustc`, `clippy`, `rustfmt` and
+`rust-analyzer`; `~/.cargo/bin` is on `PATH` for anything installed with `cargo install`. It also installs:
+
+| Tool                                                               | Use                                                          |
+| ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| [cargo-edit](https://github.com/killercup/cargo-edit)              | `cargo upgrade` bumps dependency versions in `Cargo.toml`    |
+| [cargo-nextest](https://nexte.st)                                  | faster test runner                                           |
+| [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov)        | source-based code coverage                                   |
+| [cargo-audit](https://rustsec.org)                                 | checks dependencies against the RustSec advisory database    |
+| [cargo-shear](https://github.com/Boshen/cargo-shear)               | finds unused dependencies                                    |
+| [cargo-expand](https://github.com/dtolnay/cargo-expand)            | shows macro-expanded code                                    |
+| [bacon](https://dystroy.org/bacon)                                 | background checker that reruns on file changes               |
+| [taplo](https://taplo.tamasfe.dev)                                 | TOML formatter and language server, for `Cargo.toml`         |
+
+rustup keeps its toolchains in `~/.rustup`, outside Nix, so after the first switch install one and the
+component `cargo-llvm-cov` needs:
+
+```sh
+rustup default stable
+rustup component add llvm-tools-preview
+```
 
 ## Formatting
 
