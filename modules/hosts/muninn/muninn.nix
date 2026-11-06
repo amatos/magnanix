@@ -18,6 +18,7 @@ in
       den.aspects.certbot
       den.aspects.fonts
       den.aspects.audio
+      den.aspects.ruby
       den.aspects.tailscale
 
       # Binary cache for the other machines on the LAN

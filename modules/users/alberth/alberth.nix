@@ -44,6 +44,7 @@ in
       den.aspects.macos.supaSideBar
       den.aspects.macos.spamsieve
       den.aspects.macos.skim
+      den.aspects.ruby
     ];
 
     # Home Manager configuration for alberth
