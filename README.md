@@ -775,6 +775,32 @@ terminals), with `bootstrap_check_in ... Permission denied (1100)`. An empty end
 `nix` runs normally. The side effect is that Determinate no longer receives Nix crash reports from this directory.
 Outside direnv, prefix the command instead: `NIX_SENTRY_ENDPOINT= nix ...`.
 
+## Rust
+
+The `rust` aspect (`modules/packages/languages/rust.nix`) installs the toolchain through
+[rustup](https://rustup.rs) rather than a fixed nixpkgs `rustc`, so a project's `rust-toolchain.toml` picks its
+own channel, components and targets. rustup's proxies provide `cargo`, `rustc`, `clippy`, `rustfmt` and
+`rust-analyzer`; `~/.cargo/bin` is on `PATH` for anything installed with `cargo install`. It also installs:
+
+| Tool                                                               | Use                                                          |
+| ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| [cargo-edit](https://github.com/killercup/cargo-edit)              | `cargo upgrade` bumps dependency versions in `Cargo.toml`    |
+| [cargo-nextest](https://nexte.st)                                  | faster test runner                                           |
+| [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov)        | source-based code coverage                                   |
+| [cargo-audit](https://rustsec.org)                                 | checks dependencies against the RustSec advisory database    |
+| [cargo-shear](https://github.com/Boshen/cargo-shear)               | finds unused dependencies                                    |
+| [cargo-expand](https://github.com/dtolnay/cargo-expand)            | shows macro-expanded code                                    |
+| [bacon](https://dystroy.org/bacon)                                 | background checker that reruns on file changes               |
+| [taplo](https://taplo.tamasfe.dev)                                 | TOML formatter and language server, for `Cargo.toml`         |
+
+rustup keeps its toolchains in `~/.rustup`, outside Nix, so after the first switch install one and the
+component `cargo-llvm-cov` needs:
+
+```sh
+rustup default stable
+rustup component add llvm-tools-preview
+```
+
 ## Formatting
 
 The formatter is `nixfmt` (the RFC 166 style), also used to format the generated `flake.nix`:
