@@ -64,7 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
-│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python`, `ruby`, `rust`
+│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`), `ruby`, `rust`
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
@@ -762,6 +762,25 @@ through the host's `provides.<user>`. `magnus` does this for `alberth`:
 ```nix
 den.aspects.magnus.provides.alberth.includes = [ den.aspects.git.signing ];
 ```
+
+## Python
+
+The `python` aspect (`modules/packages/languages/python.nix`, included by `alberth`) installs nixpkgs' default
+`python3` for ad-hoc scripts and leaves per-project Python versions to uv. It also installs:
+
+| Tool                                                   | Use                                                                         |
+| ------------------------------------------------------ | --------------------------------------------------------------------------- |
+| [uv](https://docs.astral.sh/uv)                        | projects, lockfiles, virtualenvs, Python versions, `uv build`, `uv publish` |
+| [Ruff](https://docs.astral.sh/ruff)                    | linter and formatter (`ruff format` replaces Black)                         |
+| [basedpyright](https://docs.basedpyright.com)          | type checker and language server                                           |
+| [ty](https://docs.astral.sh/ty)                        | Astral's type checker and language server, still pre-1.0                    |
+
+uv and Ruff are set up through Home Manager's `programs.uv` and `programs.ruff`, so global settings go in their
+`settings` (`~/.config/uv/uv.toml`, `~/.config/ruff/ruff.toml`); a project's own config takes precedence. Tools a
+project pins, such as mypy or Black, belong in its dev dependencies (`uv add --dev mypy`) or run with `uvx`.
+
+uv downloads standalone Python builds, which are linked against a generic `/lib64` loader that NixOS doesn't
+have. On NixOS the aspect enables `programs.nix-ld`, which provides one, so those builds run.
 
 ## Ruby
 
