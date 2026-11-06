@@ -36,17 +36,28 @@ in
       den.aspects.alberth.scripts
       den.aspects.alberth.shellAliases
       den.aspects.alberth.ssh
+      den.aspects.c
       den.aspects.direnv
+      den.aspects.elixir
       den.aspects.github
+      den.aspects.go
       den.aspects.gpg
+      den.aspects.javascript
+      den.aspects.kotlin
+      den.aspects.lua
       den.aspects.macos.mas
       den.aspects.macos.setapp
       den.aspects.macos.skim
       den.aspects.macos.spamsieve
       den.aspects.macos.supaSideBar
+      den.aspects.ocaml
+      den.aspects.php
       den.aspects.python
       den.aspects.ruby
       den.aspects.rust
+      den.aspects.shellscript
+      den.aspects.swift
+      den.aspects.zig
     ];
 
     # Home Manager configuration for alberth
