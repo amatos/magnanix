@@ -46,6 +46,7 @@ in
       den.aspects.macos.skim
       den.aspects.rust
       den.aspects.ruby
+      den.aspects.python
     ];
 
     # Home Manager configuration for alberth
