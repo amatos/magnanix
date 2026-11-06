@@ -772,7 +772,7 @@ The `python` aspect (`modules/packages/languages/python.nix`, included by `alber
 | ------------------------------------------------------ | --------------------------------------------------------------------------- |
 | [uv](https://docs.astral.sh/uv)                        | projects, lockfiles, virtualenvs, Python versions, `uv build`, `uv publish` |
 | [Ruff](https://docs.astral.sh/ruff)                    | linter and formatter (`ruff format` replaces Black)                         |
-| [basedpyright](https://docs.basedpyright.com)          | type checker and language server                                           |
+| [basedpyright](https://docs.basedpyright.com)          | type checker and language server                                            |
 | [ty](https://docs.astral.sh/ty)                        | Astral's type checker and language server, still pre-1.0                    |
 
 uv and Ruff are set up through Home Manager's `programs.uv` and `programs.ruff`, so global settings go in their
