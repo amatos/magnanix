@@ -44,6 +44,7 @@ in
       den.aspects.macos.cleanShot
       den.aspects.macos.codePeek
       den.aspects.macos.contactsSync
+      den.aspects.macos.crossOver
       den.aspects.macos.crystalFetch
       den.aspects.macos.darkroom
       den.aspects.macos.dropover
