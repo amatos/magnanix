@@ -62,15 +62,11 @@
         };
       };
 
-    darwin = {
-      programs = {
-        _1password = {
-          enable = true;
-        };
-        _1password-gui = {
-          enable = true;
-        };
-      };
-    };
+    # On macOS, 1Password and its CLI come from Homebrew casks. The GUI must live
+    # in /Applications for browser integration and its code-signature checks.
+    darwin.homebrew.casks = [
+      "1password"
+      "1password-cli"
+    ];
   };
 }
