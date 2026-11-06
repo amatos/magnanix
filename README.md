@@ -64,6 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
+│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK), `python`, `ruby`, `rust`
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
