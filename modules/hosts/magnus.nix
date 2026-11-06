@@ -38,6 +38,7 @@ in
       den.aspects.macos.appleDeveloper
       den.aspects.macos.autoMounter
       den.aspects.macos.backgroundSwitcher
+      den.aspects.macos.battleNet
       den.aspects.macos.boardGames
       den.aspects.macos.bookShelves
       den.aspects.macos.broadcasts
@@ -55,6 +56,7 @@ in
       den.aspects.macos.iris
       den.aspects.macos.ivory
       den.aspects.macos.iwork
+      den.aspects.macos.kaleidoscope
       den.aspects.macos.languageTool
       den.aspects.macos.ledgerWallet
       den.aspects.macos.magnet
