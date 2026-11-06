@@ -2,7 +2,7 @@
 {
   den.aspects.rust = {
     homeManager =
-      { pkgs, ... }:
+      { lib, pkgs, ... }:
       {
         # Binaries installed with `cargo install` go here.
         home.sessionPath = [ "$HOME/.cargo/bin" ];
@@ -17,7 +17,12 @@
           # ── Cargo extensions ───────────────────────────────────────────────────
           cargo-edit # cargo upgrade — update dependency versions in Cargo.toml
           cargo-nextest # faster test runner
-          cargo-llvm-cov # source-based code coverage (needs llvm-tools-preview)
+          # Source-based code coverage (needs llvm-tools-preview). On macOS its
+          # integration tests segfault: they build coverage-instrumented binaries
+          # with nixpkgs' rustc inside the build sandbox. The tool itself builds
+          # fine and uses rustup's toolchain at runtime, so skip the tests there.
+          # Linux keeps the cached build. Drop this once nixpkgs fixes the tests.
+          (cargo-llvm-cov.overrideAttrs (lib.optionalAttrs stdenv.hostPlatform.isDarwin { doCheck = false; }))
           cargo-audit # check dependencies for known vulnerabilities
           cargo-shear # find unused dependencies
           cargo-expand # show macro-expanded code

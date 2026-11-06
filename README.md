@@ -822,6 +822,11 @@ rustup default stable
 rustup component add llvm-tools-preview
 ```
 
+On macOS, `cargo-llvm-cov` is built with its tests skipped (`doCheck = false`), so it builds locally instead of
+coming from the binary cache. Its integration tests build coverage-instrumented binaries with nixpkgs' `rustc`,
+and those segfault inside the macOS build sandbox. The tool itself is unaffected: at runtime it uses rustup's
+toolchain and `llvm-tools-preview`. Remove the override once nixpkgs fixes the tests.
+
 ## Formatting
 
 The formatter is `nixfmt` (the RFC 166 style), also used to format the generated `flake.nix`:
