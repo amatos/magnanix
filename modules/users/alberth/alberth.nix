@@ -58,6 +58,7 @@ in
       den.aspects.ruby
       den.aspects.rust
       den.aspects.shellscript
+      den.aspects.python
       den.aspects.swift
       den.aspects.zig
     ];
