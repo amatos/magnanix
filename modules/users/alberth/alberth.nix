@@ -45,6 +45,7 @@ in
       den.aspects.macos.spamsieve
       den.aspects.macos.skim
       den.aspects.rust
+      den.aspects.ruby
     ];
 
     # Home Manager configuration for alberth
