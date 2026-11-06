@@ -64,7 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
-│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust))
+│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust)), and `c`, `elixir`, `go`, `javascript`, `kotlin`, `lua`, `ocaml`, `php`, `shellscript`, `swift`, `zig` (all included by `alberth`; see [Other languages](#other-languages))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
@@ -846,6 +846,53 @@ fetching it from the binary cache. Its integration tests build coverage-instrume
 `rustc`, and those segfault (seen on aarch64-darwin and x86_64-linux). The tool itself is unaffected: at runtime
 it uses rustup's toolchain and `llvm-tools-preview`. Remove the override once nixpkgs fixes the tests (see
 [TODO](#todo)).
+
+## Other languages
+
+Each aspect in `modules/packages/languages/` installs a language's runtime or compiler, its language server and
+formatter through Home Manager. All of them are included by `alberth`.
+
+| Aspect        | Installs                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `c`           | clang-tools (clangd, clang-format, clang-tidy), CMake, Ninja; on NixOS also GCC and gdb                    |
+| `elixir`      | Erlang/OTP, Elixir and ElixirLS, all from one `beamPackages` set                                           |
+| `go`          | Go (`programs.go`), gopls, golangci-lint, Delve; `~/go/bin` is on `PATH`                                   |
+| `javascript`  | Node.js LTS (`programs.npm`), pnpm, Bun, Deno, TypeScript 5, typescript-language-server, Biome             |
+| `kotlin`      | kotlinc, kotlin-language-server, ktlint, all on JDK 25; includes `java` for `JAVA_HOME`, Gradle and Maven  |
+| `lua`         | LuaJIT (also as `lua`), LuaRocks, lua-language-server, StyLua                                              |
+| `ocaml`       | OCaml, dune, ocaml-lsp, ocamlformat, opam                                                                  |
+| `php`         | PHP, Composer, intelephense (unfree)                                                                       |
+| `shellscript` | ShellCheck, shfmt, bash-language-server                                                                    |
+| `swift`       | on NixOS: Swift, sourcekit-lsp, swift-format; nothing on macOS                                             |
+| `zig`         | Zig and zls, kept on the same release                                                                      |
+
+On macOS the C/C++ compiler, lldb and the whole Swift toolchain come from the Xcode Command Line Tools
+(`xcode-select --install`), which match the SDKs, so the `c` and `swift` aspects don't install them there.
+
+Global installs go to writable directories on `PATH`: `npm install -g` to `~/.npm` (the npm prefix set in
+`~/.npmrc`), `pnpm add -g` to `PNPM_HOME`, Bun and Deno to `~/.bun/bin` and `~/.deno/bin`, `go install` to
+`~/go/bin` and `composer global require` to `~/.config/composer/vendor/bin`.
+
+nixpkgs' default `typescript` is TypeScript 7, the native compiler, which no longer ships the `tsserver.js` that
+typescript-language-server falls back to when a project has no TypeScript in `node_modules`. The aspect installs
+`typescript_5` instead; projects that use TypeScript 7 get it from their own dependencies.
+
+The Nix OCaml (5.5.1), dune, ocaml-lsp and ocamlformat need no setup. They cover standard-library-only code and
+projects that get their dependencies from Nix (`ocamlPackages` in a flake or `nix develop`). Run `opam init` once
+only when a project:
+
+- declares its dependencies in `*.opam` files and expects `opam install . --deps-only`,
+- needs a library that isn't in nixpkgs' `ocamlPackages`, or
+- needs a compiler other than 5.5.1 (create a switch for it, e.g. `opam switch create 4.14.2`).
+
+opam is installed without shell integration, since `opam env` fails until `opam init` has run, so activate a switch
+with `eval $(opam env)`. If opam becomes a regular tool, set `programs.opam.enable = true` in the `ocaml` aspect
+instead (only once `~/.opam` exists), which runs `opam env` in every shell. The Nix ocaml-lsp only understands
+projects built with OCaml 5.5.1; in a switch with another compiler, install `ocaml-lsp-server` and `ocamlformat`
+into the switch (`opam install ocaml-lsp-server ocamlformat`) so the editor uses those.
+
+Neovim keeps its own copies of shfmt, StyLua and lua-language-server on its private `PATH` (see [Neovim](#neovim)),
+so it doesn't depend on the `shellscript` and `lua` aspects.
 
 ## Formatting
 
