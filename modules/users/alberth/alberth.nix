@@ -47,8 +47,6 @@ in
       den.aspects.lua
       den.aspects.macos.mas
       den.aspects.macos.setapp
-      den.aspects.macos.supaSideBar
-      den.aspects.macos.spamsieve
       den.aspects.macos.skim
       den.aspects.macos.spamsieve
       den.aspects.macos.supaSideBar
