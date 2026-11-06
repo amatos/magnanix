@@ -64,7 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
-│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`), `ruby`, `rust`
+│   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
@@ -763,6 +763,18 @@ through the host's `provides.<user>`. `magnus` does this for `alberth`:
 den.aspects.magnus.provides.alberth.includes = [ den.aspects.git.signing ];
 ```
 
+## Direnv
+
+`.envrc` contains `use flake`, so with [direnv](https://direnv.net) the dev shell loads automatically in this
+directory (run `direnv allow` once). The `direnv` feature (`modules/packages/direnv.nix`, included by `alberth`)
+installs direnv through Home Manager with nix-direnv and shell integration enabled.
+
+`.envrc` also sets `NIX_SENTRY_ENDPOINT=""` before `use flake`. Determinate Nix starts a Crashpad-based Sentry
+crash reporter, which aborts on macOS inside sandboxes that deny Mach service registration (for example agent
+terminals), with `bootstrap_check_in ... Permission denied (1100)`. An empty endpoint disables the reporter, so
+`nix` runs normally. The side effect is that Determinate no longer receives Nix crash reports from this directory.
+Outside direnv, prefix the command instead: `NIX_SENTRY_ENDPOINT= nix ...`.
+
 ## Python
 
 The `python` aspect (`modules/packages/languages/python.nix`, included by `alberth`) installs nixpkgs' default
@@ -784,8 +796,8 @@ have. On NixOS the aspect enables `programs.nix-ld`, which provides one, so thos
 
 ## Ruby
 
-The `ruby` feature (`modules/packages/languages/ruby.nix`) installs Ruby 4.0 (`ruby_4_0`) through Home Manager.
-Ruby 4 ships gem, Bundler, irb, rake, debug and rbs. The feature also installs:
+The `ruby` aspect (`modules/packages/languages/ruby.nix`, included by `alberth`) installs Ruby 4.0 (`ruby_4_0`)
+through Home Manager. Ruby 4 ships gem, Bundler, irb, rake, debug and rbs. The aspect also installs:
 
 | Tool                                                      | Use                                                                                     |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -802,18 +814,6 @@ that lists either gem in its `Gemfile` uses its own copy through ruby-lsp.
 
 mise is activated in every shell but sets no global Ruby, so the Nix Ruby is used outside projects that pin a
 version. In a project, `mise use ruby@3.3` writes `mise.toml` and installs that version.
-
-## Direnv
-
-`.envrc` contains `use flake`, so with [direnv](https://direnv.net) the dev shell loads automatically in this
-directory (run `direnv allow` once). The `direnv` feature (`modules/packages/direnv.nix`, included by `alberth`)
-installs direnv through Home Manager with nix-direnv and shell integration enabled.
-
-`.envrc` also sets `NIX_SENTRY_ENDPOINT=""` before `use flake`. Determinate Nix starts a Crashpad-based Sentry
-crash reporter, which aborts on macOS inside sandboxes that deny Mach service registration (for example agent
-terminals), with `bootstrap_check_in ... Permission denied (1100)`. An empty endpoint disables the reporter, so
-`nix` runs normally. The side effect is that Determinate no longer receives Nix crash reports from this directory.
-Outside direnv, prefix the command instead: `NIX_SENTRY_ENDPOINT= nix ...`.
 
 ## Rust
 
