@@ -822,10 +822,11 @@ rustup default stable
 rustup component add llvm-tools-preview
 ```
 
-On macOS, `cargo-llvm-cov` is built with its tests skipped (`doCheck = false`), so it builds locally instead of
-coming from the binary cache. Its integration tests build coverage-instrumented binaries with nixpkgs' `rustc`,
-and those segfault inside the macOS build sandbox. The tool itself is unaffected: at runtime it uses rustup's
-toolchain and `llvm-tools-preview`. Remove the override once nixpkgs fixes the tests.
+`cargo-llvm-cov` is built with its tests skipped (`doCheck = false`), so every host builds it locally instead of
+fetching it from the binary cache. Its integration tests build coverage-instrumented binaries with nixpkgs'
+`rustc`, and those segfault (seen on aarch64-darwin and x86_64-linux). The tool itself is unaffected: at runtime
+it uses rustup's toolchain and `llvm-tools-preview`. Remove the override once nixpkgs fixes the tests (see
+[TODO](#todo)).
 
 ## Formatting
 
@@ -851,6 +852,11 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
   evaluation on the missing root filesystem above.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
   `nix-darwin-settings.nix` that set them was never wired in and has been removed.
+- Remove the `doCheck = false` override on `cargo-llvm-cov` in `modules/packages/languages/rust.nix` (see
+  [Rust](#rust)) once nixpkgs fixes its tests. After updating inputs, check with
+  `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
+  the pinned nixpkgs, tests included, so success means the override can go. The tests fail on both macOS and
+  Linux, so one host is enough.
 
 ## License
 
