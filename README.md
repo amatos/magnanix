@@ -64,6 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
+│   ├── languages/             one aspect per language with its runtime, tools, LSP and formatter: `python`, `ruby` (see [Ruby](#ruby)), `rust`
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
@@ -761,6 +762,27 @@ through the host's `provides.<user>`. `magnus` does this for `alberth`:
 ```nix
 den.aspects.magnus.provides.alberth.includes = [ den.aspects.git.signing ];
 ```
+
+## Ruby
+
+The `ruby` feature (`modules/packages/languages/ruby.nix`) installs Ruby 4.0 (`ruby_4_0`) through Home Manager.
+Ruby 4 ships gem, Bundler, irb, rake, debug and rbs. The feature also installs:
+
+| Tool                                                      | Use                                                                                     |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [ruby-lsp](https://shopify.github.io/ruby-lsp)            | language server, built against Ruby 4                                                   |
+| [RuboCop](https://rubocop.org)                            | linter and formatter                                                                    |
+| [Standard](https://github.com/standardrb/standard)        | RuboCop with a fixed, zero-config style (`standardrb`)                                  |
+| [bundler-audit](https://github.com/rubysec/bundler-audit) | `bundle-audit check --update` checks `Gemfile.lock` for gems with known vulnerabilities |
+| [mise](https://mise.jdx.dev)                              | per-project Ruby versions from `.ruby-version` or `mise.toml`                           |
+
+The Nix Ruby's gem directory is in the read-only store, so `gem install` and `bundle install` fall back to
+`~/.local/share/gem/ruby/4.0.0`, whose `bin` is on `PATH`. RuboCop and Standard are built on nixpkgs' default Ruby
+(3.4): their dependency unicode-emoji 4.1.0 declares `ruby < 4.0`, so the Ruby 4 builds fail at startup. A project
+that lists either gem in its `Gemfile` uses its own copy through ruby-lsp.
+
+mise is activated in every shell but sets no global Ruby, so the Nix Ruby is used outside projects that pin a
+version. In a project, `mise use ruby@3.3` writes `mise.toml` and installs that version.
 
 ## Direnv
 
