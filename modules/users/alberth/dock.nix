@@ -180,8 +180,8 @@
             #   - Homebrew casks and manual installs: /Applications/
             #   - User apps: ~/Applications/
             #
-            # Here: Orion comes from Home Manager (copyApps); Helium, Zed and Claude are
-            # Homebrew casks.
+            # Here: Orion comes from Home Manager (copyApps); Helium, Zed, Delta and
+            # Claude are Homebrew casks.
 
             # ========================================================================
             # Left side of Dock (before separator) - Main apps
@@ -211,6 +211,7 @@
               "/Applications/iTerm.app"
               "${home}/Applications/Home Manager Apps/Ghostty.app"
               "/Applications/Zed.app"
+              "/Applications/Delta.app"
               "/Applications/Claude.app"
             ];
 

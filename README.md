@@ -208,8 +208,8 @@ effect or fail an assertion. Use `determinateNix.customSettings` for Nix setting
 - `screencapture` creates its target directory (`~/Pictures/Screenshots/unsorted`) in a `postActivation` script,
   because nix-darwin doesn't and macOS ignores a missing location.
 - The Dock's `persistent-apps` list is declarative: manual Dock changes are overwritten on the next switch.
-  Orion comes from Home Manager (`~/Applications/Home Manager Apps`); Helium, Zed and Claude are Homebrew casks;
-  iTerm is installed by hand.
+  Orion comes from Home Manager (`~/Applications/Home Manager Apps`); Helium, Zed, Delta and Claude are Homebrew
+  casks; iTerm is installed by hand.
 - New files must be tracked by git (`git add`) before a plain `.#` flake reference can see them.
 
 ### OrbStack
