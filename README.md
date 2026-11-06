@@ -303,8 +303,9 @@ nix develop --command apply-configuration
 Each host also has an `nh` wrapper, for example `nix run .#magnus -- switch`.
 
 `alberth`'s `deploy-magnanix` alias (`modules/users/alberth/shell-aliases.nix`) deploys the checkout at
-`magnanix.repoDir`: it runs `git pull --ff-only` there, then the current host's `nh` wrapper with `switch`.
-Deploy from `main` after CI passes; the alias pulls whichever branch is checked out.
+`magnanix.repoDir`: it checks out `main` there, runs `git pull --ff-only`, then the current host's `nh` wrapper
+with `switch`, and checks the original branch back out afterwards (even if the deploy fails). It refuses to run
+from another branch with uncommitted changes. Deploy after CI passes on `main`.
 
 To build without activating:
 
