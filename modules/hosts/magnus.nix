@@ -31,6 +31,7 @@ in
       den.aspects.claude
       den.aspects.fonts
       den.aspects.ghostty
+      den.aspects.java
       den.aspects.macos._1password
       den.aspects.macos.acorn
       den.aspects.macos.amphetamine
