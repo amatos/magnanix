@@ -2,7 +2,7 @@
 
 ## Status: ✅ COMPLETED
 
-**All implementation phases (1–5) are complete and live on main branch.** This document records the planning and decision-making process for the CI/CD infrastructure. User-facing setup instructions are in [TAILSCALE_SETUP.md](TAILSCALE_SETUP.md).
+**All implementation phases (1–5) are complete and live on main branch.** This document records the planning and decision-making process for the CI/CD infrastructure. User-facing setup instructions are in [TAILSCALE_SETUP.md](./TAILSCALE_SETUP.md).
 
 ---
 
@@ -11,6 +11,7 @@
 This plan establishes a GitHub Actions workflow chain that builds the flake for **x86_64-linux, aarch64-linux, and aarch64-darwin**, caches results in the self-hosted Attic server on muninn, and allows your machines to substitute pre-built binaries instead of building from scratch. The workflow integrates with your existing Tailscale + Attic setup already established in `.github/workflows/update-flake-lock.yml`, extends it to perform actual builds, and navigates the cost/availability tradeoffs of GitHub's hosted runners per platform.
 
 **Implementation Status:**
+
 - ✅ Phase 1: Infrastructure Setup (Tailscale OIDC, GitHub secrets, ACL)
 - ✅ Phase 2: Workflow Creation (`.github/workflows/build.yml`)
 - ✅ Phase 3: Testing & Validation (all platforms working)
@@ -22,16 +23,19 @@ This plan establishes a GitHub Actions workflow chain that builds the flake for 
 ## What Actually Got Built
 
 ### Workflows
+
 - **`.github/workflows/build.yml`:** Multi-platform build job triggered on push to main and all PRs. Builds `magnus`, `darwintron` (aarch64-darwin), `muninn` (x86_64-linux), and `devShells.aarch64-linux.default` (aarch64-linux). Pushes results to Attic cache.
 - **`.github/workflows/update-flake-lock.yml`:** Refactored to match `build.yml` structure; consistent Tailscale OIDC, Attic authentication, and error handling.
 
 ### Infrastructure
+
 - **Tailscale OIDC Credential:** Subject set to wildcard `repo:amatos:367718/magnanix@1435869087:*` to support both main-branch pushes and all PR checks.
 - **GitHub Secrets:** `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE`, `ATTIC_TOKEN` verified and working.
 - **Attic Cache:** CI token created on muninn with 1-year TTL; push/pull permissions scoped to `magnanix` cache.
 - **ACL Rule:** `tag:ci → muninn:8080` in effect.
 
 ### Test Results
+
 - ✅ **ubuntu-latest (x86_64-linux):** builds `muninn` config in ~10–20 min.
 - ✅ **ubuntu-24.04-arm (aarch64-linux):** builds dev shell in ~5–10 min.
 - ⚠️ **macos-15 (aarch64-darwin):** builds complete but occasionally timeout due to GitHub runner capacity (not a code issue).
@@ -54,20 +58,22 @@ The sections below preserve the **decision-making process, alternatives consider
 
 ---
 
-
 ### Build Matrix by Platform
 
 **aarch64-darwin (magnus, darwintron):**
+
 - `darwinConfigurations.magnus` (system closure)
 - `darwinConfigurations.darwintron` (test VM closure)
 - `checks.aarch64-darwin.check-flake-file` (formality check)
 
 **x86_64-linux (muninn, nixostron):**
+
 - `nixosConfigurations.muninn` (system closure; already on muninn, but will self-push)
 - `nixosConfigurations.nixostron` (not buildable yet per TODO in README; propose strategy below)
 - `checks.x86_64-linux.check-flake-file` (if created, analogous to darwin)
 
 **aarch64-linux (no host yet):**
+
 - Recommend building: `devShells.aarch64-linux.default` + `checks.aarch64-linux` only
 - Rationale: No aarch64-linux host in your fleet yet; dev shells are lightweight, portable, and useful for CI/sandbox testing. Postpone full NixOS system builds for aarch64-linux until you add that host to your inventory. `checks` provide validation without full system closures.
 
@@ -83,7 +89,7 @@ strategy:
     include:
       - system: aarch64-darwin
         attr: darwinConfigurations.magnus
-        runner: macos-latest  # or macos-15
+        runner: macos-latest # or macos-15
       - system: aarch64-darwin
         attr: darwinConfigurations.darwintron
         runner: macos-latest
@@ -92,10 +98,11 @@ strategy:
         runner: ubuntu-latest
       - system: aarch64-linux
         attr: devShells.aarch64-linux.default
-        runner: ubuntu-24.04-arm  # (free for public repos)
+        runner: ubuntu-24.04-arm # (free for public repos)
 ```
 
 **Why not `nix-eval-jobs` or `nix-fast-build`?**
+
 - **`nix-eval-jobs`**: Excellent for discovering all checks/packages in a large flake, but requires parallel eval workers and higher memory. Marginal win for your small, curated set of 4–5 targets.
 - **`nix flake check`**: Only builds `.#checks.*` per system. Does not build configurations.
 - **Static matrix**: Simple, auditable, no hidden derivations, and transparent cost. You control exactly what CI pays for.
@@ -112,27 +119,31 @@ on:
     branches:
       - main
   pull_request:
-  workflow_dispatch:  # manual trigger for testing
+  workflow_dispatch: # manual trigger for testing
 ```
 
 ### PR Caching Interaction
 
 **For PRs from the main repo (not forks):**
+
 - Build and push to Attic cache ✓
 - Token is safe: GitHub provides a scoped OIDC token per workflow run; Tailscale/Attic ACL limits `tag:ci` to `muninn:8080` only.
 - PR authors and reviewers benefit from fast substitution.
 
 **For PRs from forks:**
+
 - Build runs, but **do not push to Attic**.
 - Rationale: Fork runner secrets are untrusted; OIDC token is still scoped by Tailscale ACL, but it's safer to cache only on main-repo pushes.
 - Implementation: Add `if: github.event_name == 'push'` to the Attic push step.
 
 **For the weekly `update-flake-lock` PR:**
+
 - Runs under the same rules as any PR from the main repo.
 - The checklist in the PR body ("CI builds magnus and darwintron") will be satisfied by this workflow.
 
 **Build Cancellation (CCI-specific):**
 Add concurrency group to cancel stale builds on new push:
+
 ```yaml
 concurrency:
   group: build-${{ github.ref }}
@@ -145,11 +156,11 @@ concurrency:
 
 ### Runners Per Platform
 
-| Platform       | Runner Label               | Availability          | Minutes Multiplier | Notes                                                                                                    |
-|---|---|---|---|---|
-| **x86_64-linux** | `ubuntu-latest` or `ubuntu-24.04` | Public + private (free) | 1×                 | 4 vCPU, 16 GB RAM, 14 GB SSD. muninn closure builds in ~10–20 min (including Tailscale join). Sufficient. |
-| **aarch64-linux** | `ubuntu-24.04-arm`         | Public (free); private (paid, Teams/Enterprise) | 1× (Graviton)      | Free for public repos (your repo is public). 4 vCPU Graviton Neoverse N2, 16 GB RAM. Dev shell builds ~5–10 min. |
-| **aarch64-darwin** | `macos-latest` or `macos-15` | Public + private       | 1× (public repos)  | **Public repo: 1× multiplier, NO 10× cost.** 8 vCPU Apple Silicon, 24 GB RAM. System closures large (~5–15 GB). Builds: 30–60 min. Free for public repos. |
+| Platform           | Runner Label                      | Availability                                    | Minutes Multiplier | Notes                                                                                                                                                     |
+| ------------------ | --------------------------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **x86_64-linux**   | `ubuntu-latest` or `ubuntu-24.04` | Public + private (free)                         | 1×                 | 4 vCPU, 16 GB RAM, 14 GB SSD. muninn closure builds in ~10–20 min (including Tailscale join). Sufficient.                                                 |
+| **aarch64-linux**  | `ubuntu-24.04-arm`                | Public (free); private (paid, Teams/Enterprise) | 1× (Graviton)      | Free for public repos (your repo is public). 4 vCPU Graviton Neoverse N2, 16 GB RAM. Dev shell builds ~5–10 min.                                          |
+| **aarch64-darwin** | `macos-latest` or `macos-15`      | Public + private                                | 1× (public repos)  | **Public repo: 1× multiplier, NO 10× cost.** 8 vCPU Apple Silicon, 24 GB RAM. System closures large (~5–15 GB). Builds: 30–60 min. Free for public repos. |
 
 ### Disk Space Concerns
 
@@ -218,6 +229,7 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 ### Option A: Self-Hosted Runners on muninn + binfmt/QEMU
 
 **Pros:**
+
 - ✅ No GitHub runner minutes billed (muninn already runs 24/7).
 - ✅ Full control over builder machine; direct SSH access.
 - ✅ Can build x86_64-linux natively on muninn; use binfmt_misc + QEMU to cross-build aarch64-linux and aarch64-darwin.
@@ -225,6 +237,7 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 - ✅ Persistent `/nix/store` between builds; high cache hit rate.
 
 **Cons:**
+
 - ⚠️ Requires setting up GitHub self-hosted runner on muninn (additional systemd service).
 - ⚠️ Darwin binaries (aarch64-darwin) built via QEMU are slow (~2–3× slower than native).
 - ⚠️ No automatic scaling; single machine is bottleneck if multiple PRs arrive.
@@ -237,6 +250,7 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 ### Option B: GitHub-Hosted Runners (Proposed Plan)
 
 **Pros:**
+
 - ✅ Fully managed; no additional infrastructure.
 - ✅ Native aarch64-linux builds via `ubuntu-24.04-arm` (Graviton 100, fast).
 - ✅ Native aarch64-darwin via `macos-latest` (Apple Silicon).
@@ -245,6 +259,7 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 - ✅ **Public repo = NO cost multipliers. macOS is free. All runners free.**
 
 **Cons:**
+
 - ⚠️ Disk space limits (darwin closures may overflow 14 GB SSD).
 - ⚠️ Attic push over WAN (slower than LAN; still reasonable).
 
@@ -255,12 +270,14 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 ### Option C: Determinate Systems Magic Nix Cache
 
 **Pros:**
+
 - ✅ Zero-config GitHub Actions cache (no Attic server setup).
 - ✅ Free for GitHub Actions (backed by GitHub's built-in cache).
 - ✅ Works on forks (safe cache isolation).
 - ✅ Integrates seamlessly with `determinate-nix-action`.
 
 **Cons:**
+
 - ⚠️ Cache only visible in CI; cannot be pulled from your personal machines (muninn, magnus) outside CI.
 - ⚠️ 10 GB per-repo cap on GitHub Actions cache; will evict old builds if exceeded.
 - ⚠️ No persistent store between runs; every new build starts from scratch on cache miss.
@@ -273,11 +290,13 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 ### Option D: FlakeHub Cache (Determinate Systems paid)
 
 **Pros:**
+
 - ✅ Fine-grained access control per flake.
 - ✅ OIDC auth (no long-lived secrets).
 - ✅ Works on GitHub Actions and local machines.
 
 **Cons:**
+
 - ⚠️ Paid service ($$$; no public pricing, but assume $20–100/mo).
 - ⚠️ Overkill for single-person/team private repo.
 - ⚠️ Adds external dependency (not self-hosted).
@@ -290,6 +309,7 @@ sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
 ### **Recommendation: Option B (GitHub-Hosted Runners)**
 
 **Start with GitHub-hosted runners for simplicity and auto-scaling—all free because the repo is public:**
+
 - x86_64-linux: `ubuntu-latest` (free, fast).
 - aarch64-linux: `ubuntu-24.04-arm` (free, native Graviton).
 - aarch64-darwin: `macos-latest` (free, no 10× multiplier for public repos).
@@ -316,7 +336,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write  # Required for Tailscale Workload Identity Federation
+  id-token: write # Required for Tailscale Workload Identity Federation
 
 concurrency:
   group: build-${{ github.ref }}
@@ -349,12 +369,12 @@ jobs:
             timeout_minutes: 30
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: DeterminateSystems/determinate-nix-action@v3
-      
+
       # Join Tailscale via OIDC (ephemeral, scoped to tag:ci)
       - name: Join Tailscale
         uses: tailscale/github-action@v4
@@ -362,27 +382,27 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
-      
+
       # Verify connectivity to muninn
       - name: Verify Tailscale connectivity to muninn
         run: |
           tailscale ping muninn.ts.matos.cc || echo "Warning: muninn not reachable; will attempt anyway"
-      
+
       # Install attic-client via nix
       - name: Install attic-client
         run: |
           nix profile install nixpkgs#attic-client
-      
+
       # Log in to Attic cache
       - name: Log in to Attic cache
         run: |
           attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
-      
+
       # Configure Nix to use Attic cache
       - name: Configure Attic as Nix substituter
         run: |
           attic use magnanix
-      
+
       # Build the flake output and push to cache
       - name: Build ${{ matrix.attr }} for ${{ matrix.system }}
         run: |
@@ -392,19 +412,19 @@ jobs:
             WATCH_PID=$!
             echo "Started attic watch-store (PID: $WATCH_PID)"
           fi
-          
+
           # Build the attribute and capture output path
           echo "Building .#${{ matrix.attr }}..."
           BUILD_OUTPUT=$(nix build ".#${{ matrix.attr }}" --json | jq -r '.[] | .outputs.out // .outPath')
           echo "Build output: $BUILD_OUTPUT"
           echo "BUILD_OUTPUT=$BUILD_OUTPUT" >> $GITHUB_ENV
-          
+
           # Wait for watch-store to flush
           if [ -n "${WATCH_PID:-}" ]; then
             sleep 2
             kill $WATCH_PID 2>/dev/null || true
           fi
-      
+
       # Explicit push to ensure all paths reach cache
       - name: Push to Attic cache
         if: always() && env.BUILD_OUTPUT
@@ -414,7 +434,7 @@ jobs:
             attic push magnanix "$BUILD_OUTPUT"
             echo "✓ Push complete"
           fi
-      
+
       # Push to cache only on main branch (not PR forks)
       - name: Confirm cache population (main branch only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && always() && env.BUILD_OUTPUT
@@ -477,11 +497,11 @@ jobs:
 
 ### GitHub Secrets
 
-| Secret Name       | Status  | Action                                                  |
-|---|---|---|
-| `TS_OAUTH_CLIENT_ID` | ✅ Exists | Verify still valid in Tailscale Admin Console.         |
-| `TS_AUDIENCE`    | ✅ Exists | Should be `https://api.tailscale.com` (verify).        |
-| `ATTIC_TOKEN`    | ⚠️ New | Create in Phase 1; generate on muninn with `atticd-atticadm make-token`. |
+| Secret Name          | Status    | Action                                                                   |
+| -------------------- | --------- | ------------------------------------------------------------------------ |
+| `TS_OAUTH_CLIENT_ID` | ✅ Exists | Verify still valid in Tailscale Admin Console.                           |
+| `TS_AUDIENCE`        | ✅ Exists | Should be `https://api.tailscale.com` (verify).                          |
+| `ATTIC_TOKEN`        | ⚠️ New    | Create in Phase 1; generate on muninn with `atticd-atticadm make-token`. |
 
 ### Tailscale ACL
 
@@ -507,24 +527,28 @@ Verify rule exists (should already be there from `update-flake-lock.yml`):
 ## 9. Rollout Plan
 
 ### Week 1: Foundation
+
 1. Generate ATTIC_TOKEN on muninn.
 2. Add token to GitHub secrets.
 3. Create `.github/workflows/build.yml`.
 4. Push to test branch; verify workflow structure (no actual builds yet).
 
 ### Week 2: Testing
+
 1. Run workflow on test branch with `workflow_dispatch` trigger.
 2. Monitor first build; fix any connectivity or configuration issues.
 3. Verify cache contents on muninn.
 4. Test substitution from local machine via Tailscale.
 
 ### Week 3: Integration
+
 1. Update `.github/workflows/update-flake-lock.yml` checklist.
 2. Merge build.yml to main.
 3. Trigger weekly flake-lock update; verify CI builds automatically.
 4. Confirm checklist items pass in the PR.
 
 ### Ongoing
+
 1. Monitor macOS runner disk space (set `--option max-free-disk-space` if needed).
 2. Reminder: ATTIC_TOKEN expires in 1 year (set calendar reminder to regenerate before expiry).
 3. Periodically check cache hit rate on muninn (`attic cache info magnanix`).
@@ -534,16 +558,19 @@ Verify rule exists (should already be there from `update-flake-lock.yml`):
 ## 10. Risks & Open Questions
 
 ### Resolved
+
 - ✅ **Public repo cost:** Confirmed free macOS runners (no 10× multiplier).
 - ✅ **Secrets on fork PRs:** OIDC token scoped by Tailscale ACL; push only on main.
 - ✅ **Secrets during eval:** Confirmed sops-encrypted secrets are decrypted at activation, not during eval.
 
 ### Monitoring
+
 - ⚠️ **Disk space on macOS runners:** Darwin closures are large; add `--option max-free-disk-space` if builds fail with "out of disk".
 - ⚠️ **ATTIC_TOKEN expiry:** Set a calendar reminder to regenerate token 1 month before expiry.
 - ⚠️ **Tailscale network latency:** If Attic pushes are slow, consider enabling upstream filter on muninn Attic config.
 
 ### Future Enhancements
+
 - 🔄 **Flake update PR auto-merge:** Once CI is stable, configure auto-merge for flake-lock PRs that pass checks.
 - 🔄 **Self-hosted muninn runner:** If GitHub runner costs or performance become an issue, migrate aarch64-darwin builds to self-hosted runner on muninn (trade speed for cost).
 - 🔄 **aarch64-linux system builds:** Once you provision aarch64-linux host, update workflow to build full system closure instead of just dev shell.
@@ -553,27 +580,32 @@ Verify rule exists (should already be there from `update-flake-lock.yml`):
 ## 11. Quick Reference Commands
 
 ### Token Generation (on muninn)
+
 ```bash
 sudo atticd-atticadm make-token --sub ci-github --validity "1y" \
   --pull magnanix --push magnanix
 ```
 
 ### Verify Cache Contents (on muninn)
+
 ```bash
 attic cache info magnanix
 ```
 
 ### Test Tailscale Connectivity (from any Tailscale-joined machine)
+
 ```bash
 tailscale ping muninn.ts.matos.cc
 ```
 
 ### Test Attic Substituter (from any Tailscale-joined machine)
+
 ```bash
 nix store ping http://muninn.ts.matos.cc:8080
 ```
 
 ### Local Flake Evaluation
+
 ```bash
 nix flake show
 nix eval ".#darwinConfigurations" --json | jq 'keys'
@@ -585,6 +617,7 @@ nix eval ".#nixosConfigurations" --json | jq 'keys'
 ## Summary
 
 **This plan leverages GitHub's free runners for public repos to establish a zero-cost CI/CD pipeline that:**
+
 - Builds configurations for aarch64-darwin (magnus, darwintron) and x86_64-linux (muninn).
 - Builds dev shells for aarch64-linux (deferred full system builds until host exists).
 - Pushes all outputs to the self-hosted Attic cache on muninn.
