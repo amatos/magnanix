@@ -777,10 +777,10 @@ Outside direnv, prefix the command instead: `NIX_SENTRY_ENDPOINT= nix ...`.
 
 ## Rust
 
-The `rust` aspect (`modules/packages/languages/rust.nix`) installs the toolchain through
-[rustup](https://rustup.rs) rather than a fixed nixpkgs `rustc`, so a project's `rust-toolchain.toml` picks its
-own channel, components and targets. rustup's proxies provide `cargo`, `rustc`, `clippy`, `rustfmt` and
-`rust-analyzer`; `~/.cargo/bin` is on `PATH` for anything installed with `cargo install`. It also installs:
+The `rust` aspect (`modules/packages/languages/rust.nix`, included by `alberth`) installs the toolchain
+through [rustup](https://rustup.rs) rather than a fixed nixpkgs `rustc`, so a project's `rust-toolchain.toml`
+picks its own channel, components and targets. rustup's proxies provide `cargo`, `rustc`, `clippy`, `rustfmt`
+and `rust-analyzer`; `~/.cargo/bin` is on `PATH` for anything installed with `cargo install`. It also installs:
 
 | Tool                                                               | Use                                                          |
 | ------------------------------------------------------------------ | ------------------------------------------------------------ |
