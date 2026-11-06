@@ -98,6 +98,9 @@ in
     };
   };
 
-  # alberth is the primary user on magnus.
-  den.aspects.magnus.provides.alberth.includes = [ den.batteries.primary-user ];
+  # alberth is the primary user on magnus, and signs commits with the GPG key here.
+  den.aspects.magnus.provides.alberth.includes = [
+    den.batteries.primary-user
+    den.aspects.git.signing
+  ];
 }

@@ -30,7 +30,6 @@
           # ── Viewing files ──────────────────────────────────────────────────────
           bat # cat with syntax highlighting (used by fzf-tab previews)
           eza # ls with git status and icons (used by fzf-tab previews)
-          delta # syntax-highlighting diff pager
           glow # render Markdown in the terminal
 
           # ── Structured data and text ───────────────────────────────────────────

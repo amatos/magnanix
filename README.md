@@ -78,6 +78,7 @@ modules/
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts, all from nixpkgs (Home Manager); see [Fonts](#fonts)
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
+│   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick
 │   ├── magnet.nix             Magnet window manager, from the App Store (macOS)
@@ -134,7 +135,7 @@ where something includes them. An aspect's name doesn't have to match its path (
 [macOS defaults](#macos-defaults) under `darwin.*`, whose group name already says so. There are three places to
 include one:
 
-- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `imagemagick`,
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `git`, `imagemagick`,
   `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
   `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
@@ -165,10 +166,10 @@ A user's aspect carries a `meta` attribute set. It is defined in a `let` binding
 | Attribute        | Purpose                                                                               |
 | ---------------- | ------------------------------------------------------------------------------------- |
 | `username`       | the account name                                                                      |
-| `fullName`       | display name for the OS account                                                       |
-| `email`          | primary email address                                                                 |
+| `fullName`       | display name for the OS account and git's `user.name`                                 |
+| `email`          | primary email address and git's `user.email`                                          |
 | `authorizedKeys` | SSH public keys allowed to log in (all hosts)                                         |
-| `gpgKey`         | long GPG key ID; sets `default-key` (optional)                                        |
+| `gpgKey`         | long GPG key ID; sets `default-key` and git's signing key (optional)                  |
 | `gpgFingerprint` | full 40-character fingerprint of the key                                              |
 | `gpgPublicKey`   | path to the exported public key (`.pub.asc`); imported with ultimate trust (optional) |
 
@@ -728,6 +729,38 @@ Home Manager module, and sets `EDITOR=nvim`. `vi`, `vim` and `vimdiff` run Neovi
   `background` Neovim detects from the terminal at startup. Everyone else, and hosts without the checkout, get the
   free Dracula theme. Neovim doesn't add itself to `draculaPro.usedBy`, so it never triggers the clone, which keeps
   headless hosts like muninn from trying. Clone the checkout there by hand to get Dracula PRO in Neovim.
+
+## Git
+
+The `git` feature (`modules/packages/git.nix`, included by `base`) configures git through Home Manager for every
+user, taking `user.name` and `user.email` from the user's [metadata](#user-metadata). Besides git itself it
+installs:
+
+| Tool                                                  | Use                                                                                                   |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [git-lfs](https://git-lfs.com)                        | large files stored as pointers                                                                        |
+| [delta](https://github.com/dandavison/delta)          | pager for `diff`, `log`, `show`, `blame` and `add -p`, with line numbers (`n`/`N` jump between files) |
+| [difftastic](https://difftastic.wilfred.me.uk)        | syntax-aware diffs on demand: `git difftool`                                                          |
+| [mergiraf](https://mergiraf.org)                      | syntax-aware merge driver; falls back to line-based merging when unsure                               |
+| [lazygit](https://github.com/jesseduffield/lazygit)   | terminal UI for staging, rebasing and history, using delta for diffs                                  |
+| [git-absorb](https://github.com/tummychow/git-absorb) | `git absorb` turns staged changes into `fixup!` commits for the right earlier commits                 |
+| [git-extras](https://github.com/tj/git-extras)        | extra subcommands (`git summary`, `git undo`, ...); the zsh plugin adds completions                   |
+
+Defaults worth knowing: new repositories start on `main`; `git push` sets the upstream on first push; `fetch`
+prunes deleted branches and tags; `rebase` auto-stashes, applies `fixup!` commits and moves stacked branches
+(`updateRefs`); `rerere` remembers conflict resolutions; diffs use the histogram algorithm. `merge.conflictStyle`
+is `diff3` because mergiraf requires it. Home Manager won't enable delta's and difftastic's git integrations
+together, so difftastic is wired up by hand as `diff.tool`. `pull` is left at git's default.
+
+### Commit signing
+
+Signing is off by default, since a GPG key on a YubiKey isn't available on every host. `den.aspects.git.signing`
+signs commits and tags with the user's `meta.gpgKey`. Include it for a user on the hosts where that key is usable,
+through the host's `provides.<user>`. `magnus` does this for `alberth`:
+
+```nix
+den.aspects.magnus.provides.alberth.includes = [ den.aspects.git.signing ];
+```
 
 ## Direnv
 
