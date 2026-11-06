@@ -41,12 +41,12 @@ in
       den.aspects.gpg
       den.aspects.macos.mas
       den.aspects.macos.setapp
-      den.aspects.macos.supaSideBar
-      den.aspects.macos.spamsieve
       den.aspects.macos.skim
-      den.aspects.rust
-      den.aspects.ruby
+      den.aspects.macos.spamsieve
+      den.aspects.macos.supaSideBar
       den.aspects.python
+      den.aspects.ruby
+      den.aspects.rust
     ];
 
     # Home Manager configuration for alberth
