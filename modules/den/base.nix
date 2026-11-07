@@ -26,6 +26,7 @@
       den.aspects.sudo
       den.aspects.systemdBoot # NixOS-only: defines just the `nixos` class
       den.aspects.tui.atuin
+      den.aspects.tui.fastfetch
       den.aspects.tui.tealdeer
       den.aspects.tui.trash
       den.aspects.tui.yazi
