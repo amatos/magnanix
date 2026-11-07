@@ -64,7 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
-│   ├── fastfetch/             fastfetch (Home Manager) and its config, behind a wrapper that sizes the section banners to the widest row (included by `base`; see [Fastfetch](#fastfetch))
+│   ├── fastfetch/             fastfetch (Home Manager) and its config, behind a wrapper that sizes the section banners to the widest row, run by every shell at login (included by `base`; see [Fastfetch](#fastfetch))
 │   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust)), and `c`, `elixir`, `go`, `javascript`, `kotlin`, `lua`, `ocaml`, `php`, `shellscript`, `swift`, `zig` (all included by `alberth`; see [Other languages](#other-languages))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
@@ -806,6 +806,13 @@ The `tui.fastfetch` feature (`modules/packages/fastfetch/`, included by `base`) 
 networking under boxed section banners. `bluetooth` (it crashed fastfetch 2.63.1 on Apple Silicon) and `publicip`
 (a network call, and the IP shows in screenshots) are left commented out.
 
+fastfetch runs when bash, zsh, fish or Nushell starts as an interactive login shell with stdout on a terminal: a new
+terminal window or tab on macOS (editor terminals included, since they open login shells too) or an SSH session.
+Each shell's hook is in its login file or checks for a login shell itself (`.zlogin`, `.bashrc` with
+`shopt -q login_shell`, `config.fish` with `status is-login`, `login.nu`). Non-interactive shells (`ssh host cmd`,
+scripts, agent shells) and non-login shells (nested shells, `exec fish`) stay quiet. To skip it, set
+`FASTFETCH_ON_LOGIN=0` in the environment the shell starts with, such as a terminal's config.
+
 `fastfetch` on `PATH` is a wrapper, `fastfetch-wrapper.py`, because fastfetch can't size the banners to its output.
 The wrapper runs fastfetch twice:
 
@@ -820,6 +827,7 @@ nothing, it reports fastfetch's exit status on stderr. `--help`, `--version`, `-
 | Variable                  | Effect                                                                     |
 | ------------------------- | -------------------------------------------------------------------------- |
 | `FASTFETCH_CONFIG`        | config file to pass as `--config` (default: fastfetch's own lookup)        |
+| `FASTFETCH_ON_LOGIN`      | `0` stops the shells from running fastfetch at login                       |
 | `FASTFETCH_WRAPPER_DEBUG` | set to anything to log the wrapper's steps to stderr                       |
 
 `FASTFETCH_BIN` (the real binary) is fixed to the store path by the package, so the wrapper can't call itself.

@@ -6,10 +6,17 @@
 # widest data row. The wrapper still prints something when fastfetch crashes
 # or hangs part-way; see the comments at the top of the script. Its tests
 # (./test_fastfetch_wrapper.py) run when the package builds.
+#
+# fastfetch also runs when bash, zsh, fish or Nushell starts as an interactive
+# login shell with stdout on a terminal: a new terminal window or tab on macOS
+# (including editor terminals, which open login shells), an SSH session.
+# Non-interactive shells (`ssh host cmd`, scripts, agent shells) and
+# non-login ones (nested shells, `exec fish`) stay quiet. Set
+# FASTFETCH_ON_LOGIN=0 to skip it.
 {
   den.aspects.tui.fastfetch = {
     homeManager =
-      { pkgs, ... }:
+      { lib, pkgs, ... }:
       let
         inherit (pkgs) fastfetch;
 
@@ -47,8 +54,36 @@
         yellow = colored "yellow";
         blue = colored "blue";
         magenta = colored "magenta";
+
+        exe = "${wrapped}/bin/fastfetch";
       in
       {
+        # Each hook sits in a file only login shells read, or checks for a
+        # login shell itself, and also checks for an interactive shell.
+        programs.zsh.loginExtra = ''
+          if [[ -o interactive && -t 1 && "''${FASTFETCH_ON_LOGIN:-1}" != 0 ]]; then
+            ${exe}
+          fi
+        '';
+        # .bashrc returns early for non-interactive shells. mkAfter puts this
+        # (and the fish hook) late in the file, after most of the shell setup.
+        programs.bash.initExtra = lib.mkAfter ''
+          if shopt -q login_shell && [[ -t 1 && "''${FASTFETCH_ON_LOGIN:-1}" != 0 ]]; then
+            ${exe}
+          fi
+        '';
+        programs.fish.interactiveShellInit = lib.mkAfter ''
+          if status is-login; and isatty stdout; and test "$FASTFETCH_ON_LOGIN" != 0
+            ${exe}
+          end
+        '';
+        # login.nu is read only by login shells.
+        programs.nushell.extraLogin = ''
+          if $nu.is-interactive and (is-terminal --stdout) and ($env.FASTFETCH_ON_LOGIN? | default "1") != "0" {
+            ^${exe}
+          }
+        '';
+
         programs.fastfetch = {
           enable = true;
           package = wrapped;
