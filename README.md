@@ -64,6 +64,7 @@ modules/
 │   ├── audio/                 audio tools installed as Homebrew casks (macOS) and PipeWire (NixOS)
 │   ├── browsers/              Firefox (cask on macOS, Home Manager), Helium (cask), Orion (Home Manager, macOS) and Zen (Home Manager module); Firefox and Zen force-install the 1Password extension; Helium and Orion include `_1password`, and Helium also includes `macos._1passwordForHelium`
 │   ├── darwin/                macOS system defaults: Dock, Finder, trackpad, ... (see [macOS defaults](#macos-defaults))
+│   ├── fastfetch/             fastfetch (Home Manager) and its config, behind a wrapper that sizes the section banners to the widest row (included by `base`; see [Fastfetch](#fastfetch))
 │   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust)), and `c`, `elixir`, `go`, `javascript`, `kotlin`, `lua`, `ocaml`, `php`, `shellscript`, `swift`, `zig` (all included by `alberth`; see [Other languages](#other-languages))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
@@ -140,7 +141,7 @@ where something includes them. An aspect's name doesn't have to match its path (
 include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `git`, `imagemagick`,
-  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
+  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.fastfetch`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
   `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
@@ -796,6 +797,39 @@ crash reporter, which aborts on macOS inside sandboxes that deny Mach service re
 terminals), with `bootstrap_check_in ... Permission denied (1100)`. An empty endpoint disables the reporter, so
 `nix` runs normally. The side effect is that Determinate no longer receives Nix crash reports from this directory.
 Outside direnv, prefix the command instead: `NIX_SENTRY_ENDPOINT= nix ...`.
+
+## Fastfetch
+
+The `tui.fastfetch` feature (`modules/packages/fastfetch/`, included by `base`) installs
+[fastfetch](https://github.com/fastfetch-cli/fastfetch) through Home Manager. Its config is written in Nix as
+`programs.fastfetch.settings` and lands in `~/.config/fastfetch/config.jsonc`. It shows hardware, OS, uptime and
+networking under boxed section banners. `bluetooth` (it crashed fastfetch 2.63.1 on Apple Silicon) and `publicip`
+(a network call, and the IP shows in screenshots) are left commented out.
+
+`fastfetch` on `PATH` is a wrapper, `fastfetch-wrapper.py`, because fastfetch can't size the banners to its output.
+The wrapper runs fastfetch twice:
+
+1. Without the logo and in plain-text mode, to measure the widest data row.
+2. Normally, inside a pseudo-terminal, then redraws every banner to that width.
+
+It always prints something. If fastfetch crashes, hangs (30 s limit) or is interrupted part-way, the wrapper prints
+what it got so far. If the normal run prints nothing, the wrapper falls back to the plain-text run. If both print
+nothing, it reports fastfetch's exit status on stderr. `--help`, `--version`, `--list-*`, `--print-*` and
+`--gen-config*` go straight to the real binary.
+
+| Variable                  | Effect                                                                     |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `FASTFETCH_CONFIG`        | config file to pass as `--config` (default: fastfetch's own lookup)        |
+| `FASTFETCH_WRAPPER_DEBUG` | set to anything to log the wrapper's steps to stderr                       |
+
+`FASTFETCH_BIN` (the real binary) is fixed to the store path by the package, so the wrapper can't call itself.
+
+The wrapper's tests, `test_fastfetch_wrapper.py`, run every time the package builds; a failing test fails the
+switch. Run them by hand with:
+
+```sh
+python3 -I modules/packages/fastfetch/test_fastfetch_wrapper.py
+```
 
 ## Python
 
