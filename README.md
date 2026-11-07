@@ -77,6 +77,7 @@ modules/
 │   ├── claude.nix             Claude Code, its global rules and default settings, the Claude desktop app and usage trackers (see [Claude Code](#claude-code))
 │   ├── cleanshot.nix          CleanShot X cask (macOS)
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
+│   ├── crossover.nix          Crossover (CodeWeavers CrossOver) cask, runs Windows apps (macOS)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts, all from nixpkgs (Home Manager); see [Fonts](#fonts)
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
