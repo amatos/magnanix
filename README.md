@@ -71,6 +71,7 @@ modules/
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── attic.nix              Attic binary cache: the server (NixOS), every host's substituter settings, and the push watcher (see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
+│   ├── battle-net.nix         Blizzard Battle.net cask (macOS)
 │   ├── bluetooth.nix          Bluetooth (NixOS)
 │   ├── certbot.nix            Let's Encrypt certificates through LuaDNS (macOS and NixOS; see [TLS certificates](#tls-certificates))
 │   ├── claude.nix             Claude Code, its global rules and default settings, the Claude desktop app and usage trackers (see [Claude Code](#claude-code))
@@ -82,6 +83,7 @@ modules/
 │   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick
+│   ├── kaleidoscope.nix       Kaleidoscope cask (macOS)
 │   ├── magnet.nix             Magnet window manager, from the App Store (macOS)
 │   ├── mail.nix               Postfix: outgoing mail through the LAN's SMTP relay, and the relay itself (see [Mail](#mail))
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
