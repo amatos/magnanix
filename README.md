@@ -706,7 +706,9 @@ its own file:
 - **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`).
   The `_1password` aspect adds `op` completions to bash, zsh and fish, so they only load on hosts that include it.
 - **Aliases and functions:** the common aliases (`rm`/`mv`/`cp` with `-i`, the `ssh*` variants, `git-log`,
-  `git-author`) apply to zsh and fish. The functions cover GPG and YubiKey resets, Docker cleanup, Tailscale
+  `git-author`) apply to zsh and fish. `cliutils` adds `ls`, `ll`, `la` and `lt` as `eza --icons auto` aliases
+  (plus `cat` → `bat`, `top` → `btm`, `df` → `duf`) to bash, zsh and fish; Nushell keeps its built-in structured
+  `ls`. The functions cover GPG and YubiKey resets, Docker cleanup, Tailscale
   and DNS fixes, network info, and a zoxide and fzf directory jumper (`zox`). They are written once for POSIX
   shells and once for fish, so keep the two files in step when adding or changing one. In `shell-functions-posix.nix`
   each entry becomes a shell function; in `shell-functions-fish.nix` it becomes a fish function.
