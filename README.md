@@ -82,7 +82,7 @@ modules/
 │   ├── crossover.nix          Crossover (CodeWeavers CrossOver) cask, runs Windows apps (macOS)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts, all from nixpkgs (Home Manager); see [Fonts](#fonts)
-│   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host)
+│   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host); theme is `dracula-pro` with `magnanix.draculaPro`, Dracula otherwise
 │   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick

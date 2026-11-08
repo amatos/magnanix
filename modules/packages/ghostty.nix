@@ -49,7 +49,8 @@
           settings = {
             # Follows the system appearance, like Zed's Dracula/Alucard pairing.
             theme =
-              if draculaPro.enable then "light:${themeName "alucard"},dark:${themeName "pro"}" else "Dracula";
+              # if draculaPro.enable then "light:${themeName "alucard"},dark:${themeName "pro"}" else "Dracula";
+              if draculaPro.enable then "${themeName "pro"}" else "Dracula";
 
             # Ghostty's default is 13.
             font-size = 14;
