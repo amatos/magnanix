@@ -69,7 +69,7 @@ modules/
 │   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust)), and `c`, `elixir`, `go`, `javascript`, `kotlin`, `lua`, `ocaml`, `php`, `shellscript`, `swift`, `zig` (all included by `alberth`; see [Other languages](#other-languages))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
-│   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
+│   ├── zed/                   Zed editor cask, a git-tracked, writable `settings.json`, and Zed as the default app for `.txt`, `.yaml` and `.sh` files (duti on macOS, `xdg.mimeApps` on Linux)
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── attic.nix              Attic binary cache: the server (NixOS), every host's substituter settings, and the push watcher (see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search

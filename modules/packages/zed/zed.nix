@@ -196,10 +196,6 @@
             mime = "text/plain";
           }
           {
-            ext = ".md";
-            mime = "text/markdown";
-          }
-          {
             ext = ".yaml";
             mime = "application/yaml";
           }
