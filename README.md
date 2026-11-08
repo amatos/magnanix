@@ -43,6 +43,7 @@ documentation/                 project documentation outside this README:
 ├── TAILSCALE_SETUP.md         setting up Tailscale and Attic access for GitHub Actions
 └── tailscale-policy/acl.hujson  the tailnet ACL policy, including the `tag:ci` → muninn:8080 rule CI needs (see [Continuous Integration](#continuous-integration))
 pkgs/darwintron-vm.sh          the `darwintron-vm` script from the dev shell
+pkgs/sensible-side-buttons.nix the SensibleSideButtons 1.0.7 package (update steps at the top of the file)
 pkgs/texpile.nix               the Texpile package (update steps at the top of the file)
 pkgs/python/                   Python packages, such as the certbot-dns-luadns certbot plugin
 modules/
@@ -94,6 +95,7 @@ modules/
 │   ├── nushell.nix            Nushell (Home Manager), with the session variables and other tools' integrations
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
 │   ├── pixelsnap.nix          PixelSnap 2 cask (macOS)
+│   ├── sensible-side-buttons.nix SensibleSideButtons, mouse side buttons for back/forward (macOS)
 │   ├── setapp.nix             Setapp cask (macOS)
 │   ├── skim.nix               Skim PDF reader (macOS)
 │   ├── spamsieve.nix          SpamSieve cask (macOS)

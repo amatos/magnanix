@@ -71,6 +71,7 @@ in
       den.aspects.macos.pixelmator
       den.aspects.macos.reeder
       den.aspects.macos.safariExtensions
+      den.aspects.macos.sensibleSideButtons
       den.aspects.macos.simpleComic
       den.aspects.macos.stecker
       den.aspects.macos.texStage
