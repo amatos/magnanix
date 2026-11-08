@@ -111,6 +111,7 @@ modules/
 │   ├── tzdata.nix             system time zone (NixOS)
 │   ├── yazi.nix               yazi file manager with its plugins and keybindings
 │   ├── yubikey.nix            YubiKey Manager, and pcscd on NixOS
+│   ├── zellij.nix             zellij terminal multiplexer with its built-in Dracula theme
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
 │   ├── muninn/                a host with its generated `_hardware-configuration.nix` beside it
@@ -143,7 +144,7 @@ where something includes them. An aspect's name doesn't have to match its path (
 include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `git`, `imagemagick`,
-  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.fastfetch`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey` and
+  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.fastfetch`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey`, `tui.zellij` and
   `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where `magnus` gets most of its apps:
