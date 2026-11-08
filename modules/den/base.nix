@@ -31,6 +31,7 @@
       den.aspects.tui.trash
       den.aspects.tui.yazi
       den.aspects.tui.yubikey
+      den.aspects.tui.zellij
       den.aspects.tui.zoxide
       den.aspects.tzdata
     ];
