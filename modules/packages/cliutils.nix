@@ -5,10 +5,10 @@
       { pkgs, ... }:
       let
         modernAliases = {
-          ls = "eza";
-          ll = "eza -l --git";
-          la = "eza -la --git";
-          lt = "eza --tree --level=2";
+          ls = "eza --icons auto";
+          ll = "eza -l --git --icons auto";
+          la = "eza -la --git --icons auto";
+          lt = "eza --tree --level=2 --icons auto";
           cat = "bat --plain --paging=never";
           top = "btm";
           df = "duf";
