@@ -55,14 +55,15 @@
       # stream (its user service starts with the session). greetd runs this once;
       # after logging out, the tuigreet login screen comes back as usual.
       #
-      # The command must match the compositor's session command (niri-session
-      # for the niri aspect); change it here when switching compositors.
+      # The command must match the compositor's session command (start-hyprland
+      # for the hyprland aspect, niri-session for niri); change it here when
+      # switching compositors.
       #
       # The session is not locked: anyone at the machine gets alberth's desktop
       # until it is locked by hand. Locking on autologin is still to do.
       services.greetd.settings.initial_session = {
         user = "alberth";
-        command = "niri-session";
+        command = "start-hyprland";
       };
 
       system.stateVersion = "26.05";

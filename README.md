@@ -561,7 +561,7 @@ sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot
   compositor, and the AMD GPU encodes through VA-API.
 - **Session:** the user service only runs while someone is logged in, so greetd logs `alberth` in at boot
   (`services.greetd.settings.initial_session` in `fortuna.nix`). Its command must match the compositor's session
-  command (`niri-session` for now). The autologin session is **not locked**: anyone at the machine gets the
+  command (`start-hyprland` for the `hyprland` aspect, `niri-session` for `niri`). The autologin session is **not locked**: anyone at the machine gets the
   desktop until it is locked by hand.
 - **Network:** Sunshine's ports (TCP 47984, 47989, 47990, 48010; UDP 47998-48000, 48002, 48010) are open on
   `tailscale0` only, not on the LAN, so clients connect over the tailnet. mDNS discovery doesn't cross Tailscale:
