@@ -60,6 +60,11 @@
             # Ghostty's default is 13.
             font-size = 14;
 
+            # Ghostty's default (`true`) copies selections only to its own selection
+            # clipboard, which macOS lacks a system equivalent of; `clipboard` also
+            # copies to the system clipboard, so Cmd+V and other apps can paste it.
+            copy-on-select = "clipboard";
+
             # Added to Ghostty's defaults (listed features are toggled, the rest
             # keep their defaults). `sudo` keeps Ghostty's terminfo under sudo;
             # `ssh-terminfo` installs it on remote hosts on first connect, for
