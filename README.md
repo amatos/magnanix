@@ -74,7 +74,7 @@ modules/
 │   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust)), and `c`, `elixir`, `go`, `javascript`, `kotlin`, `lua`, `ocaml`, `php`, `shellscript`, `swift`, `zig` (all included by `alberth`; see [Other languages](#other-languages))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
-│   ├── zed/                   Zed editor cask, a git-tracked, writable `settings.json` (skipped with a warning when `magnanix.repoDir` isn't a git checkout), and Zed as the default app for `.txt`, `.yaml` and `.sh` files (duti on macOS, `xdg.mimeApps` on Linux); on Linux, Zed's Delta as `zed-delta`, since its `delta` would clash with the git pager
+│   ├── zed/                   Zed editor cask, a git-tracked, writable `settings.json` (skipped with a warning when `magnanix.repoDir` isn't a git checkout), and Zed as the default app for `.txt`, `.yaml` and `.sh` files (duti on macOS, `xdg.mimeApps` on Linux); on Linux, the FHS-wrapped `zed-editor-fhs` and Zed's Delta as `zed-delta`, since its `delta` would clash with the git pager
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
 │   ├── amdgpu.nix             AMD Radeon graphics: amdgpu in the initrd, 32-bit Mesa for Steam (NixOS)
 │   ├── attic.nix              Attic binary cache: the server (NixOS), every host's substituter settings, and the push watcher (see [Binary cache](#binary-cache))
@@ -789,8 +789,8 @@ Home Manager module, and sets `EDITOR=nvim`. `vi`, `vim` and `vimdiff` run Neovi
 - **Languages:** the `lang.nix`, `json`, `markdown`, `toml` and `yaml` extras. Tools that lazyvim-nix doesn't map to
   a package (such as `yaml-language-server`, `marksman` and `lua-language-server`) are listed in `extraPackages`;
   with Mason disabled, a missing language server is an error whenever a file of its type opens.
-- **`EDITOR` and `VISUAL`:** the aspect sets only `EDITOR`. Hosts with Zed set `VISUAL=zed --wait`
-  (`modules/packages/zed/zed.nix`), and most programs (git, crontab, ...) prefer `VISUAL`, so on those hosts they
+- **`EDITOR` and `VISUAL`:** the aspect sets only `EDITOR`. Hosts with Zed set `VISUAL=zed --wait` on macOS
+  or `VISUAL=zeditor --wait` on Linux (from `zed-editor-fhs`; `modules/packages/zed/zed.nix`), and most programs (git, crontab, ...) prefer `VISUAL`, so on those hosts they
   open Zed. Elsewhere `VISUAL` is unset and they use Neovim. Home Manager's `programs.neovim.defaultEditor` stays off
   because it would also set `VISUAL`, and the two definitions would fail evaluation.
 - **Theme:** users with `magnanix.draculaPro` get Dracula PRO, loaded at runtime from the checkout (never copied
