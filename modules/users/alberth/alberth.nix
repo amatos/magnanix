@@ -101,8 +101,14 @@ in
     os =
       { pkgs, ... }:
       {
-        # On NixOS this also overrides the fish default set by the shell.fish aspect.
-        users.users.${meta.username}.shell = pkgs.zsh;
+        users.users.${meta.username} = {
+          # On NixOS this also overrides the fish default set by the shell.fish aspect.
+          shell = pkgs.zsh;
+
+          # Keys that may log in as alberth over SSH, on hosts that include the
+          # openssh aspect. nix-darwin puts them in /etc/ssh/nix_authorized_keys.d.
+          openssh.authorizedKeys.keys = meta.authorizedKeys;
+        };
       };
 
     # nix-darwin only applies users.users.<name>.shell to users in users.knownUsers,
@@ -123,7 +129,7 @@ in
         '';
       };
 
-    # extraGroups, openssh and hashedPasswordFile are NixOS-only users.users options
+    # extraGroups and hashedPasswordFile are NixOS-only users.users options
     # (not supported by nix-darwin's users.users submodule).
     nixos =
       { config, ... }:
@@ -148,8 +154,6 @@ in
           ];
 
           hashedPasswordFile = config.sops.secrets.alberth_password.path;
-
-          openssh.authorizedKeys.keys = meta.authorizedKeys;
         };
       };
   };

@@ -34,6 +34,7 @@
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.niri
+      den.aspects.openssh
       den.aspects.steam
       den.aspects.tailscale
       den.aspects.zed

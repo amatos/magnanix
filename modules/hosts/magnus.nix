@@ -81,6 +81,7 @@ in
       den.aspects.macos.velja
       den.aspects.macos.windowsApp
       den.aspects.macos.zavala
+      den.aspects.openssh
       den.aspects.ruby
       den.aspects.steam
       den.aspects.tailscale
