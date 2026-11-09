@@ -36,6 +36,7 @@
       den.aspects.hyprland
       den.aspects.openssh
       den.aspects.steam
+      den.aspects.sunshine
       den.aspects.tailscale
       den.aspects.zed
     ];
@@ -49,6 +50,20 @@
 
       networking.networkmanager.enable = true;
       users.users.alberth.extraGroups = [ "networkmanager" ];
+
+      # Log alberth in at boot, so there is a graphical session for Sunshine to
+      # stream (its user service starts with the session). greetd runs this once;
+      # after logging out, the tuigreet login screen comes back as usual.
+      #
+      # The command must match the compositor's session command (niri-session
+      # for the niri aspect); change it here when switching compositors.
+      #
+      # The session is not locked: anyone at the machine gets alberth's desktop
+      # until it is locked by hand. Locking on autologin is still to do.
+      services.greetd.settings.initial_session = {
+        user = "alberth";
+        command = "niri-session";
+      };
 
       system.stateVersion = "26.05";
     };
