@@ -24,7 +24,21 @@
                 name = "deploy-magnanix";
                 runtimeInputs = [ pkgs.git ];
                 text = ''
-                  cd ${lib.escapeShellArg config.magnanix.repoDir}
+                  repo=${lib.escapeShellArg config.magnanix.repoDir}
+
+                  # Fail with a clear message rather than a bare `cd` or git error.
+                  # The second check catches a directory that exists but isn't the
+                  # checkout, such as a stray tree created by another module.
+                  if [ ! -d "$repo" ]; then
+                    echo "deploy-magnanix: $repo does not exist; clone magnanix there or set magnanix.repoDir" >&2
+                    exit 1
+                  fi
+                  if [ ! -e "$repo/.git" ]; then
+                    echo "deploy-magnanix: $repo is not a git checkout; clone magnanix there or set magnanix.repoDir" >&2
+                    exit 1
+                  fi
+
+                  cd "$repo"
 
                   original=$(git symbolic-ref --short -q HEAD || git rev-parse HEAD)
 

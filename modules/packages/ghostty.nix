@@ -21,9 +21,9 @@
       let
         # Users who own Dracula PRO opt in with `magnanix.draculaPro` (see
         # modules/den/dracula-pro.nix); everyone else gets Ghostty's built-in Dracula.
-        # Each PRO variant is symlinked out of the store into
-        # ~/.config/ghostty/themes as `dracula-pro-<variant>`; `pro` is the
-        # flagship dark theme and is linked as plain `dracula-pro`.
+        # The flagship `pro` variant is included over Dracula (see `config-file`
+        # below), and each PRO variant is symlinked into ~/.config/ghostty/themes
+        # as `dracula-pro-<variant>` (`pro` as plain `dracula-pro`).
         draculaPro = config.magnanix.draculaPro;
         draculaProThemes = "${draculaPro.dir}/themes/ghostty";
         draculaProVariants = [
@@ -47,10 +47,15 @@
           # Written to ~/.config/ghostty/config and checked with
           # `ghostty +validate-config` whenever it changes.
           settings = {
-            # Follows the system appearance, like Zed's Dracula/Alucard pairing.
-            theme =
-              # if draculaPro.enable then "light:${themeName "alucard"},dark:${themeName "pro"}" else "Dracula";
-              if draculaPro.enable then "${themeName "pro"}" else "Dracula";
+            # Ghostty's built-in Dracula, always available.
+            theme = "Dracula";
+
+            # Dracula PRO's colors on top, when the checkout exists. The leading `?`
+            # makes the include optional: before the checkout is cloned (a fresh
+            # host, where activation can't reach GitHub) Ghostty silently keeps
+            # Dracula instead of failing on a missing theme. Included files load
+            # after this config, and their colors override the theme's.
+            config-file = lib.mkIf draculaPro.enable "?${draculaProThemes}/pro";
 
             # Ghostty's default is 13.
             font-size = 14;
@@ -67,20 +72,11 @@
         # Lets modules/den/dracula-pro.nix clone the checkout on this host.
         magnanix.draculaPro.usedBy = lib.mkIf draculaPro.enable [ "ghostty" ];
 
+        # The PRO variants as named themes, to try one by hand (for example
+        # `theme = dracula-pro-blade`). Nothing in the generated config names them,
+        # so these links dangling before the checkout exists is harmless.
         xdg.configFile = lib.mkIf draculaPro.enable (
-          {
-            # Until the checkout exists (e.g. its clone failed on a fresh host),
-            # validation would reject the PRO theme names and abort the switch.
-            # Skip it then; Ghostty falls back to its default colors.
-            "ghostty/config".onChange = lib.mkForce ''
-              if [[ -d ${lib.escapeShellArg draculaProThemes} ]]; then
-                ${lib.getExe config.programs.ghostty.package} +validate-config --config-file=${config.xdg.configHome}/ghostty/config
-              else
-                warnEcho ${lib.escapeShellArg "Skipping Ghostty config validation: ${draculaProThemes} is missing."}
-              fi
-            '';
-          }
-          // lib.listToAttrs (
+          lib.listToAttrs (
             map (
               variant:
               lib.nameValuePair "ghostty/themes/${themeName variant}" {

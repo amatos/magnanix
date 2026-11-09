@@ -10,11 +10,12 @@ and users simply pick the aspects they want.
 
 | Host         | Platform         | Kind       | User        | Notes                                                |
 | ------------ | ---------------- | ---------- | ----------- | ---------------------------------------------------- |
-| `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron and nixostron VMs                |
+| `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron and nixostron VMs; SSH (keys only) |
 | `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
 | `nixostron-aarch64` | `aarch64-linux` | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under Tart on magnus |
 | `nixostron-x86_64`  | `x86_64-linux`  | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under QEMU on muninn |
 | `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM |
+| `fortuna`    | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: niri, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
@@ -56,7 +57,7 @@ modules/
 │   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features)); flake-only users on NixOS
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
-│   ├── disko.nix              disko (declarative disk layouts) and its input; opt-in, used by nixostron
+│   ├── disko.nix              disko (declarative disk layouts) and its input; opt-in, used by nixostron and fortuna
 │   ├── homebrew.nix           nix-homebrew (macOS only); undeclared formulae and casks are zapped on switch
 │   ├── home-manager.nix       Home Manager integration for all users
 │   ├── nix-darwin.nix         the nix-darwin input
@@ -73,8 +74,9 @@ modules/
 │   ├── languages/             one aspect per language with its runtime, build tools, LSP and formatter: `java` (JDK 25 LTS as `JAVA_HOME`, Maven, Gradle 9, jdtls, google-java-format and JBang, all on that one JDK; included by `magnus`), `python` (uv, Ruff, basedpyright and ty; included by `alberth`; see [Python](#python)), `ruby` (included by `alberth`; see [Ruby](#ruby)), `rust` (included by `alberth`; see [Rust](#rust)), and `c`, `elixir`, `go`, `javascript`, `kotlin`, `lua`, `ocaml`, `php`, `shellscript`, `swift`, `zig` (all included by `alberth`; see [Other languages](#other-languages))
 │   ├── shells/                zsh, fish and bash, plus the aliases and functions they share (see [Shells](#shells))
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
-│   ├── zed/                   Zed editor cask, a git-tracked, writable `settings.json`, and Zed as the default app for `.txt`, `.yaml` and `.sh` files (duti on macOS, `xdg.mimeApps` on Linux)
+│   ├── zed/                   Zed editor cask, a git-tracked, writable `settings.json` (skipped with a warning when `magnanix.repoDir` isn't a git checkout), and Zed as the default app for `.txt`, `.yaml` and `.sh` files (duti on macOS, `xdg.mimeApps` on Linux); on Linux, Zed's Delta as `zed-delta`, since its `delta` would clash with the git pager
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
+│   ├── amdgpu.nix             AMD Radeon graphics: amdgpu in the initrd, 32-bit Mesa for Steam (NixOS)
 │   ├── attic.nix              Attic binary cache: the server (NixOS), every host's substituter settings, and the push watcher (see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
 │   ├── battle-net.nix         Blizzard Battle.net cask (macOS)
@@ -86,7 +88,7 @@ modules/
 │   ├── crossover.nix          Crossover (CodeWeavers CrossOver) cask, runs Windows apps (macOS)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
 │   ├── fonts.nix              fonts, all from nixpkgs (Home Manager); see [Fonts](#fonts)
-│   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host); theme is `dracula-pro` with `magnanix.draculaPro`, Dracula otherwise
+│   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host); theme is the built-in Dracula, with Dracula PRO's colors layered on through an optional `config-file` include when `magnanix.draculaPro` is on and its checkout exists
 │   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
 │   ├── imagemagick.nix        ImageMagick
@@ -96,7 +98,9 @@ modules/
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── neovim.nix             Neovim with LazyVim (lazyvim-nix), the default `$EDITOR` (see [Neovim](#neovim))
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   ├── niri.nix               niri Wayland compositor, greetd/tuigreet login, fuzzel, waybar, swaylock, mako; niri's default config with Ghostty on Mod+T (NixOS)
 │   ├── nushell.nix            Nushell (Home Manager), with the session variables and other tools' integrations
+│   ├── openssh.nix            SSH server, keys only (no password or root login): sshd on NixOS (port 22 opened), Remote Login on macOS
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
 │   ├── pixelsnap.nix          PixelSnap 2 cask (macOS)
 │   ├── sensible-side-buttons.nix SensibleSideButtons, mouse side buttons for back/forward (macOS)
@@ -118,6 +122,7 @@ modules/
 │   ├── zellij.nix             zellij terminal multiplexer with its built-in Dracula theme
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
+│   ├── fortuna/               a host with its disko layout (`_disk-config.nix`) and `_hardware-configuration.nix`
 │   ├── muninn/                a host with its generated `_hardware-configuration.nix` beside it
 │   ├── nixostron.nix          two Den hosts (x86_64, aarch64) sharing den.aspects.nixostron, the test VM
 │   ├── _darwin_template.nix   copy this to add a macOS host
@@ -302,7 +307,8 @@ apps.
 The configuration expects its live checkout at `~/Developer/magnanix` (the `magnanix.repoDir` default in
 `modules/den/repo-dir.nix`): out-of-store symlinks such as Zed's `settings.json` point into it, and the
 `deploy-magnanix` alias pulls there. Clone it there, or set `magnanix.repoDir` in a `homeManager` module for
-that user or host.
+that user or host. If the checkout isn't there, activation warns and skips Zed's `settings.json` instead of
+creating a stray directory at `magnanix.repoDir`.
 
 Enter the dev shell and run the `apply-configuration` script. It picks the right command for the machine and
 uses the machine's host name:
@@ -319,7 +325,8 @@ Each host also has an `nh` wrapper, for example `nix run .#magnus -- switch`.
 `alberth`'s `deploy-magnanix` alias (`modules/users/alberth/shell-aliases.nix`) deploys the checkout at
 `magnanix.repoDir`: it checks out `main` there, runs `git pull --ff-only`, then the current host's `nh` wrapper
 with `switch`, and checks the original branch back out afterwards (even if the deploy fails). It refuses to run
-from another branch with uncommitted changes. Deploy after CI passes on `main`.
+from another branch with uncommitted changes, and stops with an error if `magnanix.repoDir` doesn't exist or isn't
+a git checkout. Deploy after CI passes on `main`.
 
 To build without activating:
 
@@ -550,7 +557,7 @@ sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
-   set: `_1password`, `browsers`, `fonts`, `ghostty`, `audio` and `zed`, plus `bluetooth` on NixOS.
+   set: `_1password`, `browsers`, `fonts`, `ghostty`, `openssh`, `audio` and `zed`, plus `bluetooth` on NixOS.
 5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in a
    `modules/hosts/<hostname>/` directory, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
    it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`). The boot loader comes from `base`
@@ -1026,6 +1033,8 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 
 ## TODO
 
+- `fortuna`: add an `alberth_fortuna` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
+  Its second NVMe drive (the Samsung 970 EVO Plus) is reserved for Windows 11; keep NixOS off it.
 - Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`
   and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.

@@ -13,6 +13,7 @@
       den.aspects.browsers
       den.aspects.fonts
       den.aspects.ghostty
+      den.aspects.openssh
       den.aspects.audio
       den.aspects.zed
     ];
