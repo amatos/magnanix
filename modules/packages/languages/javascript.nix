@@ -2,7 +2,12 @@
 {
   den.aspects.javascript = {
     homeManager =
-      { config, pkgs, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       {
         # Installs Node.js (current LTS) and writes ~/.npmrc. The Nix Node's own
         # prefix is read-only, so `npm install -g` goes to ~/.npm instead.
@@ -25,16 +30,22 @@
           "${config.home.homeDirectory}/.deno/bin"
         ];
 
-        home.packages = with pkgs; [
-          deno # runtime with built-in formatter, linter and LSP
+        home.packages =
+          with pkgs;
+          [
+            deno # runtime with built-in formatter, linter and LSP
 
-          # TypeScript 5 rather than nixpkgs' default 7: 7 is the native (Go) compiler
-          # and no longer ships tsserver.js, which typescript-language-server needs
-          # when a project has no TypeScript of its own in node_modules.
-          typescript_5 # tsc and tsserver
-          typescript-language-server # language server (LSP)
-          biome # linter and formatter for JS, TS, JSON and CSS
-        ];
+            # TypeScript 5 rather than nixpkgs' default 7: 7 is the native (Go) compiler
+            # and no longer ships tsserver.js, which typescript-language-server needs
+            # when a project has no TypeScript of its own in node_modules.
+            typescript_5 # tsc and tsserver
+            typescript-language-server # language server (LSP)
+          ]
+          # Linter and formatter for JS, TS, JSON and CSS.
+          # TEMPORARY: skipped on Linux because Hydra has no x86_64-linux build of
+          # biome 2.6.5 (cancelled on trunk), so muninn compiled it from source for
+          # hours and then failed. Remove the condition once cache.nixos.org has it.
+          ++ lib.optional (!stdenv.hostPlatform.isLinux) biome;
       };
   };
 }
