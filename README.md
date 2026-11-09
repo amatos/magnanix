@@ -99,6 +99,7 @@ modules/
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── neovim.nix             Neovim with LazyVim (lazyvim-nix), the default `$EDITOR` (see [Neovim](#neovim))
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   ├── niri.nix               niri Wayland compositor, greetd/tuigreet login, fuzzel, waybar, swaylock, mako; niri's default config with Ghostty on Mod+T (NixOS); not included by any host (fortuna uses `hyprland`), kept to switch back to
 │   ├── nushell.nix            Nushell (Home Manager), with the session variables and other tools' integrations
 │   ├── openssh.nix            SSH server, keys only (no password or root login): sshd on NixOS (port 22 opened), Remote Login on macOS
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
