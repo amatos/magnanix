@@ -224,12 +224,13 @@
         ];
       in
       {
-        # duti is macOS-only; on Linux Zed comes from nixpkgs and Delta from its
+        # duti is macOS-only; on Linux Zed comes from nixpkgs (FHS-wrapped, so
+        # extensions' prebuilt binaries such as language servers run) and Delta from its
         # official flake (no casks there).
         home.packages =
           lib.optionals isDarwin [ pkgs.duti ]
           ++ lib.optionals isLinux [
-            pkgs.zed-editor
+            pkgs.zed-editor-fhs
             zedDelta
           ];
 
@@ -237,7 +238,7 @@
         # callers (git commit, crontab -e, …) see the edited result. On macOS the
         # cask links the `zed` CLI onto PATH; on Linux nixpkgs names it `zeditor`.
         home.sessionVariables.VISUAL =
-          if isDarwin then "zed --wait" else "${lib.getExe pkgs.zed-editor} --wait";
+          if isDarwin then "zed --wait" else "${lib.getExe pkgs.zed-editor-fhs} --wait";
 
         xdg.configFile."zed/settings.json".source = config.lib.file.mkOutOfStoreSymlink settingsFile;
 
