@@ -12,8 +12,8 @@ keys:
   - &host_magnus age1kmemkv7z7am3ve7fhlmg7xjw3gd67tqpxqjzcugncrl37penq9zsj3v8zv
   # The private half lives in secrets/bootstrap/darwintron.yaml and is injected into each VM.
   - &host_darwintron age1h3tkml7fsqlfrpww4vefqmyd95k074sduyh0jz28k32dxvwkp5cqtzqvug
-  # This is a placeholder.  replace with the real value when available.
-  - &host_nixostron age1kmemkv7z7am3ve7fhlmg7xjw3gd67tqpxqjzcugncrl37penq9zsj3v8zv
+  # The private half lives in secrets/bootstrap/nixostron.yaml and is injected into each VM.
+  - &host_nixostron age1qyyyv9yfgaureqyx9qdrszf046jh8r7f6w4207p4nzuua0v5q5wsqhfq80
   - &host_muninn age16vynhfk26c2z9tq6xh53skcwm4lqfwx5qr2cwjng3hlgj8hssp9qyncpnm
   # Generated off-host before install; the private half is in 1Password.
   - &host_fortuna age10s2kgymxl7fw2u5222qw5kzd6ztdq49z5ss4jwa3kfxjwn2gdqvqwyh7v5
@@ -21,6 +21,12 @@ keys:
   - &alberth_magnus age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
   # The private half lives in secrets/bootstrap/darwintron.yaml and is injected into each VM.
   - &ephemeral_darwintron age1rd88xaq8el7hm5rn3en6jhy8elfdn8z0elnfrd63q74vsxmanvascxh5sd
+  # The private half lives in secrets/bootstrap/nixostron.yaml and is injected into each VM.
+  - &ephemeral_nixostron age1t7ewwhp7ywczmqz0ycvc8q0pjs96h4mqkzqj3nvucapupqy2wcrqvnkqw3
+  # TODO: on muninn, run `age-keygen -o ~/.config/sops-nix/key.txt`, put the public key
+  # (`age-keygen -y ~/.config/sops-nix/key.txt`) here, uncomment this line and the
+  # `*alberth_muninn` entries below, then run `sops updatekeys` on the files that list it.
+  # - &alberth_muninn age1...
 
 creation_rules:
   # System secrets for one host
@@ -124,6 +130,21 @@ creation_rules:
           - *yubikey7cb1cad0
           - *yubikeyb4d67c6f
           - *ephemeral_darwintron
+          - *ephemeral_nixostron
+
+  # nixostron's private keys, decrypted by the nixostron-vm script on magnus and on
+  # the x86_64 NixOS hosts that run it. Never add a nixostron key here.
+  - path_regex: secrets/bootstrap/nixostron\.yaml$
+    key_groups:
+      - age:
+          - *yubikey0634d1c4
+          - *yubikey2ab5ff2f
+          - *yubikeybe7a2b66
+          - *yubikey49705840
+          - *yubikey7cb1cad0
+          - *yubikeyb4d67c6f
+          - *alberth_magnus
+          # - *alberth_muninn
 
   # darwintron's private keys, decrypted on magnus by the darwintron-vm script.
   # Never add a darwintron key here.

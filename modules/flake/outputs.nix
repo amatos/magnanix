@@ -53,10 +53,16 @@ in
     );
 
     # `nix flake check` fails when flake.nix is out of date with the modules
+    # Linux systems also build the nixostron host for their architecture, so
+    # `nix flake check` on muninn catches a nixostron that no longer builds.
     checks = forEachSupportedSystem (
-      { pkgs, ... }:
+      { pkgs, system }:
       {
         check-flake-file = config.flake-file.check-flake-file pkgs;
+      }
+      // lib.optionalAttrs (lib.hasSuffix "-linux" system) {
+        nixostron =
+          config.flake.nixosConfigurations."nixostron-${lib.head (lib.splitString "-" system)}".config.system.build.toplevel;
       }
     );
 
@@ -124,6 +130,25 @@ in
               # Its commands are single-quoted on purpose: they expand on the guest.
               excludeShellChecks = [ "SC2016" ];
               text = builtins.readFile ../../pkgs/darwintron-vm.sh;
+            })
+
+            # Builds and tests the disposable nixostron VM: under Tart on magnus, under
+            # QEMU (`nixos-rebuild build-vm`) on x86_64 NixOS hosts. tart and
+            # nixos-rebuild come from the system profile.
+            (pkgs.writeShellApplication {
+              name = "nixostron-vm";
+              runtimeInputs = [
+                pkgs.age
+                pkgs.git
+                pkgs.jq
+                pkgs.nixos-anywhere
+                pkgs.sops
+                pkgs.ssh-to-age
+                pkgs.sshpass
+              ];
+              # Its commands are single-quoted on purpose: they expand on the guest.
+              excludeShellChecks = [ "SC2016" ];
+              text = builtins.readFile ../../pkgs/nixostron-vm.sh;
             })
 
             # Tools for creating and editing secrets
