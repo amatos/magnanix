@@ -28,6 +28,24 @@
         # The checkout location comes from the shared `magnanix.repoDir` option.
         settingsFile = "${config.magnanix.repoDir}/modules/users/${config.home.username}/configs/zed/settings.json";
 
+        # Zed's Delta (the AI coding assistant) installs its CLI as `bin/delta`, which
+        # collides with the git pager `delta` that `programs.delta` (git.nix) installs.
+        # Expose it as `zed-delta` (the name of its macOS cask) and leave `delta` to
+        # the pager. Its desktop entries call the original store path, so they keep
+        # working.
+        zedDelta =
+          let
+            delta = inputs.delta.packages.${pkgs.stdenv.hostPlatform.system}.delta;
+          in
+          pkgs.runCommand "zed-delta-${delta.version}" { } ''
+            mkdir -p $out/bin
+            ln -s ${delta}/bin/delta $out/bin/zed-delta
+            if [ -e ${delta}/bin/delta-app ]; then
+              ln -s ${delta}/bin/delta-app $out/bin/delta-app
+            fi
+            ln -s ${delta}/share $out/share
+          '';
+
         # Skeleton: defaults merged *under* the tracked file on every switch. Keys
         # already in the file win, so changes made in Zed stick; keys missing from
         # the file are filled in from here. Objects merge recursively; arrays are
@@ -212,7 +230,7 @@
           lib.optionals isDarwin [ pkgs.duti ]
           ++ lib.optionals isLinux [
             pkgs.zed-editor
-            inputs.delta.packages.${pkgs.stdenv.hostPlatform.system}.delta
+            zedDelta
           ];
 
         # Use Zed for $VISUAL; --wait blocks until the file's tab is closed so
