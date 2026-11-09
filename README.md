@@ -14,6 +14,7 @@ and users simply pick the aspects they want.
 | `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
 | `nixostron`  | `x86_64-linux`   | NixOS      | `ephemeral` | [not buildable yet](#todo)                           |
 | `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay |
+| `fortuna`    | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: niri, LUKS + btrfs via disko; [not installed yet](#todo) |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
@@ -51,6 +52,7 @@ modules/
 │   ├── flake-file.nix         flake-file setup: description, outputs expression, nixpkgs/import-tree/flake-file inputs
 │   ├── den.nix                imports Den's flake module (and the den input)
 │   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features)); flake-only users on NixOS
+│   ├── disko.nix              the disko input and NixOS module, for hosts that declare their disks (`fortuna`)
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
 │   ├── homebrew.nix           nix-homebrew (macOS only); undeclared formulae and casks are zapped on switch
@@ -71,6 +73,7 @@ modules/
 │   ├── TeX/                   latexmk config, texlab, Texpile, TeXstudio, TeXShop and MacTeX
 │   ├── zed/                   Zed editor cask and a git-tracked, writable `settings.json`
 │   ├── zsaVoyager/            ZSA Voyager keyboard tools (Keymapp, Zapp)
+│   ├── amdgpu.nix             AMD Radeon graphics: amdgpu in the initrd, 32-bit Mesa for Steam (NixOS)
 │   ├── attic.nix              Attic binary cache: the server (NixOS), every host's substituter settings, and the push watcher (see [Binary cache](#binary-cache))
 │   ├── atuin.nix              shell history search
 │   ├── battle-net.nix         Blizzard Battle.net cask (macOS)
@@ -92,6 +95,7 @@ modules/
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── neovim.nix             Neovim with LazyVim (lazyvim-nix), the default `$EDITOR` (see [Neovim](#neovim))
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
+│   ├── niri.nix               niri Wayland compositor, greetd/tuigreet login, fuzzel, waybar, swaylock, mako; niri's default config with Ghostty on Mod+T (NixOS)
 │   ├── nushell.nix            Nushell (Home Manager), with the session variables and other tools' integrations
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
 │   ├── pixelsnap.nix          PixelSnap 2 cask (macOS)
@@ -113,6 +117,7 @@ modules/
 │   ├── yubikey.nix            YubiKey Manager, and pcscd on NixOS
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
+│   ├── fortuna/               a host with its disko layout (`_disk-config.nix`) and `_hardware-configuration.nix`
 │   ├── muninn/                a host with its generated `_hardware-configuration.nix` beside it
 │   ├── _darwin_template.nix   copy this to add a macOS host
 │   └── _nix_template.nix      copy this to add a NixOS host
@@ -973,6 +978,10 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 
 ## TODO
 
+- `fortuna`: before installing, generate its SSH host key, add `host_fortuna` (its age key) to `.sops.yaml` and the
+  `common.yaml` rule, add a `secrets/hosts/fortuna.yaml` rule and file, and run `sops updatekeys secrets/common.yaml`.
+  At install, set the drive id in `_disk-config.nix` and replace the provisional `_hardware-configuration.nix` (the
+  steps are at the top of `fortuna.nix`). Its second NVMe drive is reserved for Windows 11; keep NixOS off it.
 - Replace the `host_nixostron` placeholder age key in `.sops.yaml` (it currently reuses magnus's key), and add an
   `ephemeral_nixostron` key to the `ephemeral.yaml` rule.
 - Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`,
