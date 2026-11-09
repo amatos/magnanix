@@ -246,8 +246,16 @@
         # The file is only rewritten when the merge actually adds something, so
         # Zed's own formatting (trailing commas, key order) survives a switch
         # and doesn't show up as a spurious git diff.
+        #
+        # Skipped, with a warning, when `magnanix.repoDir` isn't a git checkout (not
+        # cloned yet, or cloned somewhere else). Creating the file there would leave
+        # a stray directory holding one generated file, and the misplaced clone
+        # would go unnoticed. Not fatal: a fresh install activates before the repo
+        # is cloned.
         home.activation.zedSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-          if [[ -v DRY_RUN ]]; then
+          if [[ ! -e ${lib.escapeShellArg "${config.magnanix.repoDir}/.git"} ]]; then
+            warnEcho ${lib.escapeShellArg "Skipping Zed settings: ${config.magnanix.repoDir} is not a git checkout, so ~/.config/zed/settings.json points nowhere. Clone magnanix there (or set magnanix.repoDir to where it is) and switch again."}
+          elif [[ -v DRY_RUN ]]; then
             echo ${lib.escapeShellArg "Would fill in missing Zed defaults in ${settingsFile}"}
           else
             ${mergeSettings}
