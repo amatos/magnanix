@@ -11,9 +11,10 @@
 # Refer to the drive by its /dev/disk/by-id path, never /dev/nvme0n1 or
 # /dev/nvme1n1: the kernel can number the two drives differently between boots.
 let
-  # TODO: replace with the NixOS drive's id, from `ls -l /dev/disk/by-id/` in the
-  # installer (the nvme-<model>_<serial> entry without a -partN suffix).
-  device = "/dev/disk/by-id/nvme-CHANGE_ME";
+  # Samsung SSD 980 PRO with Heatsink 2 TB. The other drive, the Samsung SSD 970
+  # EVO Plus 1 TB (nvme-Samsung_SSD_970_EVO_Plus_1TB_S4EWNX0R952864V), is the one
+  # reserved for Windows: never declare it here.
+  device = "/dev/disk/by-id/nvme-Samsung_SSD_980_PRO_with_Heatsink_2TB_S6WRNJ0W805522X";
 
   btrfsOptions = [
     "compress=zstd"
