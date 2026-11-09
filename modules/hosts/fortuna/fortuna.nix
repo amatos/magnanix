@@ -4,7 +4,7 @@
   # _hardware-configuration.nix.
   den.hosts.x86_64-linux.fortuna.users.alberth = { };
 
-  # Configuration specific to fortuna: an AMD (CPU and GPU) desktop running niri.
+  # Configuration specific to fortuna: an AMD (CPU and GPU) desktop running Hyprland.
   #
   # Fortuna has two NVMe drives. NixOS owns one (see _disk-config.nix); the other
   # is kept empty for a possible Windows 11 install. To keep that possible:
@@ -33,7 +33,7 @@
       den.aspects.disko
       den.aspects.fonts
       den.aspects.ghostty
-      den.aspects.niri
+      den.aspects.hyprland
       den.aspects.openssh
       den.aspects.steam
       den.aspects.tailscale
