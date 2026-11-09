@@ -15,7 +15,7 @@ and users simply pick the aspects they want.
 | `nixostron-aarch64` | `aarch64-linux` | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under Tart on magnus |
 | `nixostron-x86_64`  | `x86_64-linux`  | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under QEMU on muninn |
 | `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM |
-| `fortuna`    | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
+| `fortuna`    | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland, LUKS + btrfs via disko, SSH (keys only), [Sunshine streaming](#game-streaming) over Tailscale with autologin; second drive reserved for Windows |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
@@ -109,6 +109,7 @@ modules/
 │   ├── skim.nix               Skim PDF reader (macOS)
 │   ├── spamsieve.nix          SpamSieve cask (macOS)
 │   ├── steam.nix              Steam (cask on macOS, `programs.steam` on NixOS)
+│   ├── sunshine.nix           Sunshine game and desktop streaming for Moonlight, with KMS capture and its ports open on the Tailscale interface only (NixOS; see [Game streaming](#game-streaming))
 │   ├── sudo.nix               sudo-rs with passwordless wheel (NixOS), Touch ID for sudo (macOS)
 │   ├── supasidebar.nix        SupaSidebar cask (macOS)
 │   ├── systemdBoot.nix        systemd-boot (UEFI) and a tmpfs /tmp cleared on boot (NixOS)
@@ -549,6 +550,35 @@ To request a certificate by hand instead (it is only copied to `/etc/letsencrypt
 ```sh
 sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot_luadns -d example.com
 ```
+
+## Game streaming
+
+`fortuna` streams its desktop and games to [Moonlight](https://moonlight-stream.org) clients with
+[Sunshine](https://github.com/LizardByte/Sunshine), through `den.aspects.sunshine` (`modules/packages/sunshine.nix`).
+
+- **Capture:** Sunshine runs as a systemd user service started with the graphical session, with `CAP_SYS_ADMIN`
+  (a `/run/wrappers/bin/sunshine` wrapper) so it captures the screen through DRM/KMS. That works under any Wayland
+  compositor, and the AMD GPU encodes through VA-API.
+- **Session:** the user service only runs while someone is logged in, so greetd logs `alberth` in at boot
+  (`services.greetd.settings.initial_session` in `fortuna.nix`). Its command must match the compositor's session
+  command (`niri-session` for now). The autologin session is **not locked**: anyone at the machine gets the
+  desktop until it is locked by hand.
+- **Network:** Sunshine's ports (TCP 47984, 47989, 47990, 48010; UDP 47998-48000, 48002, 48010) are open on
+  `tailscale0` only, not on the LAN, so clients connect over the tailnet. mDNS discovery doesn't cross Tailscale:
+  in Moonlight, add the host by hand with its Tailscale name or IP.
+- **Apps:** Sunshine's defaults, Desktop and Steam Big Picture. They are not set declaratively, so they stay
+  editable in the web UI (setting `services.sunshine.applications` would make Sunshine read its config from the
+  store).
+
+First setup, after the first switch with a session running:
+
+1. Set the web UI's username and password: open `https://localhost:47990` on fortuna (it asks for them on the first
+   visit), or run `sunshine --creds <username> <password>`.
+2. In Moonlight, add fortuna by its Tailscale name. Moonlight shows a PIN; enter it in the web UI's PIN page
+   (`https://fortuna:47990/pin`) to pair.
+
+KMS capture needs an active display: with the monitor off or unplugged there is nothing to capture. For headless
+streaming, use a dummy HDMI/DisplayPort plug or an EDID override (the `drm.edid_firmware` kernel parameter).
 
 ## Adding a host
 
