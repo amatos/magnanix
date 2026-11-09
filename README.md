@@ -10,14 +10,16 @@ and users simply pick the aspects they want.
 
 | Host         | Platform         | Kind       | User        | Notes                                                |
 | ------------ | ---------------- | ---------- | ----------- | ---------------------------------------------------- |
-| `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron VM                               |
+| `magnus`     | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron and nixostron VMs                |
 | `darwintron` | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](#testing-changes-on-darwintron) |
-| `nixostron`  | `x86_64-linux`   | NixOS      | `ephemeral` | [not buildable yet](#todo)                           |
-| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay |
+| `nixostron-aarch64` | `aarch64-linux` | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under Tart on magnus |
+| `nixostron-x86_64`  | `x86_64-linux`  | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under QEMU on muninn |
+| `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
-`den.hosts.<system>.<host>.hostName`, which defaults to the host's name. A macOS host also sets its display name in
+`den.hosts.<system>.<host>.hostName`, which defaults to the host's name. The two `nixostron-*` hosts are the
+exception: one per architecture, both with `hostName = "nixostron"` and both configured by `den.aspects.nixostron`. A macOS host also sets its display name in
 its `darwin` block, as `magnus` does with `networking.computerName = "Magnus"`. OS options like `networking` only
 work inside a `darwin` or `nixos` block; at the top level of a host file they are flake-parts options and fail.
 
@@ -37,12 +39,13 @@ flake.lock                     pinned inputs
 .githooks/pre-commit           formatting and flake.nix up-to-date checks (enabled by the dev shell)
 .github/workflows/             weekly flake input update PR (see Updating inputs)
 .sops.yaml                     sops recipients and creation rules
-secrets/                       encrypted secrets (common, per host, per user, darwintron's bootstrap keys)
+secrets/                       encrypted secrets (common, per host, per user, darwintron's and nixostron's bootstrap keys)
 documentation/                 project documentation outside this README:
 ├── CICD_PLAN.md               planning and decision record for the CI/CD and binary cache setup
 ├── TAILSCALE_SETUP.md         setting up Tailscale and Attic access for GitHub Actions
 └── tailscale-policy/acl.hujson  the tailnet ACL policy, including the `tag:ci` → muninn:8080 rule CI needs (see [Continuous Integration](#continuous-integration))
 pkgs/darwintron-vm.sh          the `darwintron-vm` script from the dev shell
+pkgs/nixostron-vm.sh           the `nixostron-vm` script from the dev shell
 pkgs/sensible-side-buttons.nix the SensibleSideButtons 1.0.7 package (update steps at the top of the file)
 pkgs/texpile.nix               the Texpile package (update steps at the top of the file)
 pkgs/python/                   Python packages, such as the certbot-dns-luadns certbot plugin
@@ -53,6 +56,7 @@ modules/
 │   ├── base.nix               baseline for every host: hostname, macOS defaults, shells, sudo, Nix, CLI and TUI tools (see [Features](#features)); flake-only users on NixOS
 │   ├── determinate.nix        Determinate Nix modules and settings (macOS and NixOS)
 │   ├── sops.nix               sops-nix (system and Home Manager) and secrets file wiring
+│   ├── disko.nix              disko (declarative disk layouts) and its input; opt-in, used by nixostron
 │   ├── homebrew.nix           nix-homebrew (macOS only); undeclared formulae and casks are zapped on switch
 │   ├── home-manager.nix       Home Manager integration for all users
 │   ├── nix-darwin.nix         the nix-darwin input
@@ -104,7 +108,7 @@ modules/
 │   ├── supasidebar.nix        SupaSidebar cask (macOS)
 │   ├── systemdBoot.nix        systemd-boot (UEFI) and a tmpfs /tmp cleared on boot (NixOS)
 │   ├── tailscale.nix          Tailscale: tailscaled (NixOS), the App Store app (macOS); also picks the mail relay and Attic server names
-│   ├── tart.nix               Tart, which runs the darwintron VM (macOS)
+│   ├── tart.nix               Tart, which runs the darwintron and nixostron VMs (macOS)
 │   ├── tealdeer.nix           tealdeer `tldr` client with automatic cache updates
 │   ├── topnotch.nix           TopNotch cask (macOS)
 │   ├── trash.nix              trash-cli
@@ -115,6 +119,7 @@ modules/
 │   └── zoxide.nix             zoxide directory jumper
 ├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
 │   ├── muninn/                a host with its generated `_hardware-configuration.nix` beside it
+│   ├── nixostron.nix          two Den hosts (x86_64, aarch64) sharing den.aspects.nixostron, the test VM
 │   ├── _darwin_template.nix   copy this to add a macOS host
 │   └── _nix_template.nix      copy this to add a NixOS host
 └── users/
@@ -320,7 +325,7 @@ To build without activating:
 
 ```sh
 darwin-rebuild build --flake .#magnus      # macOS
-nixos-rebuild build --flake .#nixostron    # NixOS
+nixos-rebuild build --flake .#muninn       # NixOS
 ```
 
 ## Adding an input
@@ -572,7 +577,7 @@ Secrets are encrypted with [sops](https://github.com/getsops/sops) using age. `.
 
 `secrets/common.yaml` is for secrets shared between hosts (`magnus` and `muninn` can decrypt it),
 `secrets/hosts/<host>.yaml` is per host, `secrets/users/<user>.yaml` is per user, and
-`secrets/bootstrap/darwintron.yaml` holds darwintron's private keys. After changing the recipients, re-encrypt the existing files with
+`secrets/bootstrap/darwintron.yaml` and `secrets/bootstrap/nixostron.yaml` hold the test VMs' private keys. After changing the recipients, re-encrypt the existing files with
 `sops updatekeys <file>`. The dev shell provides `sops`, `age`, `age-plugin-yubikey` and `ssh-to-age`.
 
 sops only uses a YubiKey when it is given the key's age-plugin-yubikey identity, so the dev shell sets
@@ -597,7 +602,8 @@ sops secrets/common.yaml          # edit later; needs a YubiKey or the machine's
 
 `modules/den/sops.nix` imports sops-nix for darwin, NixOS and Home Manager, and sets the defaults:
 
-- **System:** each host's `sops.defaultSopsFile` is `secrets/hosts/<host>.yaml`, decrypted with the host's SSH
+- **System:** each host's `sops.defaultSopsFile` is `secrets/hosts/<hostName>.yaml` (so both nixostron hosts
+  share `nixostron.yaml`), decrypted with the host's SSH
   key (`/etc/ssh/ssh_host_ed25519_key`).
 - **Home Manager:** each user's `sops.defaultSopsFile` is `secrets/users/<user>.yaml`, decrypted with the key in
   `~/.config/sops-nix/key.txt`. Create it on each machine with `age-keygen -o ~/.config/sops-nix/key.txt` before
@@ -623,7 +629,8 @@ it in with `sops secrets/common.yaml`. Any NixOS host `alberth` is on must be a 
 
 The flake's password takes priority. `base` sets `users.mutableUsers = false` on every NixOS host, so each switch
 resets the password and `passwd` can't change it. Every user on a NixOS host therefore needs a password option or
-SSH keys; `ephemeral` has the throwaway password `ephemeral` and darwintron-vm's access key. macOS passwords are never managed here: nix-darwin has no password option, and
+SSH keys; `ephemeral` has the throwaway password `ephemeral` and darwintron-vm's access key (which nixostron-vm
+uses too). macOS passwords are never managed here: nix-darwin has no password option, and
 changing one with `dscl` breaks the login keychain and the FileVault token.
 
 ## Testing changes on darwintron
@@ -653,6 +660,51 @@ activation, and removes them before saving an image, so neither image contains t
 
 The image is pinned by digest at the top of `pkgs/darwintron-vm.sh`. YubiKeys, 1Password, the App Store and audio
 hardware can't be tested in the VM.
+
+## Testing changes on nixostron
+
+`nixostron` is a disposable, headless NixOS VM, built for whichever architecture the machine running it has:
+`nixostron-aarch64` under Tart on `magnus`, and `nixostron-x86_64` under QEMU on `muninn` (or any x86_64 NixOS host
+with KVM). Both hosts share `den.aspects.nixostron` in `modules/hosts/nixostron.nix`; to test something, add its
+aspect there on a branch. Its disk is described with [disko](https://github.com/nix-community/disko) (GPT, a 1 GiB
+ESP at `/boot`, ext4 root on `/dev/vda`). The only way in is SSH as `ephemeral` with the access key.
+
+Run these inside `nix develop`. Only committed code is tested.
+
+On `magnus`, the workflow matches darwintron's. The seed is a stock Ubuntu image; [nixos-anywhere](https://github.com/nix-community/nixos-anywhere)
+kexecs from it into the NixOS installer, partitions the disk with disko and installs. magnus can't build Linux,
+so the guest builds its own system (`--build-on remote`); nearly everything comes from the binary cache.
+
+```sh
+nixostron-vm seed                 # once: stock Ubuntu with the access key
+nixostron-vm baseline             # after main moves: the seed with main installed by nixos-anywhere
+nixostron-vm test my-branch       # switch a clone to my-branch, check, reboot, roll back, delete
+nixostron-vm test my-branch --fresh    # install my-branch onto a seed clone with nixos-anywhere
+nixostron-vm test my-branch --keep     # keep the VM afterwards; then `ssh` and `destroy`
+```
+
+On `muninn` (and later `fortuna`), each test is a fresh build, so there is no seed, baseline or rollback:
+
+```sh
+nixostron-vm test my-branch           # nixos-rebuild build-vm, boot, check, reboot, check, delete
+nixostron-vm test my-branch --disko   # the same on disko's vmWithDisko, which boots the real disk layout
+nixostron-vm test my-branch --keep    # keep the VM afterwards (SSH on localhost:2222); then `ssh` and `destroy`
+```
+
+A failed test keeps its VM for inspection. Each test checks that the system reaches `running` with no failed units,
+both canary secrets decrypt, the hostname and login shell are right, and sshd refuses passwords. On `magnus` a
+test from the baseline also prints `nix store diff-closures`.
+
+The VM keeps one identity however often it is rebuilt. `secrets/bootstrap/nixostron.yaml` holds its host key,
+`ephemeral`'s age key and the access key, encrypted to the YubiKeys, `alberth_magnus` and (once added)
+`alberth_muninn`. The script decrypts them on the host and puts them in `/var/lib/nixostron-keys` on the guest: via
+nixos-anywhere's `--extra-files` or SSH on Tart, and as a read-only QEMU share on muninn. The `nixostron-keys`
+activation script installs them before sops-nix runs, and the Tart script removes them before saving an image. The
+public halves are `host_nixostron` and `ephemeral_nixostron` in `.sops.yaml`.
+
+`nix flake check` on a Linux machine also builds the nixostron host for its architecture.
+
+The Ubuntu image is pinned by digest at the top of the Tart section of `pkgs/nixostron-vm.sh`.
 
 ## Shells
 
@@ -974,17 +1026,16 @@ git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check      
 
 ## TODO
 
-- Replace the `host_nixostron` placeholder age key in `.sops.yaml` (it currently reuses magnus's key), and add an
-  `ephemeral_nixostron` key to the `ephemeral.yaml` rule.
-- Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`,
-  `secrets/hosts/nixostron.yaml` and `secrets/users/alberth.yaml` with real secrets and declare them as
+- Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`
+  and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.
-- `nixostron`: add a root filesystem and `hardware-configuration.nix` (with the ESP at `/boot`, for
-  `systemdBoot`), and confirm the platform.
-- `muninn`: add an `alberth_muninn` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
+- `muninn`: create `alberth_muninn` (see the TODO in `.sops.yaml`), add it to the
+  `secrets/bootstrap/nixostron.yaml` rule so nixostron-vm runs there without a YubiKey, and run
+  `sops updatekeys secrets/bootstrap/nixostron.yaml` (on magnus, no YubiKey needed). Add it to the `alberth.yaml`
+  rule too once `alberth` declares a Home Manager secret.
 - Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
-- Build `nixostron` and `muninn`. `magnus` and `darwintron` build and `muninn` evaluates; `nixostron` fails
-  evaluation on the missing root filesystem above.
+- Build `muninn`, and run `nixostron-vm` on both `magnus` and `muninn` for the first time. `magnus` and
+  `darwintron` build; `muninn` and both `nixostron` hosts evaluate.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
   `nix-darwin-settings.nix` that set them was never wired in and has been removed.
 - Remove the `doCheck = false` override on `cargo-llvm-cov` in `modules/packages/languages/rust.nix` (see

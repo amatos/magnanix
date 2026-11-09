@@ -29,11 +29,12 @@
 
     includes = [
       # System level: each host decrypts with its SSH host key converted to age,
-      # the same key `.sops.yaml` lists as `host_<name>`.
+      # the same key `.sops.yaml` lists as `host_<name>`. Keyed by hostName, not the
+      # Den host name, so both nixostron hosts (one per architecture) share a file.
       (
         { host, ... }:
         {
-          os.sops.defaultSopsFile = ../../secrets/hosts/${host.name}.yaml;
+          os.sops.defaultSopsFile = ../../secrets/hosts/${host.hostName}.yaml;
         }
       )
 
