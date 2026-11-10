@@ -48,6 +48,20 @@
         ./_hardware-configuration.nix
       ];
 
+      # Send audio to the GPU's HDMI output by default: WirePlumber picks the sink
+      # with the highest priority.session, so raise it above the onboard codec's.
+      services.pipewire.wireplumber.extraConfig."51-fortuna-hdmi-default" = {
+        "monitor.alsa.rules" = [
+          {
+            matches = [ { "node.name" = "~alsa_output.*hdmi.*"; } ];
+            actions.update-props = {
+              "priority.session" = 2000;
+              "priority.driver" = 2000;
+            };
+          }
+        ];
+      };
+
       networking.networkmanager.enable = true;
       users.users.alberth.extraGroups = [ "networkmanager" ];
 
