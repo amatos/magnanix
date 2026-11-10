@@ -1,0 +1,60 @@
+# Joins the tailnet and points Nix at muninn's Attic cache.
+#
+# Shared by the build jobs in build.yml and by update-flake-lock.yml. Nix must
+# already be installed. Composite actions can't read secrets, so the caller
+# passes them in as inputs.
+name: Attic cache
+description: Join Tailscale, log in to muninn's Attic cache and use it as a substituter
+
+inputs:
+  ts-oauth-client-id:
+    description: Tailscale OAuth client ID (secrets.TS_OAUTH_CLIENT_ID)
+    required: true
+  ts-audience:
+    description: Tailscale workload identity audience (secrets.TS_AUDIENCE)
+    required: true
+  attic-token:
+    description: Attic token with pull and push access to the magnanix cache (secrets.ATTIC_TOKEN)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Join Tailscale
+      uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ inputs.ts-oauth-client-id }}
+        audience: ${{ inputs.ts-audience }}
+        tags: tag:ci
+
+    # On macOS the action points system DNS at MagicDNS (100.100.100.100), which
+    # fails to resolve public names on hosted runners
+    # (https://github.com/tailscale/github-action/issues/315). Go back to the
+    # runner's own resolver: muninn.ts.matos.cc is in public DNS, and Tailscale
+    # still routes its 100.x address.
+    - name: Restore system DNS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        sudo networksetup -setdnsservers Ethernet Empty
+        sudo networksetup -setsearchdomains Ethernet Empty
+        sudo dscacheutil -flushcache
+        sudo killall -HUP mDNSResponder
+
+    - name: Verify Tailscale connectivity to muninn
+      shell: bash
+      run: tailscale ping muninn.ts.matos.cc || true
+
+    - name: Install attic-client
+      shell: bash
+      run: nix --option extra-substituters "" profile install nixpkgs#attic-client
+
+    - name: Log in to Attic cache
+      shell: bash
+      env:
+        ATTIC_TOKEN: ${{ inputs.attic-token }}
+      run: attic login ci http://muninn.ts.matos.cc:8080 "$ATTIC_TOKEN" --set-default
+
+    - name: Use Attic cache for builds
+      shell: bash
+      run: attic use magnanix

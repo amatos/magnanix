@@ -4,6 +4,11 @@
 
 **All implementation phases (1–5) are complete and live on main branch.** This document records the planning and decision-making process for the CI/CD infrastructure. User-facing setup instructions are in [TAILSCALE_SETUP.md](./TAILSCALE_SETUP.md).
 
+> **Revised:** `build.yml` now evaluates every host on each PR and push to `main`, and builds every host only on
+> pushes to `main`, the `update-flake-lock` PR, PRs labelled `ci:build` and manual runs. The README's
+> [Continuous Integration](../README.md#continuous-integration) section describes the current setup; the rest of
+> this document is the original record.
+
 ---
 
 ## Executive Summary
