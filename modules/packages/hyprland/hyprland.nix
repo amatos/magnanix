@@ -17,7 +17,12 @@
   # Each sets magnanix.hyprland.shell, so including two fails with a conflict.
   den.aspects.hyprland = {
     nixos =
-      { config, lib, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       {
         options.magnanix.hyprland.shell = lib.mkOption {
           type = lib.types.nullOr (
@@ -51,7 +56,19 @@
           # ReGreet, a graphical (GTK4) greeter. The module enables greetd and runs
           # ReGreet in cage, a kiosk compositor. It lists the installed sessions
           # (Hyprland's runs start-hyprland) and remembers the last user and session.
-          services.displayManager.regreet.enable = true;
+          # Themed with Dracula's GTK and icon themes from nixpkgs (Dracula PRO
+          # lives in a per-user checkout the greeter can't read).
+          services.displayManager.regreet = {
+            enable = true;
+            theme = {
+              package = pkgs.dracula-theme;
+              name = "Dracula";
+            };
+            iconTheme = {
+              package = pkgs.dracula-icon-theme;
+              name = "Dracula";
+            };
+          };
         };
       };
 
