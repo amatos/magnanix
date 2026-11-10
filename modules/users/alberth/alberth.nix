@@ -7,6 +7,7 @@ let
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILfxNl1S0Fvzh2aOAG6FuIwB96eqnUqY1nl2p2jSnTOD internal"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDkzNer1Wht+A3qapGFtp8LzrxamOWbfV1sP4J5lW8qI alberth@darwintron"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIgWB6nLQXyN7qcb23zZt1Nd+4QuaXm78Ye39FnwgNaj IOSinternal@Prompt3"
     ];
 
     email = "alberth@matos.cc";
