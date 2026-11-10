@@ -19,5 +19,3 @@
   `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
   the pinned nixpkgs, tests included, so success means the override can go. The tests fail on both macOS and
   Linux, so one host is enough.
-- Define `reload-wifi-mt7921` (called by fish's `full-network-reset` on NixOS in
-  `modules/packages/shells/fish.nix`), or remove that step.

@@ -14,8 +14,6 @@
 #   ntp-force-update (programs.fish.shellFunctions). macOS: pbcopy aliases, and
 #   `tail-exit-node-fix` (clears stuck Tailscale exit-node routes), defined in
 #   interactiveShellInit because nix-darwin has no shellFunctions option.
-# - full-network-reset calls `reload-wifi-mt7921`, which isn't defined anywhere
-#   in this repo, so that step fails until it is.
 { den, ... }:
 {
   den.aspects.shell.fish = {
@@ -131,8 +129,6 @@
               tail-vpn-restart
               echo "🔁 Resetting DNS..."
               dns-reset-all
-              echo "📶 Reloading Wi-Fi module..."
-              reload-wifi-mt7921
               echo
               echo "🌐 Checking internet connectivity..."
               if ping -c 2 1.1.1.1 >/dev/null 2>&1

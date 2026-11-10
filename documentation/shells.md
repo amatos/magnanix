@@ -45,8 +45,7 @@ its own file:
   NixOS; `pbcopy` aliases and `tail-exit-node-fix` on macOS). Only one-line commands are aliases; multi-line
   helpers are real fish functions. On NixOS they're in `programs.fish.shellFunctions` (installed as
   `/etc/fish/functions/<name>.fish`); nix-darwin has no such option, so on macOS they're `function … end` blocks
-  in `programs.fish.interactiveShellInit`. `full-network-reset` calls `reload-wifi-mt7921`, which isn't defined
-  yet, so that step fails.
+  in `programs.fish.interactiveShellInit`.
 - **Starship prompt:** the shell indicator is on, so each prompt shows which shell you're in: 🐚 bash, 🦓 zsh,
   🐟 fish, 🪟 PowerShell, and ❓ for anything else. The hostname is trimmed at the first `.` (`host.example.com`
   shows as `host`).
