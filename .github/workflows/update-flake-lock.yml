@@ -43,29 +43,14 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
 
-      - name: Join Tailscale
-        uses: tailscale/github-action@v4
+      # The cache only speeds up `write-flake`; the update works without it.
+      - name: Use muninn's Attic cache
+        continue-on-error: true
+        uses: ./.github/actions/attic-cache
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          audience: ${{ secrets.TS_AUDIENCE }}
-          tags: tag:ci
-
-      - name: Verify Tailscale connectivity to muninn
-        run: tailscale ping muninn.ts.matos.cc || true
-
-      - name: Install attic-client
-        run: |
-          nix --option extra-substituters "" profile install nixpkgs#attic-client
-
-      - name: Log in to Attic cache
-        continue-on-error: true
-        run: |
-          attic login ci http://muninn.ts.matos.cc:8080 ${{ secrets.ATTIC_TOKEN }} --set-default
-
-      - name: Use Attic cache for builds
-        continue-on-error: true
-        run: |
-          attic use magnanix
+          ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          ts-audience: ${{ secrets.TS_AUDIENCE }}
+          attic-token: ${{ secrets.ATTIC_TOKEN }}
 
       - name: Update flake.lock
         run: nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
@@ -88,7 +73,7 @@ jobs:
             echo
             echo 'Before merging:'
             echo
-            echo '- [ ] CI builds magnus and darwintron'
+            echo '- [ ] CI evaluates and builds every host (this branch always gets a full build)'
             echo '- [ ] `darwintron-vm test update-flake-lock` passes on magnus'
           } > "$RUNNER_TEMP/pr-body.md"
 
