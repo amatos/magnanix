@@ -34,7 +34,7 @@
       den.aspects.disko
       den.aspects.fonts
       den.aspects.ghostty
-      den.aspects.hyprland
+      den.aspects.noctalia
       den.aspects.openssh
       den.aspects.steam
       den.aspects.tailscale
