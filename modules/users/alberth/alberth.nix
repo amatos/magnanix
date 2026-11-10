@@ -1,3 +1,21 @@
+# User:      alberth (den.aspects.alberth)
+# Platforms: nixos, darwin, home-manager
+# Purpose:   alberth's account, metadata and personal tool set: the language
+#            toolchains, gpg, direnv, gh, the Dock, ~/.local/bin scripts,
+#            deploy-magnanix and SSH client config. Follows alberth to every
+#            host they're on.
+#
+# Notes:
+# - `meta` (identity, SSH keys, GPG key) is read by shared aspects such as git
+#   and gpg; see documentation/architecture.md for each attribute.
+# - host-aspects forwards the homeManager parts of the host's apps into this
+#   home; without it, host aspects only deliver their system-level config.
+# - Login shell is Nix's zsh everywhere. macOS needs a dscl postActivation
+#   script for this (see below); open a new terminal after the first switch.
+# - ~/.ssh/authorized_keys is a real file (mode 600), not a store symlink,
+#   because sshd's StrictModes rejects the group-writable store.
+# - NixOS password: `alberth_password` (yescrypt hash) in secrets/common.yaml.
+#   It always wins over `passwd`. macOS passwords are never managed here.
 { den, ... }:
 let
   # Defined here (rather than read back through `config`) so the same values can
@@ -33,8 +51,8 @@ in
       # deliver their system-level config on their own.
       den.batteries.host-aspects
 
-      den.aspects.alberth.macos.dock
       den.aspects.alberth.deployMagnanix
+      den.aspects.alberth.macos.dock
       den.aspects.alberth.scripts
       den.aspects.alberth.ssh
       den.aspects.c
@@ -57,7 +75,6 @@ in
       den.aspects.ruby
       den.aspects.rust
       den.aspects.shellscript
-      den.aspects.python
       den.aspects.swift
       den.aspects.zig
     ];
@@ -73,7 +90,8 @@ in
 
         # Licensed theme pack (see modules/den/dracula-pro.nix). Access comes from
         # alberth's GitHub account, so the URL alone gives nobody else anything.
-        # Only cloned on hosts with an app that uses it (Ghostty), not on muninn.
+        # Only cloned on hosts with an app that uses it (Ghostty), so headless hosts
+        # never try.
         magnanix.draculaPro = {
           enable = true;
           repo = "git@github.com:dracula-pro/dracula-pro.git";

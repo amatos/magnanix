@@ -1,3 +1,15 @@
+# Host:      magnus (den.aspects.magnus)
+# Platform:  aarch64-darwin (nix-darwin)
+# Purpose:   The main Mac: desktop apps, App Store apps, development tools,
+#            OrbStack, Tart (runs the darwintron and nixostron test VMs), the
+#            Attic push watcher, certbot and Tailscale.
+#
+# Notes:
+# - Users that include den.batteries.host-aspects also get the homeManager parts
+#   of the aspects included here.
+# - alberth is the primary user and signs commits with their GPG key here
+#   (git.signing), because the key (on a YubiKey) is usable here.
+# - Requests certificates for magnus.home.matos.cc and magnus.ts.matos.cc.
 {
   den,
   inputs,

@@ -1,4 +1,12 @@
-# OCaml compiler and development tools.
+# Aspect:    den.aspects.ocaml
+# Platforms: home-manager
+# Purpose:   OCaml, dune, ocaml-lsp and ocamlformat from nixpkgs, plus opam.
+#
+# Notes:
+# - The Nix tools need no setup. Run `opam init` only for opam-based projects,
+#   libraries missing from nixpkgs, or another compiler version.
+# - opam has no shell integration (`opam env` fails before `opam init`);
+#   activate a switch with `eval $(opam env)`.
 {
   den.aspects.ocaml = {
     homeManager =
@@ -15,7 +23,8 @@
           pkgs.ocamlformat # formatter
 
           # Package and compiler-switch manager, only needed for opam-based projects,
-          # libraries missing from ocamlPackages or other compilers (see the README).
+          # libraries missing from ocamlPackages or other compilers (see
+          # documentation/languages.md).
           # Installed without shell integration: `opam env` fails until `opam init`
           # has been run. After that, activate a switch with `eval $(opam env)`.
           pkgs.opam

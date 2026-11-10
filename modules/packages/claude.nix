@@ -1,3 +1,19 @@
+# Aspect:    den.aspects.claude
+# Platforms: home-manager, darwin
+# Purpose:   Claude Code (CLI) with its agents, slash commands and global rules,
+#            plus the Claude desktop app and ClaudeBar (casks) and the usage
+#            tracker on macOS.
+#
+# Notes:
+# - Agents, commands and rules in ~/.claude/ are read-only store symlinks: edit
+#   them here, not in ~/.claude.
+# - ~/.claude/settings.json is NOT a symlink, because Claude Code writes to it
+#   at runtime. The claudeSettings activation script deep-merges
+#   `defaultSettings` into it on every switch: Nix wins on the keys it sets,
+#   other keys are left alone, and invalid JSON fails the switch instead of
+#   being overwritten.
+# - attribution = "" stops Claude Code adding Co-Authored-By trailers to
+#   commits and "Generated with Claude Code" lines to PRs.
 { den, ... }: {
   den.aspects.claude = {
     includes = [

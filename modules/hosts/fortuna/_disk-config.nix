@@ -1,15 +1,18 @@
-# Fortuna's NixOS drive, partitioned by disko at install time:
+# Host:      fortuna, disk layout (imported by fortuna.nix; leading `_` keeps
+#            import-tree from loading it as a flake module)
+# Platform:  NixOS (disko)
+# Purpose:   Fortuna's NixOS drive, partitioned by disko at install time:
 #
 #   ESP   1 GiB   vfat, /boot (systemd-boot)
 #   luks  rest    LUKS2 "cryptroot", holding one btrfs filesystem with the
 #                 subvolumes /, /home, /nix and /swap (a swapfile)
 #
-# Fortuna has a second NVMe drive, reserved for a possible Windows 11 install.
-# It is deliberately NOT declared here: disko wipes every disk it declares, so
-# listing it would destroy Windows. Keep NixOS (including /home and swap) off it.
-#
-# Refer to the drive by its /dev/disk/by-id path, never /dev/nvme0n1 or
-# /dev/nvme1n1: the kernel can number the two drives differently between boots.
+# Notes:
+# - The second NVMe drive is reserved for a possible Windows 11 install and is
+#   deliberately NOT declared: disko wipes every disk it declares. Keep NixOS
+#   (including /home and swap) off it.
+# - Refer to the drive by its /dev/disk/by-id path, never /dev/nvme0n1 or
+#   /dev/nvme1n1: the kernel can number the two drives differently between boots.
 let
   # Samsung SSD 980 PRO with Heatsink 2 TB. The other drive, the Samsung SSD 970
   # EVO Plus 1 TB (nvme-Samsung_SSD_970_EVO_Plus_1TB_S4EWNX0R952864V), is the one

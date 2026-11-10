@@ -1,3 +1,14 @@
+# Aspect:    den.aspects.base (added to every host via den.default.includes)
+# Platforms: nixos, darwin, home-manager (through the aspects it includes)
+# Purpose:   The baseline every host and user gets: hostname, shells, macOS
+#            defaults, sudo, mail, the binary cache client, git, Neovim and the
+#            everyday CLI/TUI tools.
+#
+# Notes:
+# - To give something to every machine, include it here. To give it to one
+#   machine, include it from that host's aspect; to one person, from the user's.
+# - NixOS hosts also get users.mutableUsers = false (see below), so passwords
+#   only come from the flake.
 { den, ... }:
 {
   # Baseline configuration for every host.

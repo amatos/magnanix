@@ -1,18 +1,21 @@
-# fastfetch system summary (Home Manager), with its config written to
-# ~/.config/fastfetch/config.jsonc.
+# Aspect:    den.aspects.tui.fastfetch (included by base)
+# Platforms: home-manager
+# Purpose:   fastfetch system summary, configured in Nix (written to
+#            ~/.config/fastfetch/config.jsonc) and shown when a login shell starts.
 #
-# `fastfetch` on PATH is ./fastfetch-wrapper.py, which runs the real binary and
-# redraws the section banners (the `custom` modules below) to the width of the
-# widest data row. The wrapper still prints something when fastfetch crashes
-# or hangs part-way; see the comments at the top of the script. Its tests
-# (./test_fastfetch_wrapper.py) run when the package builds.
-#
-# fastfetch also runs when bash, zsh, fish or Nushell starts as an interactive
-# login shell with stdout on a terminal: a new terminal window or tab on macOS
-# (including editor terminals, which open login shells), an SSH session.
-# Non-interactive shells (`ssh host cmd`, scripts, agent shells) and
-# non-login ones (nested shells, `exec fish`) stay quiet. Set
-# FASTFETCH_ON_LOGIN=0 to skip it.
+# Notes:
+# - `fastfetch` on PATH is ./fastfetch-wrapper.py: it runs the real binary and
+#   redraws the section banners (the `custom` modules below) to the width of the
+#   widest data row, which fastfetch can't do itself. It still prints what it got
+#   if fastfetch crashes or hangs. Its tests (./test_fastfetch_wrapper.py) run
+#   when the package builds, so a failing test fails the switch.
+# - Runs only for interactive login shells on a terminal (a new terminal window
+#   or tab, an SSH session) in bash, zsh, fish and Nushell. Scripts, `ssh host
+#   cmd`, agent shells and nested shells stay quiet. Set FASTFETCH_ON_LOGIN=0
+#   to skip it.
+# - The bluetooth module is off because it crashes fastfetch 2.63.1 on Apple
+#   Silicon; publicip is off for privacy (it shows in screenshots) and speed.
+# - Full details: documentation/fastfetch.md.
 {
   den.aspects.tui.fastfetch = {
     homeManager =

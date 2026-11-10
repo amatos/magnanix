@@ -1,3 +1,18 @@
+# Aspect:    den.aspects.tui.yazi (included by base)
+# Platforms: home-manager, darwin
+# Purpose:   yazi, a terminal file manager, with plugins (git status, lazygit,
+#            diff, drag-and-drop, chmod, image convert/zoom, system clipboard,
+#            sudo file operations, starship header) and keybindings for them.
+#
+# Notes:
+# - Plugin keys: `g i` lazygit, `g D` diff, Ctrl-G drag, `c m` chmod,
+#   `c p/j/w` convert to PNG/JPG/WebP, `>`/`<` zoom, `y`/`x` also copy to the
+#   system clipboard, Ctrl-P paste from it, `R ...` the sudo variants.
+# - macOS: the mactag plugin shows and edits Finder tags (`b a` / `b r`). It
+#   needs jdberry's `tag` CLI, which isn't in nixpkgs, so it comes from Homebrew
+#   and a small wrapper puts it on PATH.
+# - imagemagick, lazygit and nushell are installed as runtime dependencies of
+#   the convert/zoom, lazygit and sudo plugins.
 {
   den.aspects.tui.yazi = {
     # mactag shells out to jdberry/tag, which isn't in nixpkgs.

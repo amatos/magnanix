@@ -1,3 +1,13 @@
+# Host:      template for a new NixOS host (ignored by import-tree: leading `_`)
+# Platform:  x86_64-linux (NixOS); change the den.hosts key for aarch64-linux
+# Purpose:   Copy to modules/hosts/<hostname>/<hostname>.nix, replace
+#            CHANGE_HOSTNAME and CHANGE_USERNAME, and import the machine's
+#            _hardware-configuration.nix. See
+#            documentation/adding-hosts-and-users.md.
+#
+# Notes:
+# - The host name must match `hostname`.
+# - The boot loader (systemd-boot) comes from base.
 { den, ... }:
 {
   # NOTE: assumes CHANGE_HOSTNAME is x86_64-linux. Den sets nixpkgs.hostPlatform from

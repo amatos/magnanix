@@ -1,3 +1,14 @@
+# Aspect:    none (added to every user via den.default.homeManager)
+# Platforms: home-manager
+# Purpose:   Declares the magnanix.draculaPro.* options (enable, dir, repo,
+#            usedBy) that theme-aware app modules read, and clones the licensed
+#            Dracula PRO repo into `dir` on activation when an app needs it.
+#
+# Notes:
+# - Dracula PRO is paid and licensed per person, so its files are never copied
+#   into this repo or the Nix store; apps link to the checkout instead.
+# - The clone is best-effort: a missing SSH agent or credentials only prints a
+#   warning, it never fails the switch.
 {
   # Dracula PRO (https://draculatheme.com/pro) is a paid theme pack under a
   # personal, non-transferable license, so its files never enter this public

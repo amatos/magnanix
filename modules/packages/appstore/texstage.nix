@@ -1,7 +1,10 @@
-# TexStage, a presenter for LaTeX Beamer slides and PDFs.
+# Aspect:    den.aspects.macos.texStage
+# Platforms: darwin
+# Purpose:   TexStage, a presenter for LaTeX Beamer slides and PDFs.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.texStage = {
     darwin.homebrew.masApps."TexStage" = 6737460352;

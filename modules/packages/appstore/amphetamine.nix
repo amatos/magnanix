@@ -1,7 +1,10 @@
-# Amphetamine, which keeps the Mac awake.
+# Aspect:    den.aspects.macos.amphetamine
+# Platforms: darwin
+# Purpose:   Amphetamine, which keeps the Mac awake.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.amphetamine = {
     darwin.homebrew.masApps."Amphetamine" = 937984704;

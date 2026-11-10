@@ -1,3 +1,8 @@
+# Aspect:    none (added to every user via den.default.homeManager)
+# Platforms: home-manager
+# Purpose:   Declares magnanix.repoDir, the path of the live, writable checkout
+#            of this repo (default ~/Developer/magnanix). Out-of-store symlinks
+#            (such as Zed's settings.json) and deploy-magnanix use it.
 {
   # Where the live (writable) checkout of this repo lives. Modules that symlink
   # tracked config files out of the store (mkOutOfStoreSymlink) read this, so the

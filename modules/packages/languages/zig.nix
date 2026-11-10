@@ -1,4 +1,7 @@
-# Zig toolchain and development tools.
+# Aspect:    den.aspects.zig
+# Platforms: home-manager
+# Purpose:   Zig and zls (its language server), kept on the same release
+#            because zls only supports the Zig version it was built for.
 {
   den.aspects.zig = {
     homeManager =

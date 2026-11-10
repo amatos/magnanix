@@ -1,7 +1,10 @@
-# Iris photo and video library.
+# Aspect:    den.aspects.macos.iris
+# Platforms: darwin
+# Purpose:   Iris photo and video library.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.iris = {
     darwin.homebrew.masApps."Iris" = 6761598836;

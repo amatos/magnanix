@@ -1,4 +1,10 @@
-# Lua runtime and development tools.
+# Aspect:    den.aspects.lua
+# Platforms: home-manager
+# Purpose:   LuaJIT (also as `lua`), LuaRocks, lua-language-server and StyLua.
+#
+# Notes:
+# - LuaJIT rather than PUC Lua because it's the Lua Neovim embeds; installing
+#   both would collide on `lua`.
 {
   den.aspects.lua = {
     homeManager =

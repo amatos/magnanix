@@ -1,7 +1,10 @@
-# Microsoft Office: Word, Excel and PowerPoint, plus OneDrive.
+# Aspect:    den.aspects.macos.microsoftOffice
+# Platforms: darwin
+# Purpose:   Microsoft Office: Word, Excel and PowerPoint, plus OneDrive.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.microsoftOffice = {
     darwin.homebrew.masApps = {

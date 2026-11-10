@@ -1,4 +1,9 @@
-# Basic devShell for working on this flake.
+# Aspect:    den.aspects.nix-tools (included by base)
+# Platforms: home-manager
+# Purpose:   Tools for working with Nix: search (nix-search-tv, manix, comma +
+#            nix-index), rebuild helpers (nh, nom, nvd), formatters (nixfmt,
+#            alejandra), language servers (nil, nixd) and inspection/diagnostic
+#            tools. nixfmt is the one this repo is formatted with.
 {
   den.aspects.nix-tools = {
     homeManager = { pkgs, ... }: {

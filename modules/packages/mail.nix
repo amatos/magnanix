@@ -1,20 +1,36 @@
-# Mail with Postfix on both platforms. `den.aspects.mail` (every host, through
-# `base`) sends through the local network's SMTP smart relay;
-# `den.aspects.mail.relay` (muninn) is that relay, and passes mail on to Fastmail.
+# Aspects:   den.aspects.mail        (included by base, so every host)
+#            den.aspects.mail.relay  (opt-in; the LAN's SMTP smart relay)
+# Platforms: mail: nixos, darwin; relay: nixos
+# Purpose:   Outgoing mail (cron output, `sendmail`, `mail`) with Postfix, sent
+#            through the network's smart relay, which passes it on to Fastmail.
 #
-# Every host:
-# - Every message goes to `local.mail.relayHost` on port 25, without
+# Every host (mail):
+# - Sends everything to `local.mail.relayHost` on port 25, without
 #   authentication, using STARTTLS when the relay offers it. The relay is
-#   `smtp.home.matos.cc` by default; the `tailscale` aspect switches it to
-#   `smtp.ts.matos.cc`. Both names are CNAMEs for muninn, managed outside this flake.
-# - Every sender address (envelope and From header) is rewritten to `address`.
-# - Local mail for root (and postmaster, which goes to root) is forwarded to
-#   `address` instead of a local mailbox nobody reads.
+#   smtp.home.matos.cc by default; the `tailscale` aspect switches it to
+#   smtp.ts.matos.cc. Both are CNAMEs managed outside this flake.
+# - Rewrites every sender address (envelope and From header) to `address`, and
+#   forwards local mail for root/postmaster there instead of an unread mailbox.
+# - NixOS runs its own send-only Postfix (no smtpd listening). macOS keeps
+#   Apple's Postfix: activation sets only the keys below in /etc/postfix/main.cf
+#   with `postconf -e`. A macOS update can reset main.cf; the next switch puts
+#   them back.
 #
-# NixOS runs its own Postfix (services.postfix). macOS keeps Apple's Postfix:
-# activation sets the keys below in /etc/postfix/main.cf with `postconf -e`,
-# leaving the rest of Apple's file alone. A macOS update can reset main.cf; the
-# next switch puts the keys back.
+# The relay (mail.relay):
+# - Accepts mail from `relayClients` (localhost, LAN, tailnet) on port 25
+#   (STARTTLS optional) and 465 (implicit TLS), only on the interfaces in
+#   local.mail.relay.interfaces, and relays for no one else.
+# - Rewrites the sender and From header of relayed mail too, because Fastmail
+#   only accepts senders that are the account's identities (printers, routers
+#   and NAS boxes send as anything).
+# - Sends to smtp.fastmail.com:465, verifying its certificate, logging in with
+#   the app password `fastmail_smtp_password` from the host's secrets file.
+# - Needs the `certbot` aspect: it requests the smtp.* certificates and serves
+#   smtp.home.matos.cc's on both ports. Until it's issued, port 25 works
+#   without TLS and port 465 fails.
+#
+# Test: printf 'Subject: test\n\ntest\n' | sendmail root; then `mailq` should be
+# empty. See documentation/mail.md.
 let
   address = "alberth@matos.cc";
   relayPort = 25;

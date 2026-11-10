@@ -1,6 +1,8 @@
-# CodeWeavers CrossOver, which runs Windows apps and games on macOS without a
-# Windows licence, as a Homebrew cask. CrossOver is paid software and needs a
-# licence after its trial.
+# Aspect:    den.aspects.macos.crossOver
+# Platforms: darwin
+# Purpose:   CodeWeavers CrossOver, which runs Windows apps and games on macOS
+#            without a Windows licence, as a Homebrew cask. Paid; needs a licence
+#            after the trial.
 {
   den.aspects.macos.crossOver = {
     darwin = {

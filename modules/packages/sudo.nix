@@ -1,3 +1,13 @@
+# Aspect:    den.aspects.sudo (included by base)
+# Platforms: nixos, darwin
+# Purpose:   How sudo authenticates.
+#
+# Notes:
+# - NixOS: sudo-rs (a memory-safe Rust rewrite) replaces sudo. Every user on
+#   the host is added to `wheel`, and wheel members run sudo without a password
+#   (wheelNeedsPassword = false; the NixOS default is true).
+# - macOS: Touch ID for sudo, via /etc/pam.d/sudo_local (survives macOS
+#   updates, unlike editing /etc/pam.d/sudo).
 {
   den.aspects.sudo = {
     nixos = {

@@ -1,3 +1,8 @@
+# Aspect:    den.aspects.steam
+# Platforms: darwin, nixos
+# Purpose:   Steam: the Homebrew cask on macOS, programs.steam on NixOS (which
+#            also sets up the 32-bit libraries and udev rules for controllers).
+#            Unfree.
 { den, ... }:
 {
   den.aspects.steam = {

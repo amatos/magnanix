@@ -1,0 +1,23 @@
+# TODO
+
+- `fortuna`: add an `alberth_fortuna` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
+  Its second NVMe drive (the Samsung 970 EVO Plus) is reserved for Windows 11; keep NixOS off it.
+- Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`
+  and `secrets/users/alberth.yaml` with real secrets and declare them as
+  `sops.secrets.<name>`.
+- `muninn`: create `alberth_muninn` (see the TODO in `.sops.yaml`), add it to the
+  `secrets/bootstrap/nixostron.yaml` rule so nixostron-vm runs there without a YubiKey, and run
+  `sops updatekeys secrets/bootstrap/nixostron.yaml` (on magnus, no YubiKey needed). Add it to the `alberth.yaml`
+  rule too once `alberth` declares a Home Manager secret.
+- Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
+- Build `muninn`, and run `nixostron-vm` on both `magnus` and `muninn` for the first time. `magnus` and
+  `darwintron` build; `muninn` and both `nixostron` hosts evaluate.
+- Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
+  `nix-darwin-settings.nix` that set them was never wired in and has been removed.
+- Remove the `doCheck = false` override on `cargo-llvm-cov` in `modules/packages/languages/rust.nix` (see
+  [Rust](languages.md#rust)) once nixpkgs fixes its tests. After updating inputs, check with
+  `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
+  the pinned nixpkgs, tests included, so success means the override can go. The tests fail on both macOS and
+  Linux, so one host is enough.
+- Define `reload-wifi-mt7921` (called by fish's `full-network-reset` on NixOS in
+  `modules/packages/shells/fish.nix`), or remove that step.

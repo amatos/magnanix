@@ -1,3 +1,11 @@
+# Aspect:    den.aspects.darwin.menuExtraClock (part of darwin.customizations)
+# Platforms: darwin
+# Purpose:   The menu bar clock, shown as an ISO-style "yyyy-MM-dd HH:mm:ss"
+#            24-hour timestamp with the day of the week.
+#
+# Notes:
+# - menuExtraClock picks WHICH parts show; the custom DateFormat in
+#   CustomUserPreferences decides HOW they are formatted and overrides it.
 {
   den.aspects.darwin.menuExtraClock = {
     darwin.system.defaults = {

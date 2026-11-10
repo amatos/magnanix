@@ -1,4 +1,10 @@
-# Swift toolchain and development tools.
+# Aspect:    den.aspects.swift
+# Platforms: home-manager (installs packages on Linux only)
+# Purpose:   Swift, sourcekit-lsp and swift-format on Linux.
+#
+# Notes:
+# - On macOS nothing is installed: Swift comes from Xcode or the Command Line
+#   Tools (through xcrun), matched to the SDKs.
 {
   den.aspects.swift = {
     # On macOS Swift comes from Xcode or the Command Line Tools (swift, swiftc,

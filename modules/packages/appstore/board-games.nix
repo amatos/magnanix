@@ -1,7 +1,10 @@
-# Board games: Goban (Go) and Gomoku.
+# Aspect:    den.aspects.macos.boardGames
+# Platforms: darwin
+# Purpose:   Board games: Goban (Go) and Gomoku.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.boardGames = {
     darwin.homebrew.masApps = {

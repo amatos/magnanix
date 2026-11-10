@@ -1,3 +1,15 @@
+# Aspect:    none (Den schema defaults for every user and Home Manager host)
+# Platforms: nixos, darwin (configures Home Manager's system integration)
+# Purpose:   Declares the Home Manager input, gives every user the homeManager
+#            class, and sets Home Manager's integration options on every host
+#            that has users.
+#
+# Notes:
+# - useGlobalPkgs/useUserPackages: users share the system's nixpkgs (and its
+#   allowUnfree) and install packages into the per-user profile.
+# - backupCommand: when a managed file would overwrite an existing unmanaged
+#   one, the old file goes to the trash (or is deleted) instead of the switch
+#   failing with "Existing file ... is in the way".
 {
   inputs,
   lib,

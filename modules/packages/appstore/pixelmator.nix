@@ -1,7 +1,10 @@
-# Pixelmator Pro (image editor) and Photomator (photo editor).
+# Aspect:    den.aspects.macos.pixelmator
+# Platforms: darwin
+# Purpose:   Pixelmator Pro (image editor) and Photomator (photo editor).
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.pixelmator = {
     darwin.homebrew.masApps = {

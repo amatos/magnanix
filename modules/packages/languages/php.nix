@@ -1,4 +1,7 @@
-# PHP runtime and development tools.
+# Aspect:    den.aspects.php
+# Platforms: home-manager
+# Purpose:   PHP, Composer (built on the same PHP) and intelephense (unfree);
+#            ~/.config/composer/vendor/bin is on PATH for global requires.
 { den, ... }:
 {
   den.aspects.php = {

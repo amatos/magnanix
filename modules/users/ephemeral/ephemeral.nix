@@ -1,3 +1,13 @@
+# User:      ephemeral (den.aspects.ephemeral)
+# Platforms: nixos, darwin, home-manager
+# Purpose:   Disposable test user for the darwintron and nixostron VMs. Its
+#            secrets (secrets/users/ephemeral.yaml) hold fake values only.
+#
+# Notes:
+# - Login shell is Nix's zsh, set the same way as alberth's.
+# - NixOS: throwaway password "ephemeral" (not a secret) and the test VMs'
+#   access key, because base makes users immutable and NixOS refuses to build
+#   unless an admin account can log in.
 { den, ... }:
 let
   username = "ephemeral";
@@ -9,8 +19,6 @@ let
   ];
 in
 {
-  # Disposable test user for darwintron and nixostron. Its secrets
-  # (secrets/users/ephemeral.yaml) hold fake values only.
   den.aspects.ephemeral = {
     includes = [
       den.batteries.define-user

@@ -1,7 +1,10 @@
-# Darkroom photo editor.
+# Aspect:    den.aspects.macos.darkroom
+# Platforms: darwin
+# Purpose:   Darkroom photo editor.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.darkroom = {
     darwin.homebrew.masApps."Darkroom" = 953286746;

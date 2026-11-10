@@ -1,3 +1,10 @@
+# Aspect:    den.aspects.darwin.trackpad (part of darwin.customizations)
+# Platforms: darwin
+# Purpose:   Trackpad behaviour.
+#
+# Notes (changes from macOS defaults):
+# - Tap to click and two-finger right-click are on.
+# - Tap-and-hold dragging and three-finger drag stay off.
 {
   den.aspects.darwin.trackpad = {
     darwin.system.defaults = {

@@ -1,3 +1,22 @@
+# Aspect:    den.aspects.shell.zsh (included by base)
+# Platforms: home-manager, nixos, darwin
+# Purpose:   zsh with oh-my-zsh (theme off; Starship draws the prompt), fzf-tab
+#            completion, autosuggestions, syntax highlighting and history
+#            substring search, plus the shared aliases and POSIX functions.
+#
+# Notes:
+# - System level (programs.zsh): puts Nix's zsh in /etc/shells, which a user's
+#   login shell setting requires.
+# - Config lives in $XDG_CONFIG_HOME/zsh. History is ~/.local/share/zsh/history,
+#   effectively unlimited, shared between sessions, without duplicates.
+# - Plugin order matters: fzf-tab must load first (after compinit, before the
+#   plugins that wrap widgets).
+# - On Linux fzf-tab's native module is stripped, because on non-NixOS distros
+#   it fails to load against the host's glibc; the pure-zsh fallback is used.
+# - envExtra sources the Nix daemon profile, so `nix` is on PATH when zsh is the
+#   login shell on non-NixOS Linux.
+# - A precmd hook resets mouse-tracking escapes leaked by TUIs in other Zellij
+#   panes, so they don't turn into garbage input.
 { den, ... }: {
   den.aspects.shell.zsh = {
     includes = [

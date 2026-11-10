@@ -1,3 +1,22 @@
+# Aspects:   den.aspects.ghostty           (the terminal)
+#            den.aspects.ghostty.terminfo  (included by base)
+# Platforms: ghostty: home-manager; terminfo: nixos, darwin
+# Purpose:   Ghostty terminal and its config. `terminfo` installs Ghostty's
+#            terminfo system-wide, so every host can serve SSH sessions coming
+#            from Ghostty even if it doesn't run Ghostty itself.
+#
+# Notes (changes from Ghostty's defaults):
+# - Theme: built-in Dracula. Users with magnanix.draculaPro get Dracula PRO's
+#   colors layered on through an optional include (`?` prefix), so a missing
+#   checkout falls back to Dracula instead of an error.
+# - Font size 14 (default 13).
+# - copy-on-select = "clipboard": selections also go to the system clipboard,
+#   so Cmd-V and other apps can paste them.
+# - Shell integration adds sudo (keep terminfo under sudo), ssh-terminfo
+#   (install terminfo on remote hosts) and ssh-env (fall back to
+#   TERM=xterm-256color where that's impossible).
+# - macOS uses `ghostty-bin` (the upstream app bundle); `ghostty` doesn't
+#   build there.
 {
   den.aspects.ghostty = {
     # Lets hosts that don't run Ghostty still serve SSH sessions coming from it.

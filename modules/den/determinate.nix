@@ -1,3 +1,15 @@
+# Aspect:    den.aspects.determinate (added to every host via den.default.includes)
+# Platforms: nixos, darwin
+# Purpose:   Hands the Nix installation to Determinate Nix and writes the
+#            settings every host shares to /etc/nix/nix.custom.conf.
+#
+# Notes:
+# - On macOS Determinate owns Nix, so nix-darwin's nix.* options are switched
+#   off: never use nix.gc, nix.optimise or nix.settings in a darwin block. Use
+#   determinateNix.customSettings and
+#   determinateNix.determinateNixd.garbageCollector.strategy instead.
+# - Put a setting in `sharedSettings` if every host should have it, or straight
+#   in the darwin/nixos block if only one platform should.
 { den, inputs, ... }:
 let
   # Determinate Nix settings shared by every host. nix-darwin takes them as

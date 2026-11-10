@@ -1,4 +1,15 @@
-# Ruby runtime and development tools.
+# Aspect:    den.aspects.ruby
+# Platforms: home-manager
+# Purpose:   Ruby 4.0 (with gem, bundler, irb, rake), ruby-lsp, RuboCop,
+#            Standard, bundler-audit, and mise for per-project Ruby versions.
+#
+# Notes:
+# - `gem install` / `bundle install` go to ~/.local/share/gem (the Nix Ruby's
+#   gem dir is read-only); its bin is on PATH.
+# - RuboCop and Standard run on nixpkgs' default Ruby (3.x), because a
+#   dependency refuses Ruby 4.
+# - mise sets no global Ruby; it only switches inside projects that pin one
+#   (`.ruby-version` or mise.toml, e.g. `mise use ruby@3.3`).
 {
   den.aspects.ruby = {
     homeManager =

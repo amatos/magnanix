@@ -1,3 +1,14 @@
+# Aspect:    den.aspects.shell.posixFunctions (included by bash and zsh)
+# Platforms: home-manager
+# Purpose:   Helper shell functions for bash and zsh: GPG/YubiKey resets
+#            (yubikey-reset, reload-gpg-agent, ...), Docker cleanup
+#            (docker-delete-*), Tailscale and DNS fixes (tail-vpn-restart,
+#            use-exit-node, dns-reset-all, ...), network info (mynet, myping)
+#            and a zoxide+fzf directory picker (zox).
+#
+# Notes:
+# - shell-functions-fish.nix has the same functions written for fish. Keep the
+#   two files in step when adding or changing one.
 {
   den.aspects.shell.posixFunctions = {
     homeManager =

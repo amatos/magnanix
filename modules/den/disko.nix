@@ -1,3 +1,8 @@
+# Aspect:    den.aspects.disko (opt-in)
+# Platforms: nixos
+# Purpose:   Imports disko so a host can declare its partitions, filesystems and
+#            LUKS devices in Nix (`disko.devices`) and have them created at
+#            install time by disko or nixos-anywhere.
 { inputs, ... }:
 {
   # disko: declarative disk partitioning. A host that includes this aspect describes

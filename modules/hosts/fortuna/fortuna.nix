@@ -1,3 +1,13 @@
+# Host:      fortuna (den.aspects.fortuna)
+# Platform:  x86_64-linux (NixOS)
+# Purpose:   AMD (CPU and GPU) desktop running Hyprland with the Noctalia shell,
+#            on LUKS + btrfs laid out by disko (_disk-config.nix).
+#
+# Notes:
+# - It has a second NVMe drive reserved for Windows 11. Never put NixOS data on
+#   it; install steps and the rules that keep Windows possible are below.
+# - Audio defaults to the GPU's HDMI output (WirePlumber priority rule).
+# - NetworkManager handles networking (Noctalia's Wi-Fi widget uses it).
 { den, ... }:
 {
   # Den sets nixpkgs.hostPlatform from this key; it matches the x86_64-linux in

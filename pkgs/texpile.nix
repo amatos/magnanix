@@ -1,9 +1,12 @@
-# When Texpile releases a new version:
+# Package:   Texpile (free offline LaTeX and Typst editor; not in nixpkgs)
+# Platforms: darwin (.dmg), linux (AppImage); used by den.aspects.tex.texpile
+#
+# To update when Texpile releases a new version:
 #   1. Find the latest version at https://dl.texpile.com/latest.json
 #   2. Run: nix store prefetch-file --hash-type sha256 https://dl.texpile.com/vX.Y.Z/Texpile-X.Y.Z.dmg
 #      and:  nix store prefetch-file --hash-type sha256 https://dl.texpile.com/vX.Y.Z/Texpile-X.Y.Z.AppImage
 #   3. Replace `version` and both hashes below with the new values.
-#   4. Run `darwin-rebuild switch` / `nixos-rebuild switch` to install the new version.
+#   4. Switch to install the new version.
 {
   lib,
   stdenvNoCC,

@@ -1,5 +1,10 @@
-# Shell script (bash, sh, zsh) development tools. Named `shellscript` because
-# `shell` is the aspect for the login shells themselves.
+# Aspect:    den.aspects.shellscript
+# Platforms: home-manager
+# Purpose:   Shell script (bash, sh, zsh) tools: ShellCheck, shfmt and
+#            bash-language-server.
+#
+# Notes:
+# - Named `shellscript` because `shell` is the aspect for the login shells.
 {
   den.aspects.shellscript = {
     homeManager =

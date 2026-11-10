@@ -1,3 +1,13 @@
+# Aspect:    den.aspects.darwin.screencapture (part of darwin.customizations)
+# Platforms: darwin
+# Purpose:   Screenshots (Cmd-Shift-3/4/5) go to ~/Pictures/Screenshots/unsorted
+#            as PNGs, without window shadows, with the date in the file name.
+#
+# Notes:
+# - The path is built from system.primaryUser (set per host with
+#   den.batteries.primary-user).
+# - nix-darwin doesn't create the directory, and macOS ignores a location that
+#   doesn't exist, so a postActivation script creates it.
 {
   den.aspects.darwin.screencapture = {
     # A machine-wide default applied to the host's primary user

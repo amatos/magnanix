@@ -1,3 +1,16 @@
+# Host:      darwintron (den.aspects.darwintron)
+# Platform:  aarch64-darwin (nix-darwin), a disposable Tart VM
+# Purpose:   Test bed for trying a change on macOS before it lands. Deliberately
+#            minimal: add the aspect under test to its includes on a branch, then
+#            run `darwintron-vm test <branch>` from the dev shell. See
+#            documentation/testing-vms.md.
+#
+# Notes:
+# - Its only user is `ephemeral`, whose secrets are fake; it can't read
+#   common.yaml or any real user's secrets.
+# - Automatic macOS updates are forced off so an update can't reboot the VM
+#   mid-test.
+# - The `canary` secrets prove system and Home Manager decryption work.
 { den, inputs, ... }:
 {
   den.hosts.aarch64-darwin.darwintron = {
@@ -7,8 +20,6 @@
     instantiate = inputs.nix-darwin.lib.darwinSystem;
   };
 
-  # Configuration specific to darwintron, a disposable Tart VM on magnus. See
-  # "Testing changes on darwintron" in the README.
   den.aspects.darwintron = {
     darwin =
       { lib, ... }:

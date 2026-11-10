@@ -1,3 +1,7 @@
+# Aspect:    none (flake input only)
+# Platforms: darwin
+# Purpose:   Declares the nix-darwin input that Den builds macOS hosts with and
+#            the dev shell takes darwin-rebuild from.
 { ... }:
 {
   # Unstable nix-darwin (master; use 0 for stable). Hosts build with

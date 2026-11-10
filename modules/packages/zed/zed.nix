@@ -1,3 +1,25 @@
+# Aspect:    den.aspects.zed
+# Platforms: darwin, home-manager
+# Purpose:   The Zed editor (and Zed's Delta AI assistant), with settings.json
+#            kept in this repo, Zed as $VISUAL, and Zed as the default app for
+#            .txt, .yaml and .sh files.
+#
+# Notes:
+# - Install: casks `zed` and `zed-delta` on macOS. On Linux, zed-editor-fhs
+#   (FHS-wrapped so extensions' prebuilt language servers run) and Delta from
+#   its official flake, exposed as `zed-delta` because its `delta` would clash
+#   with git's delta pager.
+# - Settings: ~/.config/zed/settings.json is a writable symlink to
+#   modules/users/<user>/configs/zed/settings.json in the live checkout
+#   (magnanix.repoDir), so changes made in Zed show up as git diffs. On every
+#   switch, `defaultSettings` below fills in keys MISSING from that file; keys
+#   already in the file win. The file is only rewritten when something is added.
+# - If magnanix.repoDir isn't a git checkout, the settings step is skipped with
+#   a warning rather than creating a stray directory.
+# - VISUAL = "zed --wait" on macOS, "zeditor --wait" on Linux, so git, crontab
+#   and friends open Zed and wait for the tab to close. EDITOR stays Neovim.
+# - File associations: duti on macOS (by extension), xdg.mimeApps on Linux
+#   (by MIME type).
 { inputs, ... }:
 {
   # Official Delta flake (Linux binaries only: x86_64-linux and aarch64-linux).
@@ -59,6 +81,7 @@
 
           # Follow the system appearance. Names must match an installed theme
           # exactly (built-in, or from an extension in auto_install_extensions).
+          # Note that the light theme actually IS called "Dracula Light (Alucard"
           theme = {
             mode = "system";
             light = "Dracula Light (Alucard";

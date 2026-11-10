@@ -1,3 +1,12 @@
+# Aspect:    den.aspects.browsers.firefox (part of den.aspects.browsers)
+# Platforms: darwin, home-manager
+# Purpose:   Firefox, with the 1Password extension force-installed through
+#            enterprise policy.
+#
+# Notes:
+# - macOS: the app is the Homebrew cask (the signed Mozilla build) and Home
+#   Manager only manages its config, because 1Password refuses to talk to the
+#   nixpkgs build, whose wrapper breaks the code signature.
 {
   den.aspects.browsers.firefox = {
     # The signed Mozilla build. 1Password checks the browser's code signature on

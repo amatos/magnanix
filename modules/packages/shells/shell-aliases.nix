@@ -1,3 +1,14 @@
+# Aspect:    den.aspects.shell.shellAliases (included by each shell aspect)
+# Platforms: home-manager, nixos, darwin
+# Purpose:   Aliases shared by the shells.
+#
+# Notes:
+# - zsh and fish (Home Manager): rm/mv/cp ask before overwriting or deleting
+#   (-i), ssh* variants (sshk: skip host key check, sshv: verbose, sshp: force
+#   password, ssht: 5 s timeout, sshx: X11 forwarding, sshnone: no known_hosts
+#   at all), and git-log / git-author history views.
+# - System-wide (every shell): `clipboard` / `paste`, backed by xclip on NixOS
+#   (which also gets pbcopy/pbpaste lookalikes) and pbcopy/pbpaste on macOS.
 {
   den.aspects.shell.shellAliases = {
     homeManager =

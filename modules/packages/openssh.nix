@@ -1,6 +1,17 @@
+# Aspect:    den.aspects.openssh
+# Platforms: nixos, darwin
+# Purpose:   SSH server, public keys only: no passwords, no keyboard-interactive
+#            login, no root login. Users' keys come from
+#            users.users.<name>.openssh.authorizedKeys (alberth's come from
+#            meta.authorizedKeys).
+#
+# Notes:
+# - NixOS: sshd with port 22 open. It also generates
+#   /etc/ssh/ssh_host_ed25519_key, which sops-nix decrypts system secrets with.
+# - macOS: Apple's sshd (System Settings > General > Sharing > Remote Login),
+#   turned on at activation. Settings go in
+#   /etc/ssh/sshd_config.d/100-nix-darwin.conf.
 {
-  # SSH server, keys only, on NixOS and macOS. Users' keys come from their
-  # `users.users.<name>.openssh.authorizedKeys` (alberth's from his meta.authorizedKeys).
   den.aspects.openssh = {
     # NixOS: sshd, with port 22 opened in the firewall. It also creates
     # /etc/ssh/ssh_host_ed25519_key, the key sops-nix decrypts system secrets with.

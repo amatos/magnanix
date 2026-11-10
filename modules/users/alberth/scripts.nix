@@ -1,3 +1,17 @@
+# User:      alberth (den.aspects.alberth.scripts)
+# Platforms: home-manager
+# Purpose:   Installs the scripts in ./scripts into ~/.local/bin and puts that
+#            directory on PATH (also for non-interactive `ssh host cmd`, since
+#            zsh sets it in .zshenv).
+#
+# Scripts:
+#   control-dock.sh   -h / -s: turn Dock autohide on / off (macOS)
+#   dollar.sh         runs its arguments, so a pasted `$ cmd` works when
+#                     linked or aliased as `$`
+#   extract.sh        extracts an archive (or mounts a .dmg) by its extension
+#   switch-yubikey    points gpg's key stubs at the YubiKey now inserted
+#   velja-open.sh     `open "$@"`; used with the Velja browser picker
+#   yubi-enable / yubi-disable   turn a YubiKey's OpenPGP USB interface on/off
 {
   den.aspects.alberth.scripts = {
     homeManager = { ... }: {

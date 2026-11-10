@@ -1,9 +1,18 @@
+# Aspect:    den.aspects.sops (added to every host via den.default.includes)
+# Platforms: nixos, darwin, home-manager
+# Purpose:   Imports sops-nix and points each host at secrets/hosts/<hostName>.yaml
+#            and each user at secrets/users/<user>.yaml, so an aspect can
+#            declare a secret without naming its file.
+#
+# Notes:
+# - Hosts decrypt with their SSH host key; users with a per-machine age key in
+#   ~/.config/sops-nix/key.txt, which must exist before the first switch.
 { den, inputs, ... }:
 {
   # sops-nix for encrypted secrets, at both system and Home Manager level.
   #
   # Secret files (see .sops.yaml for who can decrypt each one):
-  #   secrets/common.yaml          for secrets shared between hosts; only magnus can decrypt it for now
+  #   secrets/common.yaml          for secrets shared between hosts; .sops.yaml lists which hosts can decrypt it
   #   secrets/hosts/<host>.yaml    one per host, the system's default secrets file
   #   secrets/users/<user>.yaml    one per user, the Home Manager default secrets file
   #

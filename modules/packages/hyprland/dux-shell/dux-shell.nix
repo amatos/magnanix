@@ -1,22 +1,26 @@
+# Aspect:    den.aspects.dux-shell (a Hyprland shell aspect; includes hyprland)
+# Platforms: nixos, home-manager
+# Purpose:   Dux Shell (https://duxlabs.dev), formerly DankMaterialShell (DMS):
+#            a Quickshell desktop shell with bar, launcher, control center,
+#            dock, notifications, lock screen, OSD, clipboard history and its
+#            own polkit agent. Keybinds are in ./dux-shell.lua.
+#
+# Notes:
+# - The rename kept the `dms` command, the dms.service unit and the
+#   ~/.config/dms and ~/.config/hypr/dms directories.
+# - Package and NixOS module come from nixpkgs; no flake input. Home Manager
+#   has no Dux module, so settings.json is seeded once (see below) and is Dux's
+#   to change after that. Delete it and switch to reseed.
+# - `dms setup` is blocked (via /etc/dms/cli-policy.json), because it would
+#   try to replace the Nix-managed hyprland.lua. On first login, close the
+#   welcome screen. A "First Time Setup" banner on the keybinds page can be
+#   ignored: edits there go to dms/binds-user.lua, which is loaded.
+# - Theme: a custom Dracula palette (./dracula.json): Dracula when dark,
+#   Alucard when light.
+# - Wi-Fi, Bluetooth and audio widgets need NetworkManager, BlueZ and
+#   PipeWire, which the host must enable itself.
 { den, ... }:
 {
-  # Dux Shell (https://duxlabs.dev), formerly DankMaterialShell (DMS): a
-  # Quickshell desktop shell with a bar, launcher, control center, dock,
-  # notifications, lock screen, OSD, clipboard history and its own polkit agent.
-  # The rename kept the `dms` command, the dms.service unit and the ~/.config/dms
-  # and ~/.config/hypr/dms directories. One of the Hyprland shell aspects (see
-  # hyprland.nix); no host includes it yet. To switch fortuna to it, replace
-  # den.aspects.noctalia with den.aspects.dux-shell in
-  # modules/hosts/fortuna/fortuna.nix.
-  #
-  # The package and the NixOS module come from nixpkgs; no flake input. Home
-  # Manager has no Dux module, so its settings are seeded below.
-  #
-  # On first login Dux shows its welcome screen; close it. Don't run `dms setup`
-  # (it's blocked below): it would try to replace hyprland.lua with its own. Its
-  # keybinds page may still show a "First Time Setup" banner, because
-  # dux-shell.lua doesn't load dms/binds.lua; ignore it, keybinds edited there
-  # still apply (they go to dms/binds-user.lua, which is loaded).
   den.aspects.dux-shell = {
     includes = [ den.aspects.hyprland ];
 
@@ -34,7 +38,7 @@
       # What Dux's battery and power-profile widgets talk to, and the location
       # source for its weather and automatic night mode. Its wifi, bluetooth
       # and audio widgets use NetworkManager, BlueZ and PipeWire, which hosts
-      # set up themselves (fortuna has all three).
+      # set up themselves.
       services.upower.enable = true;
       services.power-profiles-daemon.enable = true;
       services.geoclue2.enable = true;

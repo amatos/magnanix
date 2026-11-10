@@ -1,4 +1,7 @@
-# Elixir runtime and development tools.
+# Aspect:    den.aspects.elixir
+# Platforms: home-manager
+# Purpose:   Erlang/OTP, Elixir (mix, iex, mix format) and ElixirLS, all from
+#            one beamPackages set so they share an OTP release.
 {
   den.aspects.elixir = {
     homeManager =

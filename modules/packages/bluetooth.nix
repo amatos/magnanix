@@ -1,3 +1,7 @@
+# Aspect:    den.aspects.bluetooth
+# Platforms: nixos
+# Purpose:   Enables Bluetooth (BlueZ), with its experimental features so device
+#            battery levels are reported to the desktop.
 {
   den.aspects.bluetooth = {
     nixos = {

@@ -1,3 +1,17 @@
+# Aspect:    den.aspects.gpg
+# Platforms: home-manager, darwin
+# Purpose:   GnuPG: gpg.conf, the user's default key and public key import
+#            (from the user's meta: gpgKey, gpgPublicKey), and GPG Suite on macOS.
+#
+# Notes:
+# - macOS: GPG Suite provides the agent and pinentry (gpg-agent.conf and
+#   dirmngr.conf are left to it), but its installer also puts its own gpg on
+#   PATH. A postActivation script removes /etc/paths.d/MacGPG2 and the
+#   /usr/local/bin/gpg symlink after every switch so the Nix gpg wins.
+# - Linux: scdaemon goes through pcscd (disable-ccid, pcsc-shared), so gpg,
+#   OpenSC, ssh PKCS#11 and yubioath can share the one smartcard reader instead
+#   of fighting over it. pcscd itself is enabled by tui.yubikey.
+# - Users without gpgKey / gpgPublicKey still work; those parts are skipped.
 { den, ... }:
 {
   den.aspects.gpg = {
@@ -41,9 +55,11 @@
           # the settings below are additional or diverge from those defaults.
           settings = {
             charset = "utf-8";
-            no-greeting = true;
-            require-secmem = true;
-            armor = true;
+            no-greeting = true; # no copyright banner on every command
+            require-secmem = true; # refuse to run without locked (unswappable) memory
+            armor = true; # ASCII-armored output by default, safe to paste
+            # Find unknown keys locally, then via Web Key Directory and DANE (DNS),
+            # never from public keyservers.
             auto-key-locate = "clear,local,wkd,dane";
           }
           // lib.optionalAttrs hasKey { default-key = meta.gpgKey; };

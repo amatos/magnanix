@@ -1,20 +1,29 @@
+# Aspect:    den.aspects.hyprland (don't include directly; include a shell aspect)
+# Platforms: nixos, home-manager
+# Purpose:   Hyprland, a dynamic tiling Wayland compositor, started from a greetd
+#            login screen (ReGreet), with gnome-keyring and the Hyprland polkit
+#            agent. The shared Hyprland config is ./hyprland.lua.
+#
+# Notes:
+# - This is the compositor alone. A host includes exactly one desktop shell
+#   aspect, which includes this one and adds the bar, launcher, notifications
+#   and lock screen:
+#     hyprland-basic  waybar, fuzzel, mako, swaylock      (basic/)
+#     noctalia        the Noctalia shell                  (noctalia/)
+#     dux-shell       Dux Shell, formerly DankMaterialShell (dux-shell/)
+#   Each sets magnanix.hyprland.shell, so including two fails with a conflict,
+#   and including none fails an assertion.
+# - Launched with `start-hyprland` (upstream's launcher, which restarts
+#   Hyprland in safe mode after a crash) rather than UWSM. Home Manager's
+#   systemd integration starts graphical-session.target instead.
+# - programs.hyprland also enables polkit, XWayland, the Hyprland and GTK
+#   portals and swaylock's PAM service.
+# - gnome-keyring is enabled because, unlike niri, Hyprland doesn't do it
+#   itself; it's unlocked at login through greetd's PAM stack.
+# - The config is Lua (Hyprland 0.55+), written read-only to
+#   ~/.config/hypr/hyprland.lua: systemd integration, then ./hyprland.lua, then
+#   the shell aspect's Lua. Edit the .lua files here, not in ~/.config.
 {
-  # Hyprland, a dynamic tiling Wayland compositor (NixOS), started from a greetd
-  # login screen (ReGreet).
-  #
-  # programs.hyprland also enables polkit, XWayland, the Hyprland and GTK portals
-  # and the swaylock PAM service. It is launched with `start-hyprland`, the
-  # upstream launcher (it restarts Hyprland in safe mode if it crashes), rather
-  # than through UWSM; Home Manager's systemd integration (below) starts
-  # graphical-session.target instead.
-  #
-  # This aspect is the compositor alone. Hosts include one desktop shell aspect
-  # instead, which includes this one and adds the bar, launcher, notifications
-  # and lock screen:
-  #   - hyprland-basic: waybar, fuzzel, mako and swaylock (basic.nix)
-  #   - noctalia: the Noctalia shell (noctalia/)
-  #   - dux-shell: Dux Shell, formerly DankMaterialShell (dux-shell/)
-  # Each sets magnanix.hyprland.shell, so including two fails with a conflict.
   den.aspects.hyprland = {
     nixos =
       {

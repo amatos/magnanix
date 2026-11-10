@@ -1,14 +1,16 @@
-# Tailscale. On NixOS it's the tailscaled service; on macOS it's the App Store
-# app (installed by `brew bundle` through `mas`, which needs you signed in to the
-# App Store). Log in to the tailnet by hand after the first switch:
-# `sudo tailscale up` on NixOS, the app's menu on macOS.
+# Aspect:    den.aspects.tailscale
+# Platforms: nixos, darwin
+# Purpose:   Tailscale: tailscaled on NixOS, the App Store app on macOS (through
+#            `mas`, so you must be signed in to the App Store).
 #
-# The App Store app doesn't put its CLI on PATH; the binary inside the bundle
-# acts as the CLI when run from a terminal, so a `tailscale` wrapper execs it.
-#
-# Hosts on the tailnet send mail through the relay's Tailscale name instead of
-# its LAN one (see mail.nix), and reach the Attic cache the same way (see
-# attic.nix), so both keep working away from home.
+# Notes:
+# - Log in once after the first switch: `sudo tailscale up` on NixOS, the menu
+#   bar app on macOS.
+# - The App Store app doesn't put a CLI on PATH, but its binary acts as one when
+#   run from a terminal, so a `tailscale` wrapper execs it.
+# - Hosts with this aspect reach the mail relay and the Attic cache by their
+#   Tailscale names (smtp.ts / muninn.ts) instead of the LAN ones, so both keep
+#   working away from home.
 let
   relayHost = "smtp.ts.matos.cc";
   atticHost = "muninn.ts.matos.cc";
