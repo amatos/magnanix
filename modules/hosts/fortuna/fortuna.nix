@@ -32,6 +32,7 @@
       den.aspects.browsers
       den.aspects.browsers.linux.helium
       den.aspects.disko
+      den.aspects.elgato
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.noctalia

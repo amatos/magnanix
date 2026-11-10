@@ -87,6 +87,7 @@ modules/
 │   ├── cliutils.nix           modern CLI tools (ripgrep, fd, bat, eza, fzf, jq, ...)
 │   ├── crossover.nix          Crossover (CodeWeavers CrossOver) cask, runs Windows apps (macOS)
 │   ├── direnv.nix             direnv with nix-direnv and shell integration (Home Manager)
+│   ├── elgato.nix             Elgato apps as casks (macOS: Capture Device Utility, Control Center, Stream Deck, Studio, Wave Link); open-source stand-ins on NixOS (streamdeck-ui with its udev rules, not autostarted so Boatswain can use the device; Boatswain; keylight-cli and Keylight Controller)
 │   ├── fonts.nix              fonts, all from nixpkgs (Home Manager); see [Fonts](#fonts)
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host); theme is the built-in Dracula, with Dracula PRO's colors layered on through an optional `config-file` include when `magnanix.draculaPro` is on and its checkout exists; copy-on-select copies to the system clipboard
 │   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))

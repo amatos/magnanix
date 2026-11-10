@@ -29,6 +29,7 @@ in
       den.aspects.browsers
       den.aspects.certbot
       den.aspects.claude
+      den.aspects.elgato
       den.aspects.fonts
       den.aspects.ghostty
       den.aspects.java
