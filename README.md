@@ -15,7 +15,7 @@ and users simply pick the aspects they want.
 | `nixostron-aarch64` | `aarch64-linux` | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under Tart on magnus |
 | `nixostron-x86_64`  | `x86_64-linux`  | NixOS | `ephemeral` | [disposable VM](#testing-changes-on-nixostron) under QEMU on muninn |
 | `muninn`     | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM |
-| `fortuna`    | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
+| `fortuna`    | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland with Noctalia, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or
 `hostname` (NixOS), so that `darwin-rebuild` / `nixos-rebuild` can find it. `base` sets the OS hostname from
@@ -91,7 +91,7 @@ modules/
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host); theme is the built-in Dracula, with Dracula PRO's colors layered on through an optional `config-file` include when `magnanix.draculaPro` is on and its checkout exists; copy-on-select copies to the system clipboard
 │   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
-│   ├── hyprland/              Hyprland Wayland compositor (NixOS), started by `start-hyprland` from a greetd/ReGreet login; fuzzel, waybar, swaylock, mako, the Hyprland polkit agent and gnome-keyring; `hyprland.lua` is the config, written by Home Manager, with Ghostty on Super+Return
+│   ├── hyprland/              Hyprland Wayland compositor (NixOS), started by `start-hyprland` from a greetd/ReGreet login, with the Hyprland polkit agent and gnome-keyring; `hyprland.lua` is the shared config, written by Home Manager, with Ghostty on Super+Return. Hosts include one shell aspect, which brings Hyprland with it: `hyprland-basic` (`basic/`: waybar, fuzzel, swaylock, mako), `noctalia` (`noctalia/`: the Noctalia shell with a Dracula palette; fortuna uses it) or `dux-shell` (`dux-shell/`: Dux Shell, formerly DankMaterialShell, with a Dracula theme); including two fails the build
 │   ├── imagemagick.nix        ImageMagick
 │   ├── kaleidoscope.nix       Kaleidoscope cask (macOS)
 │   ├── magnet.nix             Magnet window manager, from the App Store (macOS)
@@ -99,7 +99,7 @@ modules/
 │   ├── mas.nix                the `mas` Mac App Store CLI (macOS)
 │   ├── neovim.nix             Neovim with LazyVim (lazyvim-nix), the default `$EDITOR` (see [Neovim](#neovim))
 │   ├── nix-tools.nix          Nix tooling (nh, nvd, nil, nixd, nixfmt, ...)
-│   ├── niri.nix               niri Wayland compositor, greetd/tuigreet login, fuzzel, waybar, swaylock, mako; niri's default config with Ghostty on Mod+T (NixOS); not included by any host (fortuna uses `hyprland`), kept to switch back to
+│   ├── niri.nix               niri Wayland compositor, greetd/tuigreet login, fuzzel, waybar, swaylock, mako; niri's default config with Ghostty on Mod+T (NixOS); not included by any host (fortuna uses Hyprland), kept to switch back to
 │   ├── nushell.nix            Nushell (Home Manager), with the session variables and other tools' integrations
 │   ├── openssh.nix            SSH server, keys only (no password or root login): sshd on NixOS (port 22 opened), Remote Login on macOS
 │   ├── orbstack.nix           OrbStack (macOS, unfree), with its data on a `Container Data` APFS volume (see [OrbStack](#orbstack))
