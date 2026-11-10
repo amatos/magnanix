@@ -7,32 +7,52 @@
   # upstream launcher (it restarts Hyprland in safe mode if it crashes), rather
   # than through UWSM; Home Manager's systemd integration (below) starts
   # graphical-session.target instead.
+  #
+  # This aspect is the compositor alone. Hosts include one desktop shell aspect
+  # instead, which includes this one and adds the bar, launcher, notifications
+  # and lock screen:
+  #   - hyprland-basic: waybar, fuzzel, mako and swaylock (basic.nix)
+  #   - noctalia: the Noctalia shell (noctalia/)
+  #   - dux-shell: Dux Shell, formerly DankMaterialShell (dux-shell/)
+  # Each sets magnanix.hyprland.shell, so including two fails with a conflict.
   den.aspects.hyprland = {
     nixos =
-      { pkgs, ... }:
+      { config, lib, ... }:
       {
-        programs.hyprland = {
-          enable = true;
-          xwayland.enable = true;
+        options.magnanix.hyprland.shell = lib.mkOption {
+          type = lib.types.nullOr (
+            lib.types.enum [
+              "basic"
+              "noctalia"
+              "dux-shell"
+            ]
+          );
+          default = null;
+          description = "The desktop shell running on Hyprland; set by the shell aspect the host includes.";
         };
 
-        # niri turns this on by itself; Hyprland doesn't. It keeps secrets for
-        # browsers and other apps, unlocked at login through greetd's PAM stack.
-        services.gnome.gnome-keyring.enable = true;
+        config = {
+          assertions = [
+            {
+              assertion = config.magnanix.hyprland.shell != null;
+              message = "hyprland: include a shell aspect (hyprland-basic, noctalia or dux-shell) rather than den.aspects.hyprland directly.";
+            }
+          ];
 
-        # ReGreet, a graphical (GTK4) greeter. The module enables greetd and runs
-        # ReGreet in cage, a kiosk compositor. It lists the installed sessions
-        # (Hyprland's runs start-hyprland) and remembers the last user and session.
-        services.displayManager.regreet.enable = true;
+          programs.hyprland = {
+            enable = true;
+            xwayland.enable = true;
+          };
 
-        environment.systemPackages = [
-          # What hyprland.lua spawns (besides the terminal, Ghostty)
-          pkgs.fuzzel # Super+R: application launcher
-          pkgs.swaylock # Super+L: screen locker
-          pkgs.waybar # status bar, started at login
+          # niri turns this on by itself; Hyprland doesn't. It keeps secrets for
+          # browsers and other apps, unlocked at login through greetd's PAM stack.
+          services.gnome.gnome-keyring.enable = true;
 
-          pkgs.mako # notifications (started on demand over D-Bus)
-        ];
+          # ReGreet, a graphical (GTK4) greeter. The module enables greetd and runs
+          # ReGreet in cage, a kiosk compositor. It lists the installed sessions
+          # (Hyprland's runs start-hyprland) and remembers the last user and session.
+          services.displayManager.regreet.enable = true;
+        };
       };
 
     homeManager = {
@@ -47,14 +67,15 @@
         # ~/.config/hypr/hyprland.lua (read-only, in the store): first the
         # systemd integration (hyprland-session.target, bound to
         # graphical-session.target, so user services like the polkit agent
-        # start), then hyprland.lua from this directory. Edit that file to
-        # customise Hyprland.
+        # start), then hyprland.lua from this directory, then the shell
+        # aspect's Lua. Edit those files to customise Hyprland.
         configType = "lua";
         extraConfig = builtins.readFile ./hyprland.lua;
       };
 
       # Password prompts for apps that ask polkit (1Password's system unlock,
       # for example). Runs as a user service under graphical-session.target.
+      # Shells with their own polkit agent turn it off.
       services.hyprpolkitagent.enable = true;
     };
   };
