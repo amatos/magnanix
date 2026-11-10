@@ -1,7 +1,8 @@
 # Host:      template for a new macOS host (ignored by import-tree: leading `_`)
 # Platform:  aarch64-darwin (nix-darwin)
-# Purpose:   Copy to modules/hosts/<hostname>.nix and replace CHANGE_HOSTNAME
-#            and CHANGE_USERNAME. See documentation/adding-hosts-and-users.md.
+# Purpose:   Copy to modules/hosts/<hostname>/<hostname>.nix and replace
+#            CHANGE_HOSTNAME and CHANGE_USERNAME. See
+#            documentation/adding-hosts-and-users.md.
 #
 # Notes:
 # - The host name must match `scutil --get LocalHostName`.

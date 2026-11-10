@@ -31,7 +31,7 @@ modules/
 │   ├── languages/             one aspect per programming language
 │   ├── shells/                zsh, fish, bash, Starship, and the aliases and functions they share
 │   └── ...                    everything else (browsers/, TeX/, audio/, 1password/, zed/, ...)
-├── hosts/                     one file (or directory) per host, plus _darwin_template.nix and _nix_template.nix
+├── hosts/                     one directory per host, plus templates/ (new-host templates) and virtual/ (test VMs)
 └── users/                     one directory per user, plus _user_template/
 ```
 

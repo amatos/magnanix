@@ -3,7 +3,7 @@
 ## Testing changes on darwintron
 
 `darwintron` is a disposable [Tart](https://tart.run) VM on `magnus` for trying a change before it lands. It is
-deliberately minimal: to test something, add its aspect to `modules/hosts/darwintron.nix` on a branch. Its primary
+deliberately minimal: to test something, add its aspect to `modules/hosts/virtual/darwintron.nix` on a branch. Its primary
 user is `ephemeral`, whose secrets hold fake values, and it can't read `common.yaml` or `alberth.yaml`.
 
 Run these inside `nix develop` on `magnus`. Only committed code is tested.
@@ -32,7 +32,7 @@ hardware can't be tested in the VM.
 
 `nixostron` is a disposable, headless NixOS VM, built for whichever architecture the machine running it has:
 `nixostron-aarch64` under Tart on `magnus`, and `nixostron-x86_64` under QEMU on `muninn` (or any x86_64 NixOS host
-with KVM). Both hosts share `den.aspects.nixostron` in `modules/hosts/nixostron.nix`; to test something, add its
+with KVM). Both hosts share `den.aspects.nixostron` in `modules/hosts/virtual/nixostron.nix`; to test something, add its
 aspect there on a branch. Its disk is described with [disko](https://github.com/nix-community/disko) (GPT, a 1 GiB
 ESP at `/boot`, ext4 root on `/dev/vda`). The only way in is SSH as `ephemeral` with the access key.
 
