@@ -1,8 +1,9 @@
 {
-  # alberth's own aliases, for bash, zsh and fish.
-  den.aspects.alberth.shellAliases = {
+  # `deploy-magnanix` as a real executable in ~/.local/bin (not a shell alias),
+  # so it also works non-interactively, e.g. `ssh fortuna deploy-magnanix`.
+  den.aspects.alberth.deployMagnanix = {
     includes = [
-      # Needs the host, so the deploy alias switches the machine it runs on.
+      # Needs the host, so the script switches the machine it runs on.
       (
         { host, ... }:
         {
@@ -67,17 +68,9 @@
                   nix run .#${host.name} -- switch
                 '';
               };
-
-              aliases = {
-                deploy-magnanix = lib.getExe deploy;
-              };
             in
             {
-              programs = {
-                bash.shellAliases = aliases;
-                fish.shellAliases = aliases;
-                zsh.shellAliases = aliases;
-              };
+              home.file.".local/bin/deploy-magnanix".source = lib.getExe deploy;
             };
         }
       )

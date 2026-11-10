@@ -34,8 +34,8 @@ in
       den.batteries.host-aspects
 
       den.aspects.alberth.macos.dock
+      den.aspects.alberth.deployMagnanix
       den.aspects.alberth.scripts
-      den.aspects.alberth.shellAliases
       den.aspects.alberth.ssh
       den.aspects.c
       den.aspects.direnv
