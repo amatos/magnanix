@@ -51,6 +51,14 @@ hl.config({
     input = {
         kb_layout    = "us",
         follow_mouse = 1,
+
+        -- Natural scrolling (content moves with the fingers), as on macOS
+        -- (see darwin/trackpad.nix): natural_scroll covers mice, the touchpad
+        -- setting covers trackpads.
+        natural_scroll = true,
+        touchpad = {
+            natural_scroll = true,
+        },
     },
 })
 
