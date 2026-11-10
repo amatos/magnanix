@@ -91,7 +91,7 @@ modules/
 │   ├── ghostty.nix            Ghostty terminal (Home Manager) and its terminfo (every host); theme is the built-in Dracula, with Dracula PRO's colors layered on through an optional `config-file` include when `magnanix.draculaPro` is on and its checkout exists; copy-on-select copies to the system clipboard
 │   ├── git.nix                Git with modern defaults, delta, difftastic, mergiraf, lazygit and more; `git.signing` signs with the user's GPG key (see [Git](#git))
 │   ├── gpg.nix                GnuPG: Home Manager config, GPG Suite cask (macOS)
-│   ├── hyprland/              Hyprland Wayland compositor (NixOS), started by `start-hyprland` from a greetd/tuigreet login; fuzzel, waybar, swaylock, mako, the Hyprland polkit agent and gnome-keyring; `hyprland.lua` is the config, written by Home Manager, with Ghostty on Super+Return
+│   ├── hyprland/              Hyprland Wayland compositor (NixOS), started by `start-hyprland` from a greetd/ReGreet login; fuzzel, waybar, swaylock, mako, the Hyprland polkit agent and gnome-keyring; `hyprland.lua` is the config, written by Home Manager, with Ghostty on Super+Return
 │   ├── imagemagick.nix        ImageMagick
 │   ├── kaleidoscope.nix       Kaleidoscope cask (macOS)
 │   ├── magnet.nix             Magnet window manager, from the App Store (macOS)

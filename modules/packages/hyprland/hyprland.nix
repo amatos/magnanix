@@ -1,6 +1,6 @@
 {
   # Hyprland, a dynamic tiling Wayland compositor (NixOS), started from a greetd
-  # login screen (tuigreet).
+  # login screen (ReGreet).
   #
   # programs.hyprland also enables polkit, XWayland, the Hyprland and GTK portals
   # and the swaylock PAM service. It is launched with `start-hyprland`, the
@@ -20,10 +20,10 @@
         # browsers and other apps, unlocked at login through greetd's PAM stack.
         services.gnome.gnome-keyring.enable = true;
 
-        services.greetd = {
-          enable = true;
-          settings.default_session.command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --cmd start-hyprland";
-        };
+        # ReGreet, a graphical (GTK4) greeter. The module enables greetd and runs
+        # ReGreet in cage, a kiosk compositor. It lists the installed sessions
+        # (Hyprland's runs start-hyprland) and remembers the last user and session.
+        services.displayManager.regreet.enable = true;
 
         environment.systemPackages = [
           # What hyprland.lua spawns (besides the terminal, Ghostty)
