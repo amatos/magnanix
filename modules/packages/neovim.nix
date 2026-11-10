@@ -1,4 +1,18 @@
-# Neovim with LazyVim, the default $EDITOR on every host (included by `base`).
+# Aspect:    den.aspects.neovim (included by base)
+# Platforms: home-manager
+# Purpose:   Neovim with LazyVim (via lazyvim-nix), as $EDITOR; vi, vim and
+#            vimdiff run it too.
+#
+# Notes:
+# - Everything comes from Nix: plugins, Treesitter parsers, language servers
+#   and formatters. Mason is disabled and lazy.nvim never clones from GitHub,
+#   so Neovim starts offline and works on NixOS.
+# - Nix owns the config, so :LazyExtras changes don't persist; enable extras in
+#   programs.lazyvim.extras here.
+# - Only EDITOR is set. Where Zed is installed, VISUAL points at Zed, and most
+#   programs (git, crontab) prefer VISUAL.
+# - Theme: Dracula PRO (dark/alucard, following the terminal's background) for
+#   users with magnanix.draculaPro and a checkout; free Dracula otherwise.
 { inputs, ... }:
 {
   # Home Manager module that builds LazyVim declaratively: plugins and
@@ -18,7 +32,7 @@
         # The PRO Vim theme is loaded straight from the checkout at runtime, so
         # its licensed files never enter the Nix store. Neovim deliberately
         # doesn't add itself to `magnanix.draculaPro.usedBy`: it runs on headless
-        # hosts (muninn) too, where the clone is not attempted. It uses the
+        # hosts too, where the clone should not be attempted. It uses the
         # checkout wherever one exists (cloned for Ghostty, or by hand).
         draculaPro = config.magnanix.draculaPro;
         draculaProVim = if draculaPro.enable then "${draculaPro.dir}/themes/vim" else null;

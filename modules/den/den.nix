@@ -1,3 +1,8 @@
+# Aspect:    none (flake-level module)
+# Platforms: n/a
+# Purpose:   Imports the Den framework, which provides the `den` module argument
+#            and every den.* option (aspects, hosts, users, batteries) used by
+#            the rest of ./modules.
 { inputs, ... }:
 {
   # Brings in the `den` module argument and all `den.*` options. This works

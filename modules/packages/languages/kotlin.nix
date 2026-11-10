@@ -1,4 +1,7 @@
-# Kotlin compiler and development tools.
+# Aspect:    den.aspects.kotlin (includes den.aspects.java)
+# Platforms: home-manager
+# Purpose:   kotlinc, kotlin-language-server and ktlint, all rebuilt on JDK 25;
+#            JAVA_HOME, Gradle and Maven come from the java aspect.
 { den, ... }:
 {
   den.aspects.kotlin = {

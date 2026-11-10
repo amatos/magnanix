@@ -1,7 +1,10 @@
-# Ivory Mastodon client.
+# Aspect:    den.aspects.macos.ivory
+# Platforms: darwin
+# Purpose:   Ivory Mastodon client.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.ivory = {
     darwin.homebrew.masApps."Ivory" = 6444602274;

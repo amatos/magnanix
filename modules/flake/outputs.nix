@@ -1,3 +1,9 @@
+# Aspect:    none (flake outputs)
+# Platforms: n/a
+# Purpose:   Defines what the flake exports: the darwin/NixOS configurations Den
+#            builds, one `nh` wrapper per host, the flake-file generators
+#            (write-flake), checks, the dev shell (apply-configuration,
+#            darwintron-vm, nixostron-vm, sops tools) and the nixfmt formatter.
 {
   config,
   inputs,
@@ -54,7 +60,7 @@ in
 
     # `nix flake check` fails when flake.nix is out of date with the modules
     # Linux systems also build the nixostron host for their architecture, so
-    # `nix flake check` on muninn catches a nixostron that no longer builds.
+    # `nix flake check` on a Linux host catches a nixostron that no longer builds.
     checks = forEachSupportedSystem (
       { pkgs, system }:
       {
@@ -116,7 +122,7 @@ in
             )
 
             # Builds and tests the disposable darwintron Tart VM. tart itself comes from
-            # the system profile (magnus), because it is unfree.
+            # the system profile (the `tui.macos.tart` aspect), because it is unfree.
             (pkgs.writeShellApplication {
               name = "darwintron-vm";
               runtimeInputs = [
@@ -132,7 +138,7 @@ in
               text = builtins.readFile ../../pkgs/darwintron-vm.sh;
             })
 
-            # Builds and tests the disposable nixostron VM: under Tart on magnus, under
+            # Builds and tests the disposable nixostron VM: under Tart on macOS, under
             # QEMU (`nixos-rebuild build-vm`) on x86_64 NixOS hosts. tart and
             # nixos-rebuild come from the system profile.
             (pkgs.writeShellApplication {

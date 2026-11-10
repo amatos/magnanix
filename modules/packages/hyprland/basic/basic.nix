@@ -1,8 +1,11 @@
+# Aspect:    den.aspects.hyprland-basic (a Hyprland shell aspect; includes hyprland)
+# Platforms: nixos, home-manager
+# Purpose:   Hyprland with separate small tools for the desktop: waybar (status
+#            bar), fuzzel (Super+R launcher), swaylock (Super+L) and mako
+#            (notifications, started on demand over D-Bus). Keybinds are in
+#            ./basic.lua.
 { den, ... }:
 {
-  # Hyprland with separate tools for the desktop: waybar (status bar), fuzzel
-  # (Super+R launcher), swaylock (Super+L) and mako (notifications). One of the
-  # Hyprland shell aspects; see hyprland.nix.
   den.aspects.hyprland-basic = {
     includes = [ den.aspects.hyprland ];
 

@@ -1,5 +1,12 @@
+# Aspect:    den.aspects.systemdBoot (included by base)
+# Platforms: nixos
+# Purpose:   UEFI boot with systemd-boot, and /tmp as a tmpfs cleared on boot.
+#
+# Notes:
+# - The EFI system partition must be mounted at /boot.
+# - canTouchEfiVariables lets nixos-rebuild register the boot entry in the
+#   firmware's NVRAM.
 {
-  # UEFI boot via systemd-boot, for NixOS hosts whose ESP is mounted at /boot.
   den.aspects.systemdBoot = {
     nixos = {
       boot = {

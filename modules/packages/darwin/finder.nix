@@ -1,3 +1,15 @@
+# Aspect:    den.aspects.darwin.finder (part of darwin.customizations)
+# Platforms: darwin
+# Purpose:   Finder preferences, plus related keys nix-darwin has no option for
+#            (set through CustomUserPreferences).
+#
+# Notes (changes from macOS defaults; each setting below lists its default):
+# - All file extensions shown, with no warning when changing one.
+# - Status bar, path bar and the full POSIX path in the window title shown.
+# - Searches look in the current folder instead of the whole Mac.
+# - Items in the Trash are deleted after 30 days.
+# - No .DS_Store files on network or USB volumes, so shares and thumb drives
+#   aren't littered for other machines.
 {
   den.aspects.darwin.finder = {
     darwin.system.defaults.finder = {

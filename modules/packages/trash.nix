@@ -1,7 +1,12 @@
+# Aspect:    den.aspects.tui.trash (included by base)
+# Platforms: nixos, darwin
+# Purpose:   trash-cli (`trash`, `trash-list`, `trash-restore`), so files can be
+#            moved to the trash instead of deleted on every host.
+#
+# Notes:
+# - macOS only ships /usr/bin/trash from 14 on, and Linux has none by default.
+# - Home Manager's backupCommand (modules/den/home-manager.nix) uses it.
 {
-  # `trash` (trash-cli) from nixpkgs, so a trash command is always available
-  # (macOS only ships /usr/bin/trash from 14 onwards; Linux has none by default).
-  # Also used by the Home Manager backupCommand in modules/den/home-manager.nix.
   den.aspects.tui.trash = {
     os =
       { pkgs, ... }:

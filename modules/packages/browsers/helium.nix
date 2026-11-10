@@ -1,3 +1,14 @@
+# Aspects:   den.aspects.browsers.macos.helium (part of den.aspects.browsers)
+#            den.aspects.browsers.linux.helium (opt-in)
+# Platforms: darwin (macos.helium); home-manager (linux.helium, x86_64 only)
+# Purpose:   Helium, a privacy-focused Chromium browser.
+#
+# Notes:
+# - macOS: Homebrew cask, plus 1Password and the native messaging fix that lets
+#   Helium's 1Password extension reach the app (macos._1passwordForHelium).
+# - Linux: the upstream AppImage from the AlvaroParker/helium-nix flake. Kept
+#   out of the browsers bundle because 1Password integration isn't known to
+#   work with it there, so a host has to opt in explicitly.
 { den, inputs, ... }: {
   flake-file.inputs.helium = {
     url = "github:AlvaroParker/helium-nix";

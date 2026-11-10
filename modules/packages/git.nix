@@ -1,6 +1,24 @@
+# Aspects:   den.aspects.git          (included by base)
+#            den.aspects.git.signing  (opt-in, per user per host)
+# Platforms: home-manager
+# Purpose:   Git with modern defaults and tooling: git-lfs, delta (pager),
+#            difftastic (`git difftool`), mergiraf (merge driver), lazygit,
+#            git-absorb and git-extras. user.name and user.email come from the
+#            user's meta (fullName, email).
+#
+# Notes (changes from git's defaults; details beside each setting):
+# - New repos start on `main`; push sets the upstream on first push; fetch
+#   prunes deleted branches and tags; rebase autostashes, applies fixup!
+#   commits and moves stacked branches; rerere remembers conflict resolutions;
+#   diffs use the histogram algorithm. `pull` keeps git's default.
+# - merge.conflictStyle = diff3 is set by the mergiraf module, which needs it.
+# - Home Manager won't enable delta's and difftastic's git integrations
+#   together, so difftastic is wired up by hand as diff.tool.
+# - Signing is a separate aspect because the GPG key (on a YubiKey) isn't
+#   usable on every machine. Include it from a host's
+#   `provides.<user>.includes` where it is.
 { den, ... }:
 {
-  # Git with modern defaults and tooling, via Home Manager.
   den.aspects.git = {
     homeManager =
       { config, pkgs, ... }:
@@ -27,17 +45,17 @@
                 // (if meta ? email then { inherit (meta) email; } else { });
 
               init.defaultBranch = "main";
-              column.ui = "auto";
-              branch.sort = "-committerdate";
-              tag.sort = "version:refname";
-              help.autocorrect = "prompt";
+              column.ui = "auto"; # list branches/tags in columns when they fit
+              branch.sort = "-committerdate"; # most recently used branches first
+              tag.sort = "version:refname"; # v1.10 sorts after v1.9
+              help.autocorrect = "prompt"; # offer to run the command a typo meant
               commit.verbose = true; # show the diff while writing the message
 
               diff = {
-                algorithm = "histogram";
-                colorMoved = "plain";
-                mnemonicPrefix = true;
-                renames = true;
+                algorithm = "histogram"; # cleaner hunks than the default (myers)
+                colorMoved = "plain"; # moved lines get their own colour
+                mnemonicPrefix = true; # i/w/c/h prefixes instead of a/b
+                renames = true; # detect renames and copies
                 # Structural (syntax-aware) diffs on demand: `git difftool`. Wired up
                 # here because Home Manager's difftastic git integration excludes delta's.
                 tool = "difftastic";
@@ -56,7 +74,7 @@
               };
               push = {
                 autoSetupRemote = true; # no more `--set-upstream origin <branch>`
-                followTags = true;
+                followTags = true; # push annotated tags that point at pushed commits
               };
               rebase = {
                 autoSquash = true; # applies fixup! commits (e.g. from git-absorb)
@@ -65,7 +83,7 @@
               };
               rerere = {
                 enabled = true; # remember conflict resolutions
-                autoupdate = true;
+                autoupdate = true; # stage files rerere resolved
               };
             };
           };

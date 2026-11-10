@@ -1,3 +1,11 @@
+# Aspect:    den.aspects.shell.fishFunctions (included by fish)
+# Platforms: home-manager
+# Purpose:   The fish versions of the helper functions in
+#            shell-functions-posix.nix (GPG/YubiKey resets, Docker cleanup,
+#            Tailscale and DNS fixes, network info, zox).
+#
+# Notes:
+# - Keep this file and shell-functions-posix.nix in step.
 {
   den.aspects.shell.fishFunctions = {
     homeManager =

@@ -1,3 +1,7 @@
+# Aspect:    den.aspects.tui.zellij (included by base)
+# Platforms: home-manager
+# Purpose:   Zellij, a terminal multiplexer (like tmux), with its built-in
+#            Dracula theme. Start it by hand with `zellij`.
 {
   den.aspects.tui.zellij = {
     homeManager = {

@@ -1,3 +1,11 @@
+# Aspect:    den.aspects.fonts
+# Platforms: home-manager
+# Purpose:   Programming and terminal fonts (Ioskeley Mono variants, JetBrains
+#            Mono, Hack, Inconsolata, Nerd Font variants, Font Awesome, ...).
+#
+# Notes:
+# - Fonts come from nixpkgs. Only use a Homebrew cask (homebrew.casks in a
+#   darwin block) for a font nixpkgs doesn't package.
 {
   den.aspects.fonts = {
     homeManager = { pkgs, ... }: {

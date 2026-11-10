@@ -1,10 +1,16 @@
+# Aspect:    den.aspects.niri
+# Platforms: nixos, home-manager
+# Purpose:   niri, a scrollable-tiling Wayland compositor, started from a greetd
+#            login screen (tuigreet), with fuzzel, swaylock, waybar and mako.
+#            Kept as an alternative to Hyprland.
+#
+# Notes:
+# - Uses niri's stock config, with Ghostty instead of alacritty on Mod+T. It is
+#   read-only (generated in the store); to customise niri, replace it with a
+#   config.kdl kept in this repo.
+# - programs.niri also enables polkit, the GNOME portal, gnome-keyring and the
+#   swaylock PAM service. xwayland-satellite gives X11 apps a display.
 {
-  # niri, a scrollable-tiling Wayland compositor (NixOS), started from a greetd
-  # login screen (tuigreet).
-  #
-  # programs.niri also enables polkit, the GNOME portal, gnome-keyring and the
-  # swaylock PAM service. niri runs xwayland-satellite itself, for X11 apps,
-  # when it is on PATH.
   den.aspects.niri = {
     nixos =
       { pkgs, ... }:

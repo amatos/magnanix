@@ -1,6 +1,17 @@
+# User:      alberth (den.aspects.alberth.deployMagnanix)
+# Platforms: home-manager
+# Purpose:   Installs ~/.local/bin/deploy-magnanix, which deploys `main` from the
+#            live checkout (magnanix.repoDir) to the machine it runs on.
+#
+# Notes:
+# - Steps: remember the current branch, check out `main`, `git pull
+#   --ff-only`, run this host's nh wrapper with `switch` (shows the diff first),
+#   then check the original branch back out, even after a failure or Ctrl-C.
+# - Refuses to run with uncommitted changes on another branch, and stops with an
+#   error if magnanix.repoDir is missing or isn't a git checkout.
+# - A real executable rather than a shell alias, so it works over SSH
+#   (`ssh <host> deploy-magnanix`). Deploy after CI passes on `main`.
 {
-  # `deploy-magnanix` as a real executable in ~/.local/bin (not a shell alias),
-  # so it also works non-interactively, e.g. `ssh fortuna deploy-magnanix`.
   den.aspects.alberth.deployMagnanix = {
     includes = [
       # Needs the host, so the script switches the machine it runs on.

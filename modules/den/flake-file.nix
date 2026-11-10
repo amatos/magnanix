@@ -1,3 +1,9 @@
+# Aspect:    none (flake-level module)
+# Platforms: n/a
+# Purpose:   Sets up flake-file, which generates flake.nix from the
+#            flake-file.* options in ./modules: the flake description, the
+#            outputs expression, and the nixpkgs, import-tree and flake-file
+#            inputs. Never edit flake.nix by hand; run `nix run .#write-flake`.
 { inputs, ... }:
 {
   # flake-file generates flake.nix from the `flake-file.*` options declared in

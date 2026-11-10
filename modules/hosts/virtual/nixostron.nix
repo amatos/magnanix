@@ -1,3 +1,21 @@
+# Hosts:     nixostron-x86_64 and nixostron-aarch64 (both den.aspects.nixostron,
+#            both with hostName "nixostron")
+# Platform:  x86_64-linux / aarch64-linux (NixOS), a disposable headless VM
+# Purpose:   Test bed for trying a change on NixOS before it lands. Add the
+#            aspect under test to its includes on a branch, then run
+#            `nixostron-vm test <branch>` from the dev shell. See
+#            documentation/testing-vms.md.
+#
+# Notes:
+# - Disk via disko: GPT, 1 GiB ESP at /boot, ext4 root on /dev/vda (virtio-blk
+#   under both Tart and QEMU).
+# - Only way in: SSH as `ephemeral` with the access key.
+# - Bootstrap keys (host key, ephemeral's age key) are placed in
+#   /var/lib/nixostron-keys by nixostron-vm and installed by the
+#   `nixostron-keys` activation script before sops-nix runs, so the VM keeps
+#   one identity however often it's rebuilt.
+# - canTouchEfiVariables is forced off: a VM's NVRAM isn't worth writing, and
+#   Tart resets it with each clone.
 { den, lib, ... }:
 let
   hostName = "nixostron";
@@ -36,7 +54,7 @@ in
   # One Den host per architecture, both named nixostron on the network and both
   # configured by den.aspects.nixostron: x86_64 runs under QEMU on muninn and
   # fortuna, aarch64 under Tart on magnus. Den sets nixpkgs.hostPlatform from the
-  # system key. See "Testing changes on nixostron" in the README.
+  # system key. See documentation/testing-vms.md.
   den.hosts = lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (system: {
     "nixostron-${lib.head (lib.splitString "-" system)}" = {
       users.${user} = { };

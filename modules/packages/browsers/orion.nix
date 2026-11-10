@@ -1,3 +1,7 @@
+# Aspect:    den.aspects.browsers.macos.orion (part of den.aspects.browsers)
+# Platforms: home-manager (macOS only)
+# Purpose:   Orion, Kagi's WebKit browser, from nixpkgs (unfree), plus the
+#            1Password app. It lands in ~/Applications/Home Manager Apps.
 { den, ... }: {
   den.aspects.browsers.macos.orion = {
     includes = [

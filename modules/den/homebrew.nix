@@ -1,3 +1,12 @@
+# Aspect:    den.aspects.macos.homebrew (added to every host via den.default.includes)
+# Platforms: darwin
+# Purpose:   Installs and manages Homebrew itself through nix-homebrew, so that
+#            other aspects can declare homebrew.casks / brews / masApps.
+#
+# Notes:
+# - onActivation.cleanup = "zap": anything installed with brew but not declared
+#   in this flake is uninstalled, with its app data, on every switch. Install
+#   casks by adding them to an aspect, not with `brew install`.
 { den, inputs, ... }:
 {
   # nix-homebrew installs and manages Homebrew itself on macOS. Only the `darwin`

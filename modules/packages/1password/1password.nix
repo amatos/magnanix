@@ -1,3 +1,16 @@
+# Aspect:    den.aspects._1password
+# Platforms: nixos, darwin, home-manager
+# Purpose:   The 1Password app and `op` CLI, with `op` shell completions and
+#            1Password's SSH agent for ssh.
+#
+# Notes:
+# - macOS: installed as Homebrew casks, not from nixpkgs. The app must live in
+#   /Applications for browser integration and its code-signature checks.
+# - NixOS: programs._1password(-gui), with the user as polkit policy owner so
+#   CLI integration and system authentication (unlock with system password) work.
+# - SSH: sets IdentityAgent to 1Password's agent socket and includes
+#   ~/.ssh/1Password/config. This only takes effect for users who enable
+#   programs.ssh themselves; enable the agent in 1Password > Settings > Developer.
 { den, ... }: {
   den.aspects._1password = {
     includes = [

@@ -1,39 +1,32 @@
-# Wires certbot + the certbot-dns-luadns plugin (pkgs/python/certbot-dns-luadns.nix)
-# into a renewal timer that keeps existing certs renewed — launchd on darwin,
-# systemd on nixos.
+# Aspect:    den.aspects.certbot
+# Platforms: nixos, darwin
+# Purpose:   Let's Encrypt certificates through certbot and the LuaDNS DNS
+#            plugin (pkgs/python/certbot-dns-luadns.nix), so a host needs no open
+#            ports to prove it owns a name.
 #
-# nix-darwin has no `services.certbot` (that's NixOS-only), so renewal is a
-# plain `certbot renew` on a timer instead of a fully declarative cert block.
-# `renew` is idempotent and needs no domain argument — it just re-processes
-# whatever's already under /etc/letsencrypt/renewal, so the schedule below
-# works unconditionally, before any cert has ever been issued.
+# Usage (in the host's darwin or nixos block):
+#   local.certbot = { email = "..."; fqdns = [ "host.example.com" ]; };
 #
-# Declarative issuance: set `local.certbot.fqdns` and `local.certbot.email`
-# on the host. A service started at boot issues any listed FQDN not yet present
-# under /etc/letsencrypt/renewal, retrying every 15 minutes until all succeed
-# (slow enough to stay under Let's Encrypt's limit of 5 failed validations per
-# hour), then the renewal timer takes over. Issuance is idempotent:
-# already-present lineages are skipped. A wildcard's lineage is named after its
-# base domain, so `example.com` and `*.example.com` can't both be listed.
-#
-# Manual issuance still works if preferred:
-#   certbot certonly --dns-luadns \
-#     --dns-luadns-credentials /run/secrets/certbot_luadns \
-#     -d example.com
-#
-# The credentials are `certbot_luadns` in secrets/common.yaml, an INI file with
-# `dns_luadns_email` and `dns_luadns_token`.
-#
-# /etc/letsencrypt/archive/<lineage> is 0700 root:root (0700 root:wheel on
-# darwin), so no non-root service can read the key material there even from a
-# chown'd copy of just the files -- the directory itself blocks traversal.
-# Rather than loosen certbot's own directory perms (which it may reset on a
-# future renewal), each platform's deploy-hook below copies each issued or
-# renewed lineage out to /etc/letsencrypt-certs/<lineage> instead: 0400 owned by
-# the host's primary user on darwin, 0440 owned by a dedicated group on nixos
-# (no single "primary user" concept there). Consumers should read certs from
-# there, not from /etc/letsencrypt directly. Manual issuance doesn't run the
-# hook unless given `--deploy-hook`, so nothing is copied until the first renewal.
+# Notes:
+# - Issuing: a boot-time service (launchd / systemd) requests every listed FQDN
+#   that has no certificate yet, retrying every 15 minutes (slow enough to stay
+#   under Let's Encrypt's 5 failed validations per hour) until all succeed.
+#   A wildcard is named after its base domain, so `example.com` and
+#   `*.example.com` can't both be listed.
+# - Renewing: `certbot renew` runs daily (03:00 on macOS) and only touches
+#   certificates that are due. nix-darwin has no services.certbot, so both
+#   platforms use a plain timer rather than NixOS's declarative module.
+# - Reading: /etc/letsencrypt is root-only (0700), and certbot may reset its
+#   permissions, so a deploy hook copies each certificate and key to
+#   /etc/letsencrypt-certs/<name>/: owned by the primary user (0400) on macOS,
+#   readable by the `cert-readers` group (every normal user, 0440) on NixOS.
+#   Point services at those copies.
+# - Credentials: `certbot_luadns` in secrets/common.yaml (an INI file with
+#   dns_luadns_email and dns_luadns_token), so the host must be a recipient
+#   of common.yaml.
+# - Manual issuance (`certbot certonly --dns-luadns --dns-luadns-credentials
+#   /run/secrets/certbot_luadns -d example.com`) skips the deploy hook, so the
+#   copy only appears after its first renewal.
 {
   den.aspects.certbot = {
     darwin =

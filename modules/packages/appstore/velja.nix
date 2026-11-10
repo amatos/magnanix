@@ -1,7 +1,10 @@
-# Velja browser picker (used by `~/.local/bin/velja-open.sh`).
+# Aspect:    den.aspects.macos.velja
+# Platforms: darwin
+# Purpose:   Velja browser picker (used by `~/.local/bin/velja-open.sh`).
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.velja = {
     darwin.homebrew.masApps."Velja" = 1607635845;

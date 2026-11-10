@@ -1,4 +1,15 @@
-# Rust toolchain and development tools.
+# Aspect:    den.aspects.rust
+# Platforms: home-manager
+# Purpose:   Rust through rustup (so rust-toolchain.toml picks the channel),
+#            plus cargo-edit, nextest, llvm-cov, audit, shear, expand, bacon and
+#            taplo. ~/.cargo/bin is on PATH.
+#
+# Notes:
+# - rustup keeps toolchains in ~/.rustup, outside Nix. After the first switch:
+#     rustup default stable
+#     rustup component add llvm-tools-preview   # for cargo-llvm-cov
+# - cargo-llvm-cov is built with doCheck = false (see below), so it builds
+#   locally instead of coming from the binary cache.
 {
   den.aspects.rust = {
     homeManager =
@@ -21,7 +32,7 @@
           # tests build coverage-instrumented binaries with nixpkgs' rustc, and
           # those segfault (seen on aarch64-darwin and x86_64-linux), so skip them.
           # The tool itself builds fine and uses rustup's toolchain at runtime.
-          # Drop this once nixpkgs fixes the tests (see the README's TODO).
+          # Drop this once nixpkgs fixes the tests (see documentation/todo.md).
           (cargo-llvm-cov.overrideAttrs { doCheck = false; })
           cargo-audit # check dependencies for known vulnerabilities
           cargo-shear # find unused dependencies

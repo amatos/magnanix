@@ -1,3 +1,12 @@
+# Aspect:    den.aspects.tex.macos.texshop (part of den.aspects.tex)
+# Platforms: darwin
+# Purpose:   Installs TeXShop (the Liquid Glass build), a macOS LaTeX editor.
+#
+# Notes:
+# - Not in nixpkgs, and the mactex cask doesn't include this build, so the signed .pkg
+#   is fetched from CTAN and run through /usr/sbin/installer after activation.
+# - Only reinstalls when pkgutil reports a different version than
+#   `texshopVersion`. To update, bump the version and the sha256.
 {
   den.aspects.tex.macos.texshop = {
     darwin =

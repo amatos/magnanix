@@ -1,7 +1,12 @@
+# Aspect:    den.aspects.nushell (included by base)
+# Platforms: home-manager
+# Purpose:   Nushell, with Home Manager writing config.nu and env.nu so the
+#            atuin, direnv, starship, yazi and zoxide integrations load in it.
+#
+# Notes:
+# - No eza aliases here: Nushell keeps its built-in, structured `ls`.
 {
   den.aspects.nushell = {
-    # Home Manager writes config.nu and env.nu, and the other tools' Nushell
-    # integrations (atuin, direnv, starship, yazi, zoxide) switch on with it.
     homeManager.programs.nushell = {
       enable = true;
 

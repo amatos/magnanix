@@ -1,7 +1,10 @@
-# LanguageTool grammar and spell checker.
+# Aspect:    den.aspects.macos.languageTool
+# Platforms: darwin
+# Purpose:   LanguageTool grammar and spell checker.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.languageTool = {
     darwin.homebrew.masApps."LanguageTool" = 1534275760;

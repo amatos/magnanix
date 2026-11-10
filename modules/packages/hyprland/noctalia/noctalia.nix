@@ -1,13 +1,24 @@
+# Aspect:    den.aspects.noctalia (a Hyprland shell aspect; includes hyprland)
+# Platforms: nixos, home-manager
+# Purpose:   Noctalia (https://noctalia.dev), a Wayland desktop shell: bar,
+#            launcher, control center, notifications, lock screen, OSD and
+#            wallpaper in one program. Keybinds are in ./noctalia.lua.
+#
+# Notes:
+# - Package and Home Manager module come from nixpkgs / Home Manager; no
+#   flake input.
+# - Theme: a custom Dracula palette (./dracula.json): Dracula when dark,
+#   Alucard when light. Noctalia also renders it into
+#   ~/.config/hypr/noctalia.lua for Hyprland's window border colours.
+# - config.toml is read-only defaults; changes made in Noctalia's settings
+#   window are kept on top of them.
+# - upower and power-profiles-daemon back its battery and power-profile
+#   widgets. Wi-Fi and Bluetooth widgets need NetworkManager and BlueZ, which
+#   the host must enable itself.
+# - To switch shells, replace den.aspects.noctalia in the host's includes with
+#   another shell aspect (hyprland-basic, dux-shell).
 { den, ... }:
 {
-  # Noctalia (https://noctalia.dev), a desktop shell for Wayland: bar, launcher,
-  # control center, notifications, lock screen, OSD and wallpaper in one
-  # program. One of the Hyprland shell aspects (see hyprland.nix); fortuna
-  # includes it. To try Dux Shell instead, replace den.aspects.noctalia with
-  # den.aspects.dux-shell in modules/hosts/fortuna/fortuna.nix.
-  #
-  # Both the package and the Home Manager module come from nixpkgs and Home
-  # Manager; no flake input.
   den.aspects.noctalia = {
     includes = [ den.aspects.hyprland ];
 
@@ -16,7 +27,7 @@
 
       # What Noctalia's battery and power-profile widgets talk to. Its wifi and
       # bluetooth widgets use NetworkManager and BlueZ, which hosts set up
-      # themselves (fortuna has both).
+      # themselves.
       services.upower.enable = true;
       services.power-profiles-daemon.enable = true;
     };

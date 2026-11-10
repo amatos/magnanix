@@ -1,6 +1,19 @@
+# Aspect:    den.aspects.shell.starship (included by each shell aspect)
+# Platforms: home-manager
+# Purpose:   The Starship prompt for every shell (Home Manager hooks it into each
+#            enabled shell).
+#
+# Notes (changes from Starship's defaults):
+# - The prompt shows which shell you're in: 🐚 bash, 🦓 zsh, 🐟 fish,
+#   🪟 PowerShell, ❓ anything else.
+# - user@host is always shown, not only over SSH; the hostname is cut at the
+#   first `.`.
+# - A clock (custom.tztime) leads the prompt, and the last command's exit
+#   status and sudo state are shown.
+# - command_timeout is 1 s (default 500 ms) so slow custom modules don't warn.
+# - Language modules for languages not used here are disabled to keep the
+#   prompt fast and short.
 {
-  # Starship prompt. Home Manager adds the init hook to each enabled shell
-  # (zsh, fish, bash) by default, so this works with whichever shells a user includes.
   den.aspects.shell.starship = {
     homeManager =
       { lib, ... }:

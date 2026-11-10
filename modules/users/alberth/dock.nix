@@ -1,3 +1,18 @@
+# User:      alberth (den.aspects.alberth.macos.dock)
+# Platforms: darwin
+# Purpose:   alberth's Dock: appearance, behaviour, gestures, hot corners and
+#            the declarative list of Dock apps and folders.
+#
+# Notes:
+# - nix-darwin applies Dock settings to the host's primary user
+#   (system.primaryUser), so this only makes sense where that is alberth. It
+#   lives with the user rather than in darwin.customizations so machines
+#   without alberth keep the stock Dock.
+# - persistent-apps / persistent-others are declarative: manual Dock changes are
+#   overwritten on the next switch. Add apps here instead.
+# - Changes from macOS defaults: autohide on with a shorter delay, hidden apps'
+#   icons translucent, all hot corners disabled, spring loading on all items,
+#   hover highlight in stack grid view.
 {
   den.aspects.alberth.macos.dock = {
     # alberth's Dock. nix-darwin applies it to the host's primary user

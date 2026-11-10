@@ -1,3 +1,17 @@
+# Aspect:    den.aspects.browsers.zen (part of den.aspects.browsers)
+# Platforms: home-manager
+# Purpose:   Zen, a Firefox-based browser, from the zen-browser-flake Home
+#            Manager module, with 1Password, a Catppuccin theme and privacy
+#            hardening presets.
+#
+# Notes:
+# - darwin.packageMode = "signed": installs the app with Zen's own code
+#   signature so 1Password, iCloud Passwords, Touch ID and Gatekeeper accept it.
+# - Policies disable telemetry and about:config, and force-install 1Password.
+# - Betterfox and arkenfox presets are applied as defaults; any entry in
+#   profiles.default.settings overrides them.
+# - The presets are built during evaluation (import from derivation), so a
+#   darwin host that includes this can only be evaluated on a Mac.
 { inputs, ... }: {
   flake-file.inputs.zen-browser = {
     url = "github:0xc000022070/zen-browser-flake";

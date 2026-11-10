@@ -1,4 +1,12 @@
-# Modern replacements and companions for the classic Unix tools.
+# Aspect:    den.aspects.cliutils (included by base)
+# Platforms: home-manager
+# Purpose:   Modern replacements and companions for the classic Unix tools
+#            (ripgrep, fd, fzf, bat, eza, jq, bottom, ...).
+#
+# Notes:
+# - Aliases ls/ll/la/lt -> eza, cat -> bat, top -> btm and df -> duf, in bash,
+#   zsh and fish only. Nushell keeps its built-in, structured `ls`.
+# - To get the original tool, bypass the alias: `command ls` or `\ls`.
 {
   den.aspects.cliutils = {
     homeManager =

@@ -1,8 +1,12 @@
-# Safari extensions. Turn each one on in Safari > Settings > Extensions after
-# the first switch. (1Password for Safari is in `macos._1password`.)
+# Aspect:    den.aspects.macos.safariExtensions
+# Platforms: darwin
+# Purpose:   Safari extensions.
 #
-# Installed from the App Store by `brew bundle` through `mas`, which needs you
-# signed in to the App Store.
+# Notes:
+# - Turn each one on in Safari > Settings > Extensions after the first switch.
+# - 1Password for Safari is a separate aspect, `macos._1password`.
+# - Installed from the Mac App Store by `brew bundle` through `mas`, so you must
+#   be signed in to the App Store.
 {
   den.aspects.macos.safariExtensions = {
     darwin.homebrew.masApps = {

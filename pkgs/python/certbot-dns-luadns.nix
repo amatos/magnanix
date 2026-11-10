@@ -1,14 +1,12 @@
-# certbot-dns-luadns — not in nixpkgs; packaged locally.
-# Uses dns-lexicon (which IS in nixpkgs) to talk to the LuaDNS API.
+# Package:   certbot-dns-luadns (certbot plugin; not in nixpkgs)
+# Platforms: nixos, darwin (used by modules/packages/certbot.nix)
+# Purpose:   Lets certbot prove domain ownership through LuaDNS DNS records,
+#            using dns-lexicon (in nixpkgs) to talk to the LuaDNS API.
 #
-# Tracks certbot's own src/version (same trick nixpkgs uses for its other
-# dns-lexicon-based plugins, e.g. certbot-dns-ovh) instead of pinning a
-# separate tag, so the plugin never drifts out of sync with whatever
-# certbot/acme version is actually installed alongside it.
-#
-# Installed and scheduled by modules/packages/certbot.nix, which also describes
-# how certificates are issued.
-
+# Notes:
+# - Takes its src and version from certbot itself (the same trick nixpkgs uses
+#   for its other dns-lexicon plugins, e.g. certbot-dns-ovh), so it never
+#   drifts out of sync with the installed certbot/acme.
 {
   buildPythonPackage,
   certbot,

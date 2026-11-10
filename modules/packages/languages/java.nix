@@ -1,4 +1,11 @@
-# Java runtime and development tools.
+# Aspect:    den.aspects.java
+# Platforms: home-manager
+# Purpose:   JDK 25 (current LTS) as JAVA_HOME, with Maven, Gradle 9, jdtls,
+#            google-java-format and JBang.
+#
+# Notes:
+# - Tools that would default to an older JDK are rebuilt against JDK 25, so
+#   there's exactly one JDK and every tool runs on the same one as JAVA_HOME.
 {
   den.aspects.java = {
     homeManager =

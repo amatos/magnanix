@@ -1,3 +1,26 @@
+# Aspect:    den.aspects.macos.orbstack
+# Platforms: darwin, home-manager
+# Purpose:   OrbStack (Docker containers and Linux machines on macOS), from
+#            nixpkgs (unfree), with its data on a dedicated, encrypted APFS
+#            volume `Container Data` instead of the system volume.
+#
+# Notes:
+# - Every switch (extraActivation) runs `container-data-volume`: it creates the
+#   volume in disk3 if missing, unlocks and mounts it at /Volumes/Container Data,
+#   encrypts it if it isn't yet, and enables ownership. On failure it only warns,
+#   and the rest of the switch carries on.
+# - The volume is locked after every reboot, so a launchd daemon
+#   (org.nixos.container-data-volume, log /var/log/container-data-volume.log)
+#   runs the same script at boot.
+# - Encryption works like the Nix installer's Nix Store volume: a random
+#   passphrase stored in the System keychain (account `Container Data`, service
+#   = the volume UUID). That keychain item is the ONLY copy of the key; save it
+#   somewhere safe:
+#     sudo security find-generic-password -a "Container Data" -w /Library/Keychains/System.keychain
+# - Each user gets /Volumes/Container Data/OrbStack/<user> (mode 700), and Home
+#   Manager sets `data_dir` in ~/.orbstack/vmconfig.json to it (the setting
+#   behind Settings > Storage > Data location; `orb config` has no key for it).
+#   Existing data in ~/.orbstack/data is not moved.
 { den, lib, ... }:
 let
   # OrbStack keeps its containers and machines on a dedicated APFS volume, added
@@ -124,9 +147,8 @@ let
     };
 in
 {
-  # OrbStack: Docker containers and Linux machines on macOS. The nixpkgs package
-  # is darwin-only (an Apple silicon build) and unfree, so only the `darwin`
-  # class installs anything.
+  # The nixpkgs package is darwin-only (an Apple silicon build) and unfree, so
+  # only the `darwin` class installs anything.
   den.aspects.macos.orbstack = {
     includes = [
       (den.batteries.unfree [

@@ -1,3 +1,14 @@
+# Host:      template for a new macOS host (ignored by import-tree: leading `_`)
+# Platform:  aarch64-darwin (nix-darwin)
+# Purpose:   Copy to modules/hosts/<hostname>/<hostname>.nix and replace
+#            CHANGE_HOSTNAME and CHANGE_USERNAME. See
+#            documentation/adding-hosts-and-users.md.
+#
+# Notes:
+# - The host name must match `scutil --get LocalHostName`.
+# - `instantiate` is needed because Den's default darwin builder expects an
+#   input called `darwin`, and this flake calls it `nix-darwin`.
+# - The includes are a sensible default app set; adjust per machine.
 { den, inputs, ... }:
 {
   den.hosts.aarch64-darwin.CHANGE_HOSTNAME = {

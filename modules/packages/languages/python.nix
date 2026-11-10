@@ -1,4 +1,12 @@
-# Python runtime and development tools.
+# Aspect:    den.aspects.python
+# Platforms: home-manager, nixos
+# Purpose:   python3 for ad-hoc scripts, uv (projects, venvs, Python versions),
+#            Ruff (lint + format), basedpyright and ty.
+#
+# Notes:
+# - Per-project Python versions are uv's job, not Nix's.
+# - NixOS: nix-ld is enabled because uv's standalone Python builds expect a
+#   generic /lib64 dynamic loader that NixOS doesn't have.
 {
   den.aspects.python = {
     # uv installs standalone Python builds, which are dynamically linked against a

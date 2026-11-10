@@ -1,4 +1,7 @@
-# Go toolchain and development tools.
+# Aspect:    den.aspects.go
+# Platforms: home-manager
+# Purpose:   Go (programs.go), gopls, golangci-lint and Delve. GOPATH stays at
+#            Go's default ~/go, and ~/go/bin is on PATH for `go install`.
 {
   den.aspects.go = {
     homeManager =

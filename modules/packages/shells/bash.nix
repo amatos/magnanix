@@ -1,3 +1,7 @@
+# Aspect:    den.aspects.shell.bash (included by base)
+# Platforms: home-manager
+# Purpose:   bash through Home Manager, with the shared aliases, the POSIX
+#            shell functions and the Starship prompt.
 { den, ... }: {
   den.aspects.shell.bash = {
     includes = [

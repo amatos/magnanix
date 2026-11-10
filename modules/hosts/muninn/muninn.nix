@@ -1,3 +1,14 @@
+# Host:      muninn (den.aspects.muninn)
+# Platform:  x86_64-linux (NixOS)
+# Purpose:   Headless home server: the Attic binary cache server, the SMTP smart
+#            relay to Fastmail for the LAN and tailnet, certbot, Tailscale, and
+#            SSH (keys only) as the only way in.
+#
+# Notes:
+# - The relay's ports (25, 465) are opened only on the LAN NIC and tailscale0.
+# - Requests certificates for muninn.home.matos.cc and muninn.ts.matos.cc (the
+#   relay adds smtp.home / smtp.ts).
+# - Also pushes its own builds to the cache (attic.push).
 { den, ... }:
 let
   hostName = "muninn";

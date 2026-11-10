@@ -1,6 +1,25 @@
-# The Attic binary cache on muninn: the server, the client side every host uses
-# to pull from it, and the watcher that pushes a host's new store paths to it.
-# See "Binary cache" in the README for creating the cache and its tokens.
+# Aspects:   den.aspects.attic.client (included by base, so every host)
+#            den.aspects.attic.server (opt-in)
+#            den.aspects.attic.push   (opt-in)
+# Platforms: client: nixos, darwin, home-manager
+#            server: nixos
+#            push:   nixos, darwin
+# Purpose:   This flake's Attic binary cache (`magnanix`), reached as
+#            muninn.home.matos.cc on the LAN or muninn.ts.matos.cc over Tailscale.
+#            - client: adds the cache as a substituter and installs `attic`.
+#            - server: runs atticd on port 8080.
+#            - push:   runs `attic watch-store` as root, pushing every new store
+#                      path the host builds or downloads to the cache.
+#
+# Notes:
+# - Cache priority is 41, after cache.nixos.org (40), so the cache only serves
+#   what cache.nixos.org lacks: unfree packages and this flake's own builds.
+# - connect-timeout = 5: a host that can't reach the cache loses a few seconds
+#   instead of curl's default 300 s per substitution.
+# - push only starts once secrets/hosts/<host>.yaml has `attic_push_token`;
+#   until then the build prints a warning and everything else still switches.
+# - Creating the cache and tokens is done by hand: see
+#   documentation/binary-cache.md.
 let
   # The names clients reach the server by: LAN DNS and Tailscale.
   lanHost = "muninn.home.matos.cc";
@@ -41,7 +60,7 @@ let
       # leaves the key names in plain text, so a top-level key starts a line.
       sopsFile = config.sops.defaultSopsFile;
       hasToken = lib.hasInfix "\n${tokenSecret}:" ("\n" + builtins.readFile sopsFile);
-      warning = "attic.push: no `${tokenSecret}` in secrets/hosts/${baseNameOf sopsFile}, so this host doesn't push to the Attic cache. See \"Pushing to the cache\" in the README.";
+      warning = "attic.push: no `${tokenSecret}` in secrets/hosts/${baseNameOf sopsFile}, so this host doesn't push to the Attic cache. See \"Pushing to the cache\" in documentation/binary-cache.md.";
 
       # The client config, used as the watcher's XDG_CONFIG_HOME. It reads the
       # token from the secret's file, so nothing has to run `attic login` or put
@@ -147,7 +166,7 @@ in
   # `attic watch-store`. Paths cache.nixos.org already signs are skipped (the
   # cache's upstream filter). It runs as root, which can read the root-only token
   # secret, and reaches the server by `local.attic.serverHost` like the client.
-  # If the server is unreachable (muninn down, the host away without Tailscale),
+  # If the server is unreachable (server down, the host away without Tailscale),
   # the watcher exits and is restarted until it gets through.
   den.aspects.attic.push = {
     nixos =
