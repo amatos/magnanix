@@ -132,9 +132,9 @@ modules/
     ├── _user_template/        copy this to add a user
     ├── alberth/               den.aspects.alberth
     │   ├── alberth.nix        the user's aspect and metadata
+    │   ├── deploy-magnanix.nix  the per-host `deploy-magnanix` script, installed into `~/.local/bin`
     │   ├── dock.nix           the macOS Dock: settings and persistent apps
-    │   ├── scripts.nix        installs `scripts/` into `~/.local/bin`
-    │   ├── shell-aliases.nix  alberth's aliases for bash, zsh and fish, such as `deploy-magnanix`
+    │   ├── scripts.nix        installs `scripts/` into `~/.local/bin` and puts it on `PATH`
     │   ├── ssh.nix            SSH client config (the 1Password agent is added by `_1password` where the host has it)
     │   ├── configs/zed/       the tracked Zed `settings.json`
     │   └── F41BDBF6171A3BB4.pub.asc   alberth's GPG public key
@@ -307,7 +307,7 @@ apps.
 
 The configuration expects its live checkout at `~/Developer/magnanix` (the `magnanix.repoDir` default in
 `modules/den/repo-dir.nix`): out-of-store symlinks such as Zed's `settings.json` point into it, and the
-`deploy-magnanix` alias pulls there. Clone it there, or set `magnanix.repoDir` in a `homeManager` module for
+`deploy-magnanix` script pulls there. Clone it there, or set `magnanix.repoDir` in a `homeManager` module for
 that user or host. If the checkout isn't there, activation warns and skips Zed's `settings.json` instead of
 creating a stray directory at `magnanix.repoDir`.
 
@@ -323,11 +323,13 @@ nix develop --command apply-configuration
 
 Each host also has an `nh` wrapper, for example `nix run .#magnus -- switch`.
 
-`alberth`'s `deploy-magnanix` alias (`modules/users/alberth/shell-aliases.nix`) deploys the checkout at
+`alberth`'s `deploy-magnanix` script (`modules/users/alberth/deploy-magnanix.nix`, installed as
+`~/.local/bin/deploy-magnanix`) deploys the checkout at
 `magnanix.repoDir`: it checks out `main` there, runs `git pull --ff-only`, then the current host's `nh` wrapper
 with `switch`, and checks the original branch back out afterwards (even if the deploy fails). It refuses to run
 from another branch with uncommitted changes, and stops with an error if `magnanix.repoDir` doesn't exist or isn't
-a git checkout. Deploy after CI passes on `main`.
+a git checkout. Because it is a script on `PATH` rather than a shell alias, it also runs over SSH, for example
+`ssh fortuna deploy-magnanix`. Deploy after CI passes on `main`.
 
 To build without activating:
 

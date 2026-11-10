@@ -1,6 +1,10 @@
 {
   den.aspects.alberth.scripts = {
     homeManager = { ... }: {
+      # Put the scripts below (and deploy-magnanix) on PATH. Home Manager's zsh
+      # sets this in .zshenv, so non-interactive `ssh host cmd` sees it too.
+      home.sessionPath = [ "$HOME/.local/bin" ];
+
       home.file = {
         ".local/bin/control-dock.sh" = {
           source = ./scripts/control-dock.sh;
