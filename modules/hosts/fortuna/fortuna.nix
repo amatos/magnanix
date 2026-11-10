@@ -30,6 +30,7 @@
       den.aspects.audio
       den.aspects.bluetooth
       den.aspects.browsers
+      den.aspects.browsers.linux.helium
       den.aspects.disko
       den.aspects.fonts
       den.aspects.ghostty
