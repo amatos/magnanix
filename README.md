@@ -122,12 +122,16 @@ modules/
 │   ├── yubikey.nix            YubiKey Manager, and pcscd on NixOS
 │   ├── zellij.nix             zellij terminal multiplexer with its built-in Dracula theme
 │   └── zoxide.nix             zoxide directory jumper
-├── hosts/                     one file per host: den.hosts.* and den.aspects.<host>
+├── hosts/                     one directory per host: den.hosts.* and den.aspects.<host>
 │   ├── fortuna/               a host with its disko layout (`_disk-config.nix`) and `_hardware-configuration.nix`
+│   ├── magnus/                the macOS workstation (`magnus.nix`)
 │   ├── muninn/                a host with its generated `_hardware-configuration.nix` beside it
-│   ├── nixostron.nix          two Den hosts (x86_64, aarch64) sharing den.aspects.nixostron, the test VM
-│   ├── _darwin_template.nix   copy this to add a macOS host
-│   └── _nix_template.nix      copy this to add a NixOS host
+│   ├── templates/
+│   │   ├── _darwin_template.nix   copy this to add a macOS host
+│   │   └── _nix_template.nix      copy this to add a NixOS host
+│   └── virtual/               the disposable test VMs
+│       ├── darwintron.nix     the macOS test VM
+│       └── nixostron.nix      two Den hosts (x86_64, aarch64) sharing den.aspects.nixostron, the NixOS test VM
 └── users/
     ├── _user_template/        copy this to add a user
     ├── alberth/               den.aspects.alberth
@@ -554,15 +558,16 @@ sudo certbot certonly --dns-luadns --dns-luadns-credentials /run/secrets/certbot
 
 ## Adding a host
 
-1. Copy `modules/hosts/_darwin_template.nix` or `_nix_template.nix` to `modules/hosts/<hostname>.nix`.
+1. Copy `modules/hosts/templates/_darwin_template.nix` or `_nix_template.nix` to
+   `modules/hosts/<hostname>/<hostname>.nix`.
 2. Replace `CHANGE_HOSTNAME` and `CHANGE_USERNAME`, and set the platform and `system.stateVersion`.
 3. For secrets, add the host's age key (and the user's per-machine key) and a creation rule to `.sops.yaml`, then
    create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
    `secrets/hosts/<hostname>.yaml` by name.
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](#features)). The templates start with a default
    set: `_1password`, `browsers`, `fonts`, `ghostty`, `openssh`, `audio` and `zed`, plus `bluetooth` on NixOS.
-5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in a
-   `modules/hosts/<hostname>/` directory, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
+5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in
+   `modules/hosts/<hostname>/`, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
    it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`). The boot loader comes from `base`
    (`systemdBoot`).
 6. New files must be tracked by git for flakes to see them (`git add` them).
@@ -646,7 +651,7 @@ changing one with `dscl` breaks the login keychain and the FileVault token.
 ## Testing changes on darwintron
 
 `darwintron` is a disposable [Tart](https://tart.run) VM on `magnus` for trying a change before it lands. It is
-deliberately minimal: to test something, add its aspect to `modules/hosts/darwintron.nix` on a branch. Its primary
+deliberately minimal: to test something, add its aspect to `modules/hosts/virtual/darwintron.nix` on a branch. Its primary
 user is `ephemeral`, whose secrets hold fake values, and it can't read `common.yaml` or `alberth.yaml`.
 
 Run these inside `nix develop` on `magnus`. Only committed code is tested.
@@ -675,7 +680,7 @@ hardware can't be tested in the VM.
 
 `nixostron` is a disposable, headless NixOS VM, built for whichever architecture the machine running it has:
 `nixostron-aarch64` under Tart on `magnus`, and `nixostron-x86_64` under QEMU on `muninn` (or any x86_64 NixOS host
-with KVM). Both hosts share `den.aspects.nixostron` in `modules/hosts/nixostron.nix`; to test something, add its
+with KVM). Both hosts share `den.aspects.nixostron` in `modules/hosts/virtual/nixostron.nix`; to test something, add its
 aspect there on a branch. Its disk is described with [disko](https://github.com/nix-community/disko) (GPT, a 1 GiB
 ESP at `/boot`, ext4 root on `/dev/vda`). The only way in is SSH as `ephemeral` with the access key.
 
