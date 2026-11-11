@@ -39,6 +39,20 @@ and `defaults read -g KeyRepeat` rather than trusting a documented default.
 bar, `false` hides it, and leaving the option unset keeps macOS's own choice. Bluetooth, Sound, Focus and Now
 Playing are shown; Display and the battery percentage are hidden.
 
+## Mouse buttons
+
+macOS ignores the extra side buttons (buttons 4 and 5) on most third-party mice, so they don't go back and forward
+in browsers or Finder. `den.aspects.macos.macMouseFix` (`modules/packages/mac-mouse-fix.nix`), included by alberth,
+installs the Mac Mouse Fix Homebrew cask to make them work.
+
+After the first switch:
+
+1. Open Mac Mouse Fix and give it Accessibility permission (System Settings > Privacy & Security >
+   Accessibility).
+2. In its Buttons tab, check that clicking buttons 4 and 5 is set to Back and Forward.
+
+Mac Mouse Fix's settings live in the app, not in this repo. It's a paid app after a free trial.
+
 ## OrbStack
 
 `den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`) installs OrbStack from nixpkgs
