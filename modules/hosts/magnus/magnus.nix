@@ -90,6 +90,7 @@ in
       den.aspects.macos.texStage
       den.aspects.macos.things
       den.aspects.macos.topNotch
+      den.aspects.macos.tower
       den.aspects.macos.transmit
       den.aspects.macos.velja
       den.aspects.macos.windowsApp

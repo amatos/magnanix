@@ -66,7 +66,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Fonts](documentation/fonts.md)                                  | where fonts come from                                                              |
 | [Shells](documentation/shells.md)                                | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell             |
 | [Neovim](documentation/neovim.md)                                | LazyVim from Nix, EDITOR/VISUAL, theme                                             |
-| [Git](documentation/git.md)                                      | git defaults and tools, commit signing                                             |
+| [Git](documentation/git.md)                                      | git defaults and tools, commit signing, Tower                                      |
 | [Claude Code](documentation/claude-code.md)                      | Claude Code config and the settings.json merge                                     |
 | [Fastfetch](documentation/fastfetch.md)                          | the login banner and its wrapper                                                   |
 | [Languages](documentation/languages.md)                          | Python, Ruby, Rust and the other language toolchains                               |
