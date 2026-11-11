@@ -18,7 +18,7 @@ stub() {
 @test "yubi-enable enables OpenPGP, then has gpg relearn the card" {
   run sh "$BATS_TEST_DIRNAME/yubi-enable"
   [ "$status" -eq 0 ]
-  [[ $output == *"YubiKey enabled"* ]]
+  [[ $output == *"OpenPGP interface of YubiKey 32146072 enabled"* ]]
   [ "$(sed -n 1p "$CALLS")" = "ykman -d 32146072 config usb -e openpgp -f" ]
   [ "$(sed -n 2p "$CALLS")" = "gpg-connect-agent scd serialno learn --force /bye" ]
 }
@@ -33,7 +33,7 @@ stub() {
 @test "yubi-disable disables OpenPGP" {
   run sh "$BATS_TEST_DIRNAME/yubi-disable"
   [ "$status" -eq 0 ]
-  [[ $output == *"YubiKey disabled"* ]]
+  [[ $output == *"OpenPGP interface of YubiKey 32146072 disabled"* ]]
   [ "$(cat "$CALLS")" = "ykman -d 32146072 config usb -d openpgp -f" ]
 }
 

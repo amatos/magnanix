@@ -14,7 +14,8 @@
 #                     parallel (over SSH, or directly on this host) and
 #                     reports the hosts that failed
 #   velja-open.sh     `open "$@"`; used with the Velja browser picker
-#   yubi-enable / yubi-disable   turn a YubiKey's OpenPGP USB interface on/off
+#   yubi-enable / yubi-disable   turn the OpenPGP USB interface on/off of
+#                     YubiKey 32146072, which lives permanently in magnus
 #                     (ykman from PATH, installed by tui.yubikey)
 {
   den.aspects.alberth.scripts = {

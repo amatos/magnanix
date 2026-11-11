@@ -1,14 +1,15 @@
 #!/bin/sh
 #
-# Turns off the OpenPGP USB interface of YubiKey 32146072.
+# Turns off the OpenPGP USB interface of YubiKey 32146072, the key that lives
+# permanently in magnus. yubi-enable turns it back on.
 
 if ! command -v ykman >/dev/null 2>&1; then
-    echo "ykman not found" >&2
-    exit 1
+  echo "ykman not found" >&2
+  exit 1
 fi
 
 if ! ykman -d 32146072 config usb -d openpgp -f; then
-    echo "ykman failed to disable OpenPGP" >&2
-    exit 1
+  echo "ykman failed to disable OpenPGP" >&2
+  exit 1
 fi
-echo "YubiKey disabled"
+echo "OpenPGP interface of YubiKey 32146072 disabled"

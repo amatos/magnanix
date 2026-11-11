@@ -1,17 +1,18 @@
 #!/bin/sh
 #
-# Turns on the OpenPGP USB interface of YubiKey 32146072, then has gpg relearn
-# the card so its key stubs point at it.
+# Turns on the OpenPGP USB interface of YubiKey 32146072, the key that lives
+# permanently in magnus, then has gpg relearn the card so its key stubs point
+# at it. The counterpart of yubi-disable.
 
 if ! command -v ykman >/dev/null 2>&1; then
-    echo "ykman not found" >&2
-    exit 1
+  echo "ykman not found" >&2
+  exit 1
 fi
 
 if ! ykman -d 32146072 config usb -e openpgp -f; then
-    echo "ykman failed to enable OpenPGP" >&2
-    exit 1
+  echo "ykman failed to enable OpenPGP" >&2
+  exit 1
 fi
-echo "YubiKey enabled"
+echo "OpenPGP interface of YubiKey 32146072 enabled"
 
 gpg-connect-agent "scd serialno" "learn --force" /bye
