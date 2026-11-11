@@ -9,15 +9,17 @@ and users simply pick the aspects they want.
 Every `.nix` file starts with a header that names its aspect, the platforms it configures and what it is for,
 with notes on anything set differently from the defaults. When something is unclear, read that file's header first.
 
+Documentation is best-effort, and believed to be correct -- however, I write documentation so that future me can understand what I did when something breaks at 3am. So, adjust salinity as required, and double check the actual docs if you're _borrowing_ my config. I have started using Claude to keep the documentation more up-to-date, so, fair warning that claude may hallucinate documenting something that I don't catch.
+
 ## Hosts
 
-| Host                | Platform         | Kind       | User        | Notes                                                                                                          |
-| ------------------- | ---------------- | ---------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| `magnus`            | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron and nixostron VMs; SSH (keys only)                                                         |
-| `darwintron`        | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](documentation/testing-vms.md#testing-changes-on-darwintron)                               |
-| `nixostron-aarch64` | `aarch64-linux`  | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under Tart on magnus                |
-| `nixostron-x86_64`  | `x86_64-linux`   | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under QEMU on muninn                |
-| `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM                         |
+| Host                | Platform         | Kind       | User        | Notes                                                                                                           |
+| ------------------- | ---------------- | ---------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
+| `magnus`            | `aarch64-darwin` | nix-darwin | `alberth`   | runs the darwintron and nixostron VMs; SSH (keys only)                                                          |
+| `darwintron`        | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](documentation/testing-vms.md#testing-changes-on-darwintron)                                |
+| `nixostron-aarch64` | `aarch64-linux`  | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under Tart on magnus                 |
+| `nixostron-x86_64`  | `x86_64-linux`   | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under QEMU on muninn                 |
+| `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM                          |
 | `fortuna`           | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland with Noctalia, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or `hostname` (NixOS), so that `darwin-rebuild` /
@@ -50,28 +52,29 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 
 ## Documentation
 
-| Topic                                                            | What's in it                                                                       |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [Architecture](documentation/architecture.md)                    | layout, how aspects are included, user metadata, Determinate settings, inputs, formatting |
-| [Applying and updating](documentation/applying.md)               | applying the configuration, deploy-magnanix, weekly input updates, direnv          |
-| [Testing scripts](documentation/testing-scripts.md)              | `test-scripts`: shellcheck, bats, zsh -n, Python unittest and ruff for the scripts    |
-| [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                          |
-| [Secrets](documentation/secrets.md)                              | sops and age, YubiKeys, how secrets are wired, login passwords                     |
-| [Binary cache](documentation/binary-cache.md)                    | the Attic server, pulling from it, pushing to it                                   |
-| [Mail](documentation/mail.md)                                    | outgoing mail through the SMTP relay, and the relay itself                         |
-| [TLS certificates](documentation/tls-certificates.md)            | Let's Encrypt through certbot and LuaDNS                                           |
-| [Test VMs](documentation/testing-vms.md)                         | darwintron and nixostron: testing a branch before it lands                         |
-| [Continuous Integration](documentation/ci.md)                    | the build workflow, runners, cache access                                          |
-| [macOS](documentation/macos.md)                                  | System Settings defaults, the Dock, OrbStack's volume, App Store apps              |
-| [Game streaming](documentation/game-streaming.md)                | Sunshine and Steam in a headless session on fortuna, Moonlight on magnus           |
-| [Fonts](documentation/fonts.md)                                  | where fonts come from                                                              |
-| [Shells](documentation/shells.md)                                | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell             |
-| [Neovim](documentation/neovim.md)                                | LazyVim from Nix, EDITOR/VISUAL, theme                                             |
-| [Git](documentation/git.md)                                      | git defaults and tools, commit signing, Tower                                      |
-| [Claude Code](documentation/claude-code.md)                      | Claude Code config and the settings.json merge                                     |
-| [Fastfetch](documentation/fastfetch.md)                          | the login banner and its wrapper                                                   |
-| [Languages](documentation/languages.md)                          | Python, Ruby, Rust and the other language toolchains                               |
-| [TODO](documentation/todo.md)                                    | open work                                                                          |
+| Topic                                                             | What's in it                                                                              |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [Architecture](documentation/architecture.md)                     | layout, how aspects are included, user metadata, Determinate settings, inputs, formatting |
+| [Applying and updating](documentation/applying.md)                | applying the configuration, deploy-magnanix, weekly input updates, direnv                 |
+| [Scripts](documentation/scripts.md)                               | alberth's scripts in `~/.local/bin`: what each one does                                   |
+| [Testing scripts](documentation/testing-scripts.md)               | `test-scripts`: shellcheck, bats, zsh -n, Python unittest and ruff for the scripts        |
+| [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                                 |
+| [Secrets](documentation/secrets.md)                               | sops and age, YubiKeys, how secrets are wired, login passwords                            |
+| [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
+| [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
+| [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |
+| [Test VMs](documentation/testing-vms.md)                          | darwintron and nixostron: testing a branch before it lands                                |
+| [Continuous Integration](documentation/ci.md)                     | the build workflow, runners, cache access                                                 |
+| [macOS](documentation/macos.md)                                   | System Settings defaults, the Dock, OrbStack's volume, App Store apps                     |
+| [Game streaming](documentation/game-streaming.md)                 | Sunshine and Steam in a headless session on fortuna, Moonlight on magnus                  |
+| [Fonts](documentation/fonts.md)                                   | where fonts come from                                                                     |
+| [Shells](documentation/shells.md)                                 | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell                    |
+| [Neovim](documentation/neovim.md)                                 | LazyVim from Nix, EDITOR/VISUAL, theme                                                    |
+| [Git](documentation/git.md)                                       | git defaults and tools, commit signing, Tower                                             |
+| [Claude Code](documentation/claude-code.md)                       | Claude Code config and the settings.json merge                                            |
+| [Fastfetch](documentation/fastfetch.md)                           | the login banner and its wrapper                                                          |
+| [Languages](documentation/languages.md)                           | Python, Ruby, Rust and the other language toolchains                                      |
+| [TODO](documentation/todo.md)                                     | open work                                                                                 |
 
 Planning notes: [CICD_PLAN.md](documentation/CICD_PLAN.md), [TAILSCALE_SETUP.md](documentation/TAILSCALE_SETUP.md).
 
