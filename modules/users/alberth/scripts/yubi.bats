@@ -1,12 +1,11 @@
 #!/usr/bin/env bats
-# Tests for yubi-enable and yubi-disable. ykman is a stub in a fake
-# $HOME/.nix-profile/bin; gpg-connect-agent is a stub on PATH.
+# Tests for yubi-enable and yubi-disable. ykman and gpg-connect-agent are
+# stubs on PATH.
 
 setup() {
-  export HOME="$BATS_TEST_TMPDIR/home"
   export CALLS="$BATS_TEST_TMPDIR/calls"
-  mkdir -p "$HOME/.nix-profile/bin" "$BATS_TEST_TMPDIR/bin"
-  stub "$HOME/.nix-profile/bin/ykman" 'echo "ykman $*" >>"$CALLS"; exit "${YKMAN_STATUS:-0}"'
+  mkdir -p "$BATS_TEST_TMPDIR/bin"
+  stub "$BATS_TEST_TMPDIR/bin/ykman" 'echo "ykman $*" >>"$CALLS"; exit "${YKMAN_STATUS:-0}"'
   stub "$BATS_TEST_TMPDIR/bin/gpg-connect-agent" 'echo "gpg-connect-agent $*" >>"$CALLS"'
   PATH="$BATS_TEST_TMPDIR/bin:$PATH"
 }
@@ -45,9 +44,9 @@ stub() {
 }
 
 @test "both fail when ykman isn't installed" {
-  rm "$HOME/.nix-profile/bin/ykman"
-  # Hide a real Homebrew ykman, if any, by checking only the message path.
-  if [ -x /opt/homebrew/bin/ykman ]; then skip "Homebrew ykman is installed"; fi
+  rm "$BATS_TEST_TMPDIR/bin/ykman"
+  # Drop the rest of PATH so a real ykman can't be found.
+  PATH="$BATS_TEST_TMPDIR/bin:/usr/bin:/bin"
   run sh "$BATS_TEST_DIRNAME/yubi-enable"
   [ "$status" -eq 1 ]
   [[ $output == *"ykman not found"* ]]

@@ -15,6 +15,7 @@
 #                     reports the hosts that failed
 #   velja-open.sh     `open "$@"`; used with the Velja browser picker
 #   yubi-enable / yubi-disable   turn a YubiKey's OpenPGP USB interface on/off
+#                     (ykman from PATH, installed by tui.yubikey)
 {
   den.aspects.alberth.scripts = {
     homeManager = { ... }: {

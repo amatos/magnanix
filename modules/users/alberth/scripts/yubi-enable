@@ -3,16 +3,12 @@
 # Turns on the OpenPGP USB interface of YubiKey 32146072, then has gpg relearn
 # the card so its key stubs point at it.
 
-if [ -x "$HOME/.nix-profile/bin/ykman" ]; then
-    ykman=$HOME/.nix-profile/bin/ykman
-elif [ -x /opt/homebrew/bin/ykman ]; then
-    ykman=/opt/homebrew/bin/ykman
-else
+if ! command -v ykman >/dev/null 2>&1; then
     echo "ykman not found" >&2
     exit 1
 fi
 
-if ! "$ykman" -d 32146072 config usb -e openpgp -f; then
+if ! ykman -d 32146072 config usb -e openpgp -f; then
     echo "ykman failed to enable OpenPGP" >&2
     exit 1
 fi
