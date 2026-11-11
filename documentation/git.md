@@ -29,3 +29,27 @@ through the host's `provides.<user>`:
 ```nix
 den.aspects.<host>.provides.<user>.includes = [ den.aspects.git.signing ];
 ```
+
+## Tower
+
+`den.aspects.macos.tower` (`modules/packages/tower.nix`, included by magnus) installs [Tower](https://www.git-tower.com)
+as a Homebrew cask, since it isn't in nixpkgs. The cask updates itself, and the license comes from git-tower.com.
+
+It also gives Tower Dracula themes, written to `~/Library/Application Support/com.fournova.Tower3/Themes`:
+
+- **Dracula**, the free theme, linked from the Nix store. Tower uses it in dark mode for users without
+  `magnanix.draculaPro`.
+- **Dracula PRO** and its variants (Alucard, Blade, Buffy, Lincoln, Morbius, Nosferatu, Van Helsing), for users
+  with `magnanix.draculaPro`. Dracula PRO is licensed, so its colors never enter this repo or the Nix store:
+  each switch reads them from the checkout's `design/palette.md` and writes the theme files, rewriting a file
+  only when it changes. Tower uses Dracula PRO in dark mode and Dracula PRO Alucard in light mode. Tower also adds
+  itself to `draculaPro.usedBy`, so the checkout is cloned on hosts that run it.
+
+Every theme shares one layout (`mkTheme`), which maps Dracula's color roles onto Tower's fields the way the
+[Dracula spec](https://draculatheme.com/spec) does, in JetBrains Mono Nerd Font Mono at 12pt. Change themes there
+rather than in Tower's theme editor: the Dracula file is read-only, and the next switch overwrites the PRO files.
+
+> [!NOTE]
+> Quit Tower before switching. A running Tower may overwrite the theme settings (`GTUserDefaultsDarkTheme` and
+> `GTUserDefaultsLightTheme`) with the values it already has in memory. Before the Dracula PRO checkout exists,
+> the PRO themes are skipped with a warning and Tower shows its default theme until the next switch.
