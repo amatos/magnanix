@@ -3,7 +3,8 @@
 # Two tiers:
 #
 # - Evaluate (every PR and every push to main): format check, flake.nix
-#   up-to-date check, and evaluation of every NixOS and nix-darwin host. Nothing
+#   up-to-date check, script lints and tests (test-scripts, on Linux and
+#   macOS), and evaluation of every NixOS and nix-darwin host. Nothing
 #   is built and no secrets are needed, so it takes a minute or two.
 # - Build (pushes to main, the weekly update-flake-lock PR, a PR labelled
 #   `ci:build`, or a manual run): builds every host's system closure and pushes
@@ -66,6 +67,9 @@ jobs:
       - name: Check flake.nix is up to date (nix run .#write-flake)
         run: nix build --no-link .#checks.x86_64-linux.check-flake-file
 
+      - name: Lint and test shell and Python scripts (test-scripts)
+        run: nix build --no-link --print-build-logs .#checks.x86_64-linux.script-tests
+
       # Hosts are listed from the flake, so new ones are picked up automatically.
       - name: Evaluate NixOS hosts
         run: |
@@ -88,6 +92,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v12
+
+      # Also on macOS, where the scripts meet BSD tools.
+      - name: Lint and test shell and Python scripts (test-scripts)
+        run: nix build --no-link --print-build-logs .#checks.aarch64-darwin.script-tests
 
       - name: Evaluate nix-darwin hosts
         run: |

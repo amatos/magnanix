@@ -1,34 +1,31 @@
-#!/usr/bin/env zsh
+#!/bin/sh
+#
+# Usage: control-dock.sh [-h] [-s]
+#   -h: Hide the dock (turn autohide on)
+#   -s: Show the dock (turn autohide off)
 
-# Function to toggle the dock
-hide_dock() {
-    osascript -e 'tell application "System Events" to tell dock preferences to set autohide to true'
-
+set_autohide() {
+    osascript -e "tell application \"System Events\" to tell dock preferences to set autohide to $1"
 }
 
-show_dock() {
-    osascript -e 'tell application "System Events" to tell dock preferences to set autohide to false'
-}
-
-# Main script
-while getopts "hs" opt; do
-    case $opt in
-        h)
-            hide_dock
-            ;;
-        s)
-            show_dock
-            ;;
-        \?)
-            echo "Invalid option: -$OPTARG" >&2
-            ;;
-    esac
-done
-
-# Execute the script with the provided options
-if [ $# -eq 0 ]; then
+usage() {
     echo "Usage: $0 [-h] [-s]"
     echo "  -h: Hide the dock"
     echo "  -s: Show the dock"
+}
+
+if [ $# -eq 0 ]; then
+    usage
     exit 1
 fi
+
+while getopts "hs" opt; do
+    case $opt in
+        h) set_autohide true ;;
+        s) set_autohide false ;;
+        *)
+            usage >&2
+            exit 1
+            ;;
+    esac
+done

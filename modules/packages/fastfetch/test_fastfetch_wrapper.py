@@ -131,6 +131,7 @@ class EndToEndTests(unittest.TestCase):
         env.pop("FASTFETCH_CONFIG", None)
         return subprocess.run(
             [sys.executable, "-I", WRAPPER, *args],
+            check=False,
             capture_output=True,
             encoding="utf-8",
             env=env,

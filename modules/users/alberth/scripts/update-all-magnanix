@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+#
+# update-all-magnanix: run deploy-magnanix on every host in the fleet, in
+# parallel, and report which hosts failed.
+#
+# Usage: update-all-magnanix [host ...]
+#
+# With no arguments it deploys the physical hosts (the test VMs in
+# modules/hosts/virtual are left out). Remote hosts run it over SSH; the host
+# this runs on runs it directly, since sudo on macOS needs Touch ID or a
+# password and can't prompt over a non-interactive SSH session.
+#
+# Each host's output is shown prefixed with its name and saved to a log file.
+# Exits 0 only if every host deployed; on failure it prints the end of each
+# failed host's log and keeps the logs.
+
+set -uo pipefail
+
+default_hosts=(fortuna magnus muninn)
+
+if [ $# -gt 0 ]; then
+  hosts=("$@")
+else
+  hosts=("${default_hosts[@]}")
+fi
+
+local_host=$(hostname -s | tr '[:upper:]' '[:lower:]')
+logdir=$(mktemp -d "${TMPDIR:-/tmp}/update-all-magnanix.XXXXXX")
+pids=()
+
+say() { printf 'update-all-magnanix: %s\n' "$*" >&2; }
+
+is_local() { [ "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" = "$local_host" ]; }
+
+deploy() {
+  if is_local "$1"; then
+    deploy-magnanix
+  else
+    # BatchMode: fail instead of prompting for a password or host key, which
+    # would hang a background job. -n: don't read this terminal's stdin.
+    ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$1" deploy-magnanix
+  fi
+}
+
+# Background jobs ignore SIGINT in a script, so Ctrl-C has to be passed on:
+# stop each job and everything it started (ssh, deploy-magnanix, nh), then report.
+# shellcheck disable=SC2329 # called from on_signal
+kill_tree() {
+  local child
+  # ps rather than pgrep: nixpkgs has no pgrep on macOS.
+  for child in $(ps -A -o pid= -o ppid= | awk -v p="$1" '$2 == p { print $1 }'); do
+    kill_tree "$child"
+  done
+  kill -TERM "$1" 2>/dev/null
+}
+
+interrupted=0
+# shellcheck disable=SC2329 # called from the trap
+on_signal() {
+  interrupted=1
+  say "interrupted; stopping running deployments"
+  for pid in "${pids[@]}"; do
+    kill_tree "$pid"
+  done
+}
+trap on_signal INT TERM
+
+# The local deploy switches with sudo. Ask for it now, while nothing else is
+# writing to the terminal; the background job reuses the cached credential.
+for host in "${hosts[@]}"; do
+  if is_local "$host"; then
+    if ! sudo -v; then
+      say "sudo failed; can't deploy $host"
+      exit 1
+    fi
+    break
+  fi
+done
+
+for host in "${hosts[@]}"; do
+  (
+    deploy "$host" 2>&1 \
+      | tee "$logdir/$host.log" \
+      | awk -v p="[$host] " '{ print p $0; fflush() }'
+    exit "${PIPESTATUS[0]}"
+  ) &
+  pids+=("$!")
+done
+
+say "deploying ${hosts[*]} (logs in $logdir)"
+
+failed=()
+for i in "${!hosts[@]}"; do
+  host=${hosts[$i]}
+  # `wait` returns early when a trapped signal arrives; wait again until the
+  # job has really exited.
+  while :; do
+    wait "${pids[$i]}"
+    status=$?
+    kill -0 "${pids[$i]}" 2>/dev/null || break
+  done
+  printf '%s\t%s\n' "$host" "$status" >>"$logdir/status"
+  if [ "$status" -ne 0 ]; then
+    failed+=("$host")
+  fi
+done
+
+echo >&2
+say "summary"
+while IFS=$'\t' read -r host status; do
+  case $status in
+    0) reason="ok" ;;
+    255) reason="failed: ssh error (unreachable, or authentication failed)" ;;
+    127) reason="failed: deploy-magnanix not found" ;;
+    130 | 143) reason="failed: interrupted" ;;
+    *) reason="failed: exit status $status" ;;
+  esac
+  printf '  %-10s %s\n' "$host" "$reason" >&2
+done <"$logdir/status"
+
+if [ ${#failed[@]} -eq 0 ] && [ "$interrupted" -eq 0 ]; then
+  rm -rf "$logdir"
+  exit 0
+fi
+
+for host in "${failed[@]}"; do
+  echo >&2
+  say "last lines from $host ($logdir/$host.log):"
+  tail -n 20 "$logdir/$host.log" | sed 's/^/    /' >&2
+done
+echo >&2
+if [ "$interrupted" -eq 1 ]; then
+  say "interrupted; logs kept in $logdir"
+  exit 130
+fi
+say "${#failed[@]} of ${#hosts[@]} hosts failed; logs kept in $logdir"
+exit 1
