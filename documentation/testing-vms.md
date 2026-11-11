@@ -40,7 +40,13 @@ Run these inside `nix develop`. Only committed code is tested.
 
 On `magnus`, the workflow matches darwintron's. The seed is a stock Ubuntu image; [nixos-anywhere](https://github.com/nix-community/nixos-anywhere)
 kexecs from it into the NixOS installer, partitions the disk with disko and installs. magnus can't build Linux,
-so the guest builds its own system (`--build-on remote`); nearly everything comes from the binary cache.
+so the guest builds its own system (`--build-on remote`); nearly everything comes from the binary cache. The
+script adds muninn's [Attic cache](binary-cache.md) (as `muninn.ts.matos.cc`, reached through magnus) to the
+installer's `nix.conf`, so the guest substitutes what CI has built instead of compiling it.
+
+The installer comes back from the kexec on a new address (it asks macOS's DHCP server for a lease by DUID, where
+Ubuntu used its MAC), so the script reads it from `/var/db/dhcpd_leases` and runs the rest of the install
+against it.
 
 ```sh
 nixostron-vm seed                 # once: stock Ubuntu with the access key
@@ -60,10 +66,11 @@ nixostron-vm test my-branch --keep    # keep the VM afterwards (SSH on localhost
 
 A failed test keeps its VM for inspection. Each test checks that the system reaches `running` with no failed units,
 both canary secrets decrypt, the hostname and login shell are right, and sshd refuses passwords. On `magnus` a
-test from the baseline also prints `nix store diff-closures`.
+test from the baseline also prints `nix store diff-closures`, and skips the rollback when the ref builds the
+baseline's own system (as `test main` does), since there is no new generation to undo.
 
 The VM keeps one identity however often it is rebuilt. `secrets/bootstrap/nixostron.yaml` holds its host key,
-`ephemeral`'s age key and the access key, encrypted to the YubiKeys, `alberth_magnus` and (once added)
+`ephemeral`'s age key and the access key, encrypted to the YubiKeys, `alberth_magnus` and
 `alberth_muninn`. The script decrypts them on the host and puts them in `/var/lib/nixostron-keys` on the guest: via
 nixos-anywhere's `--extra-files` or SSH on Tart, and as a read-only QEMU share on muninn. The `nixostron-keys`
 activation script installs them before sops-nix runs, and the Tart script removes them before saving an image. The
@@ -71,4 +78,8 @@ public halves are `host_nixostron` and `ephemeral_nixostron` in `.sops.yaml`.
 
 `nix flake check` on a Linux machine also builds the nixostron host for its architecture.
 
-The Ubuntu image is pinned by digest at the top of the Tart section of `pkgs/nixostron-vm.sh`.
+The Ubuntu image is pinned by digest at the top of the Tart section of `pkgs/nixostron-vm.sh`. Next to it,
+`kexec_image` picks the installer nixos-anywhere kexecs into. Keep it on the NixOS release closest to this flake's
+nixpkgs: disko's script uses `udevadm` from our nixpkgs, and against an older installer's udevd its
+`udevadm settle` returns at once, so `mkfs` fails on a missing `/dev/disk/by-partlabel/...` link. nixos-anywhere's
+own default (nixos-25.05) is too old for that reason.
