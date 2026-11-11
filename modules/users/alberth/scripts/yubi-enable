@@ -1,16 +1,21 @@
-#!/usr/bin/env zsh
+#!/bin/sh
+#
+# Turns on the OpenPGP USB interface of YubiKey 32146072, then has gpg relearn
+# the card so its key stubs point at it.
 
-YKMANNIX=/Users/alberth/.nix-profile/bin/ykman
-YKMANBREW=/opt/homebrew/bin/ykman
-
-if [ -e $YKMANNIX ]; then
-    YKMAN=$YKMANNIX
-elif [ -e $YKMANBREW ]; then
-    YKMAN=$YKMANBREW
+if [ -x "$HOME/.nix-profile/bin/ykman" ]; then
+    ykman=$HOME/.nix-profile/bin/ykman
+elif [ -x /opt/homebrew/bin/ykman ]; then
+    ykman=/opt/homebrew/bin/ykman
 else
-    echo "ykman not found"
+    echo "ykman not found" >&2
     exit 1
 fi
 
-[ -e $YKMAN ] && $YKMAN -d 32146072 config usb -e openpgp -f && echo "YubiKey enabled" || echo "ykman not found" &&exit 1
-/run/current-system/sw/bin/gpg-connect-agent "scd serialno" "learn --force" /bye
+if ! "$ykman" -d 32146072 config usb -e openpgp -f; then
+    echo "ykman failed to enable OpenPGP" >&2
+    exit 1
+fi
+echo "YubiKey enabled"
+
+gpg-connect-agent "scd serialno" "learn --force" /bye

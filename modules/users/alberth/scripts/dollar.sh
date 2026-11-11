@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/sh
 
 # Ever pasted "$ somecommand" into the terminal and gotten this error?
 # -bash: $: command not found
