@@ -3,7 +3,8 @@
 # Purpose:   Defines what the flake exports: the darwin/NixOS configurations Den
 #            builds, one `nh` wrapper per host, the flake-file generators
 #            (write-flake), checks, the dev shell (apply-configuration,
-#            darwintron-vm, nixostron-vm, sops tools) and the nixfmt formatter.
+#            darwintron-vm, nixostron-vm, test-scripts, sops tools) and the
+#            nixfmt formatter.
 {
   config,
   inputs,
@@ -27,6 +28,25 @@ let
         pkgs = import inputs.nixpkgs { inherit system; };
       }
     );
+
+  # Lints and tests the repo's shell and Python scripts (bats, shellcheck,
+  # zsh -n, unittest, ruff). The same command runs in the dev shell and in the
+  # `script-tests` check; see documentation/testing-scripts.md.
+  mkTestScripts =
+    pkgs:
+    pkgs.writeShellApplication {
+      name = "test-scripts";
+      runtimeInputs = [
+        pkgs.bats
+        # `ps`, used by update-all-magnanix to stop deployments on Ctrl-C
+        pkgs.procps
+        pkgs.python3
+        pkgs.ruff
+        pkgs.shellcheck
+        pkgs.zsh
+      ];
+      text = builtins.readFile ../../pkgs/test-scripts.sh;
+    };
 in
 {
   # The flake's outputs. flake.nix is generated and ends with
@@ -65,6 +85,12 @@ in
       { pkgs, system }:
       {
         check-flake-file = config.flake-file.check-flake-file pkgs;
+
+        # Shell and Python script lints and tests, run against the flake's source
+        script-tests = pkgs.runCommand "script-tests" { } ''
+          ${lib.getExe (mkTestScripts pkgs)} ${self}
+          touch $out
+        '';
       }
       // lib.optionalAttrs (lib.hasSuffix "-linux" system) {
         nixostron =
@@ -156,6 +182,9 @@ in
               excludeShellChecks = [ "SC2016" ];
               text = builtins.readFile ../../pkgs/nixostron-vm.sh;
             })
+
+            # Lints and tests the shell and Python scripts: `test-scripts`
+            (mkTestScripts pkgs)
 
             # Tools for creating and editing secrets
             pkgs.sops

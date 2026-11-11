@@ -8,3 +8,6 @@ result-*
 # Ignore NixOS interactive test driver history
 **/.nixos-test-history
 .DS_Store
+
+# Python bytecode caches (from running script tests)
+__pycache__/

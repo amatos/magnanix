@@ -153,6 +153,7 @@ def run_piped(cmd):
     try:
         r = subprocess.run(
             cmd,
+            check=False,
             capture_output=True,
             stdin=subprocess.DEVNULL,
             encoding="utf-8",

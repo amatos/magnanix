@@ -54,6 +54,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | [Architecture](documentation/architecture.md)                    | layout, how aspects are included, user metadata, Determinate settings, inputs, formatting |
 | [Applying and updating](documentation/applying.md)               | applying the configuration, deploy-magnanix, weekly input updates, direnv          |
+| [Testing scripts](documentation/testing-scripts.md)              | `test-scripts`: shellcheck, bats, zsh -n, Python unittest and ruff for the scripts    |
 | [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                          |
 | [Secrets](documentation/secrets.md)                              | sops and age, YubiKeys, how secrets are wired, login passwords                     |
 | [Binary cache](documentation/binary-cache.md)                    | the Attic server, pulling from it, pushing to it                                   |
