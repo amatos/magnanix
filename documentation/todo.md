@@ -13,5 +13,3 @@
   `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
   the pinned nixpkgs, tests included, so success means the override can go. The tests fail on both macOS and
   Linux, so one host is enough.
-- Add a cut-down NixOS VM test for [game streaming](game-streaming.md) (headless Sway and Sunshine, no Steam) that
-  checks the session starts and Sunshine listens.
