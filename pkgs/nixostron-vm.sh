@@ -145,7 +145,10 @@ check_system() {
   [ "$(guest "$user" 'hostname')" = "nixostron" ] || die "wrong hostname"
   [ "$(guest "$user" "getent passwd $user | cut -d: -f7")" = "/run/current-system/sw/bin/zsh" ] ||
     die "login shell is not Nix zsh"
-  guest "$user" 'sudo sshd -T' | grep -qx 'passwordauthentication no' ||
+  # Newer OpenSSH prints keywords in mixed case (PasswordAuthentication), older in lower.
+  local sshd_config
+  sshd_config="$(guest "$user" 'sudo sshd -T')"
+  grep -qix 'passwordauthentication no' <<<"$sshd_config" ||
     die "sshd allows password authentication"
   log "system checks passed"
 }
@@ -161,6 +164,16 @@ send_source() {
 # Pinned so the seed only changes when this line does. Ubuntu 24.04, whose only job is
 # to be a Linux with SSH that nixos-anywhere can kexec into its installer from.
 image="ghcr.io/cirruslabs/ubuntu@sha256:97166c84ea5f102be33d2959f70e83861a36bd749f1715ab669d93e6c9f31476"
+# The installer nixos-anywhere kexecs into. Its default (nixos-25.05) runs an older
+# udevd than the disko script built from our nixpkgs, and a newer `udevadm settle`
+# returns at once against an older udevd, so mkfs runs before the partition links
+# exist. Keep this on the release closest to our nixpkgs.
+kexec_image="https://github.com/nix-community/nixos-images/releases/download/nixos-26.05/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz"
+# The guest builds its own system, so install_nixos points it at this flake's Attic cache on muninn
+# (see modules/packages/attic.nix), which CI fills. Over Tailscale, so it works away
+# from the LAN too: the VM's traffic goes out through magnus.
+attic_substituter="http://muninn.ts.matos.cc:8080/magnanix"
+attic_public_key="magnanix:CqwRoN5bzF5FNtDByVxLzNm/O8lpZ+++pVopZr80TLY="
 seed_vm="nixostron-seed"
 baseline_vm="nixostron-baseline"
 test_vm="nixostron"
@@ -207,6 +220,24 @@ shut_down() {
 # Partitions, formats and installs $host from $work/src onto the running Ubuntu VM.
 # The build runs on the guest (magnus can't build Linux). The keys land in the staging
 # directory that the `nixostron-keys` activation script installs from on first boot.
+#
+# The kexec installer asks for a lease with a DUID client ID where Ubuntu used its MAC,
+# so macOS's DHCP server gives it a new address and nixos-anywhere would wait on the
+# old one forever. So the kexec phase runs on its own, the installer's new address is
+# read from the lease file, and the remaining phases run against that.
+leases="/var/db/dhcpd_leases"
+
+# Prints "ip lease" for each nixos-installer entry in the lease file.
+installer_leases() {
+  awk -F= '
+    /^\{/ { name = ""; addr = ""; lease = "" }
+    $1 ~ /name$/ { name = $2 }
+    $1 ~ /ip_address$/ { addr = $2 }
+    $1 ~ /lease$/ { lease = $2 }
+    /^\}/ && name == "nixos-installer" { print addr, lease }
+  ' "$leases" 2>/dev/null || true
+}
+
 install_nixos() {
   log "installing $host with nixos-anywhere"
   local stage="$work/extra/var/lib/nixostron-keys"
@@ -217,9 +248,43 @@ install_nixos() {
   for opt in "${ssh_opts[@]}"; do
     [ "$opt" = "-o" ] || opts+=(--ssh-option "$opt")
   done
-  nixos-anywhere --flake "$work/src#$host" --build-on remote \
-    --extra-files "$work/extra" -i "$work/access_key" "${opts[@]}" \
-    --target-host "$seed_user@$ip"
+  local na=(nixos-anywhere --flake "$work/src#$host" --build-on remote
+    --extra-files "$work/extra" -i "$work/access_key" "${opts[@]}")
+
+  installer_leases >"$work/leases.before"
+  log "kexecing into the NixOS installer"
+  "${na[@]}" --phases kexec --kexec "$kexec_image" \
+    --target-host "$seed_user@$ip" >"$work/kexec.log" 2>&1 &
+  local kexec_pid=$! new="" _
+  for _ in $(seq 1 150); do
+    new="$(installer_leases | { grep -vxFf "$work/leases.before" || true; } | tail -n 1 | cut -d' ' -f1)"
+    [ -n "$new" ] && break
+    if ! kill -0 "$kexec_pid" 2>/dev/null; then
+      cat "$work/kexec.log" >&2
+      die "the kexec phase exited before the installer took a lease"
+    fi
+    sleep 2
+  done
+  kill "$kexec_pid" 2>/dev/null || true
+  wait "$kexec_pid" 2>/dev/null || true
+  if [ -z "$new" ]; then
+    cat "$work/kexec.log" >&2
+    die "the installer did not take a DHCP lease"
+  fi
+  ip="$new"
+  log "the installer is at $ip"
+  wait_for_ssh root
+
+  # nixos-anywhere builds through an ssh-ng store whose daemon ignores substituters
+  # passed by the client, and only copies the flake's `substituters`, not the
+  # `extra-substituters` the Attic cache is in. Root's own nix.conf is trusted.
+  guest root "mkdir -p ~/.config/nix && cat >> ~/.config/nix/nix.conf" <<EOF
+extra-substituters = $attic_substituter
+extra-trusted-public-keys = $attic_public_key
+connect-timeout = 5
+EOF
+
+  "${na[@]}" --phases disko,install,reboot --target-host "root@$ip"
   wait_for_reboot "$1"
 }
 
@@ -325,7 +390,13 @@ tart_test() {
     apply
     check_system
     current="$(guest "$user" 'readlink -f /run/current-system')"
-    guest "$user" "nix store diff-closures $previous $current" || true
+    if [ "$current" = "$previous" ]; then
+      # Same system as the baseline (e.g. testing main): no new generation to undo.
+      log "$ref builds the baseline's system; nothing to roll back"
+      previous=""
+    else
+      guest "$user" "nix store diff-closures $previous $current" || true
+    fi
   fi
 
   log "rebooting"
@@ -335,7 +406,9 @@ tart_test() {
 
   if [ -n "$previous" ]; then
     log "rolling back"
-    guest "$user" 'sudo nixos-rebuild switch --rollback'
+    # --no-reexec: otherwise nixos-rebuild first rebuilds itself from <nixpkgs/nixos>,
+    # and the guest has no NIX_PATH.
+    guest "$user" 'sudo nixos-rebuild switch --rollback --no-reexec'
     [ "$(guest "$user" 'readlink -f /run/current-system')" = "$previous" ] ||
       die "rollback did not restore the previous system"
     log "rollback restored the previous system"
