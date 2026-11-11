@@ -10,6 +10,9 @@
 #                     linked or aliased as `$`
 #   extract.sh        extracts an archive (or mounts a .dmg) by its extension
 #   switch-yubikey    points gpg's key stubs at the YubiKey now inserted
+#   update-all-magnanix   runs deploy-magnanix on every non-VM host in
+#                     parallel (over SSH, or directly on this host) and
+#                     reports the hosts that failed
 #   velja-open.sh     `open "$@"`; used with the Velja browser picker
 #   yubi-enable / yubi-disable   turn a YubiKey's OpenPGP USB interface on/off
 {
@@ -34,6 +37,10 @@
         };
         ".local/bin/switch-yubikey" = {
           source = ./scripts/switch-yubikey;
+          executable = true;
+        };
+        ".local/bin/update-all-magnanix" = {
+          source = ./scripts/update-all-magnanix;
           executable = true;
         };
         ".local/bin/velja-open.sh" = {
