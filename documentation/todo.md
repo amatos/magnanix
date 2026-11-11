@@ -1,16 +1,13 @@
 # TODO
 
-- `fortuna`: add an `alberth_fortuna` key to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
-  Its second NVMe drive (the Samsung 970 EVO Plus) is reserved for Windows 11; keep NixOS off it.
-- Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`
-  and `secrets/users/alberth.yaml` with real secrets and declare them as
-  `sops.secrets.<name>`.
-- `muninn`: add `alberth_muninn` to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
-- Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
-- Test the nixostron-vm rollback on `magnus` with a branch that changes nixostron's configuration: `test main`
-  builds the baseline's own system, so it skips the rollback.
-- Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
-  `nix-darwin-settings.nix` that set them was never wired in and has been removed.
+- When `alberth` declares a Home Manager secret, add each machine's user key to the `alberth.yaml` rule in
+  `.sops.yaml`: `alberth_muninn` already exists; `fortuna` needs an `alberth_fortuna` key generated first.
+- Wire up `github_access_token` from `secrets/common.yaml`, which nothing declares yet: give Nix a GitHub
+  `access-tokens` entry so fetches avoid GitHub's rate limit for anonymous requests. Render
+  `access-tokens = github.com=<token>` with a sops template and `!include` its path (`!include` skips a missing
+  file). On NixOS, use `nix.extraOptions`. On macOS, `determinateNix.customSettings` only writes `key = value`
+  lines, but `environment.etc."nix/nix.custom.conf".text` is `types.lines`, so append the line with `lib.mkAfter`.
+  The `nix` client fetches flake inputs itself, so the template must be readable by `alberth`, not only root.
 - Remove the `doCheck = false` override on `cargo-llvm-cov` in `modules/packages/languages/rust.nix` (see
   [Rust](languages.md#rust)) once nixpkgs fixes its tests. After updating inputs, check with
   `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
