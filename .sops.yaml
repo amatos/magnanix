@@ -19,14 +19,11 @@ keys:
   - &host_fortuna age10s2kgymxl7fw2u5222qw5kzd6ztdq49z5ss4jwa3kfxjwn2gdqvqwyh7v5
   # Home Manager: per-machine user keys (`age-keygen -y ~/.config/sops-nix/key.txt`)
   - &alberth_magnus age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
+  - &alberth_muninn age1lkrmja7y0ru7yqfgckumgzzakgs06lsvmleysvrl9tm0xdp3sa6q7p84fn
   # The private half lives in secrets/bootstrap/darwintron.yaml and is injected into each VM.
   - &ephemeral_darwintron age1rd88xaq8el7hm5rn3en6jhy8elfdn8z0elnfrd63q74vsxmanvascxh5sd
   # The private half lives in secrets/bootstrap/nixostron.yaml and is injected into each VM.
   - &ephemeral_nixostron age1t7ewwhp7ywczmqz0ycvc8q0pjs96h4mqkzqj3nvucapupqy2wcrqvnkqw3
-  # TODO: on muninn, run `age-keygen -o ~/.config/sops-nix/key.txt`, put the public key
-  # (`age-keygen -y ~/.config/sops-nix/key.txt`) here, uncomment this line and the
-  # `*alberth_muninn` entries below, then run `sops updatekeys` on the files that list it.
-  # - &alberth_muninn age1...
 
 creation_rules:
   # System secrets for one host
@@ -144,7 +141,7 @@ creation_rules:
           - *yubikey7cb1cad0
           - *yubikeyb4d67c6f
           - *alberth_magnus
-          # - *alberth_muninn
+          - *alberth_muninn
 
   # darwintron's private keys, decrypted on magnus by the darwintron-vm script.
   # Never add a darwintron key here.
