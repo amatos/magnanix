@@ -19,3 +19,6 @@
   `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
   the pinned nixpkgs, tests included, so success means the override can go. The tests fail on both macOS and
   Linux, so one host is enough.
+- `fortuna`: try [game streaming](game-streaming.md) for real. It evaluates, but no session has run yet; the parts most
+  likely to need fixing are libinput under `LIBSEAT_BACKEND=noop` and Sunshine's wlr capture with VAAPI. Consider a
+  cut-down NixOS VM test (Sway, Sunshine, no Steam) once it works.

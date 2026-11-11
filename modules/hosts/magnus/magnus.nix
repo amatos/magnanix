@@ -43,6 +43,7 @@ in
       den.aspects.claude
       den.aspects.elgato
       den.aspects.fonts
+      den.aspects.game-streaming
       den.aspects.ghostty
       den.aspects.java
       den.aspects.macos._1password

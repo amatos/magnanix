@@ -44,6 +44,7 @@
       den.aspects.disko
       den.aspects.elgato
       den.aspects.fonts
+      den.aspects.game-streaming
       den.aspects.ghostty
       den.aspects.noctalia
       den.aspects.openssh

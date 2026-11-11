@@ -62,6 +62,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Test VMs](documentation/testing-vms.md)                         | darwintron and nixostron: testing a branch before it lands                         |
 | [Continuous Integration](documentation/ci.md)                    | the build workflow, runners, cache access                                          |
 | [macOS](documentation/macos.md)                                  | System Settings defaults, the Dock, OrbStack's volume, App Store apps              |
+| [Game streaming](documentation/game-streaming.md)                | Sunshine and Steam in a headless session on fortuna, Moonlight on magnus           |
 | [Fonts](documentation/fonts.md)                                  | where fonts come from                                                              |
 | [Shells](documentation/shells.md)                                | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell             |
 | [Neovim](documentation/neovim.md)                                | LazyVim from Nix, EDITOR/VISUAL, theme                                             |
