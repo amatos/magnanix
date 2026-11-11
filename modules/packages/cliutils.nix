@@ -1,7 +1,7 @@
 # Aspect:    den.aspects.cliutils (included by base)
 # Platforms: home-manager
 # Purpose:   Modern replacements and companions for the classic Unix tools
-#            (ripgrep, fd, fzf, bat, eza, jq, bottom, ...).
+#            (ripgrep, fd, fzf, bat, eza, jq, bottom, btop, ...).
 #
 # Notes:
 # - Aliases ls/ll/la/lt -> eza, cat -> bat, top -> btm and df -> duf, in bash,
@@ -47,6 +47,7 @@
 
           # ── System inspection ──────────────────────────────────────────────────
           bottom # btm — top with graphs
+          btop # resource monitor with a full-screen TUI
           procs # ps with readable, searchable output
           dust # du as a sorted tree
           duf # df as a readable table
