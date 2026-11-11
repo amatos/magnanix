@@ -55,6 +55,18 @@ the aspect, so the web UI can't change them; edit `sunshineConfig` in the aspect
 - Every window is made fullscreen, so games and launchers fill the stream.
 - Sunshine's streaming ports are open on `tailscale0` only.
 
+## Troubleshooting
+
+Start with `game-session logs`.
+
+- **Sway exits with a libinput or seat error:** check that `id` lists `input` and `uinput` and that
+  `loginctl show-user alberth -p Linger` says `Linger=yes`. New groups only apply to new logins, so log out of the
+  desktop session and reconnect over SSH after the first switch.
+- **Sunshine reports no display or no encoder:** its log lines in the journal say whether wlr capture or VAAPI failed.
+- **Moonlight can't connect:** run `tailscale ping fortuna` from magnus. The streaming ports are open only on
+  `tailscale0`, so fortuna's LAN address won't work.
+- **`start` says Steam is already running:** quit Steam in the Hyprland session first.
+
 ## Caveats
 
 - A keyboard or mouse plugged into fortuna also reaches the game session, and while the Hyprland session is logged in,
