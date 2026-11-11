@@ -5,13 +5,10 @@
 - Replace the example content in `secrets/common.yaml`, `secrets/hosts/magnus.yaml`
   and `secrets/users/alberth.yaml` with real secrets and declare them as
   `sops.secrets.<name>`.
-- `muninn`: create `alberth_muninn` (see the TODO in `.sops.yaml`), add it to the
-  `secrets/bootstrap/nixostron.yaml` rule so nixostron-vm runs there without a YubiKey, and run
-  `sops updatekeys secrets/bootstrap/nixostron.yaml` (on magnus, no YubiKey needed). Add it to the `alberth.yaml`
-  rule too once `alberth` declares a Home Manager secret.
+- `muninn`: add `alberth_muninn` to the `alberth.yaml` rule once `alberth` declares a Home Manager secret.
 - Fill in the empty `os` block in `base`, or remove it. (`darwin` is kept, empty, for macOS-only baseline options.)
-- Build `muninn`, and run `nixostron-vm` on both `magnus` and `muninn` for the first time. `magnus` and
-  `darwintron` build; `muninn` and both `nixostron` hosts evaluate.
+- Test the nixostron-vm rollback on `magnus` with a branch that changes nixostron's configuration: `test main`
+  builds the baseline's own system, so it skips the rollback.
 - Decide whether to set nix-darwin's `power.restartAfterFreeze` and a Nix `cores` limit again; the old
   `nix-darwin-settings.nix` that set them was never wired in and has been removed.
 - Remove the `doCheck = false` override on `cargo-llvm-cov` in `modules/packages/languages/rust.nix` (see
