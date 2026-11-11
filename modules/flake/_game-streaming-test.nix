@@ -3,9 +3,10 @@
 # module; outputs.nix imports it.
 #
 # It boots a VM with the aspect's NixOS module and no Steam, then, as alberth:
-# starts the session with `game-session`, checks that Sway and Sunshine come up
-# and that Sunshine listens, and stops it again. The VM has no GPU, so it covers
-# the session and its plumbing, not VAAPI encoding or an actual stream.
+# starts a Big Picture session with `game-session`, checks that Sway and
+# Sunshine come up and that Sunshine listens, stops it, and does the same for a
+# desktop session (`--desktop`). The VM has no GPU, so it covers the session and
+# its plumbing, not VAAPI encoding or an actual stream.
 {
   pkgs,
   # den.aspects.game-streaming.nixos, the aspect's NixOS module
@@ -70,7 +71,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("game-session start runs Sway and Sunshine"):
         out = machine.succeed(as_user("game-session start 1280x720"))
-        assert "started at 1280x720@60Hz" in out, out
+        assert "started bigpicture at 1280x720@60Hz" in out, out
         machine.wait_for_unit("game-session.service", "${user}")
         machine.wait_until_succeeds("pgrep -u ${user} -x sway", timeout=60)
         machine.wait_until_succeeds("pgrep -u ${user} sunshine", timeout=60)
@@ -94,5 +95,14 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_fails("pgrep -u ${user} -x sway", timeout=60)
         machine.wait_until_fails("pgrep -u ${user} sunshine", timeout=60)
         machine.wait_for_closed_port(47989)
+
+    with subtest("game-session start --desktop runs the desktop session"):
+        out = machine.succeed(as_user("game-session start --desktop"))
+        assert "started desktop at 1920x1080@60Hz" in out, out
+        machine.wait_until_succeeds("pgrep -u ${user} -x sway", timeout=60)
+        machine.succeed("grep -q 'include .*-game-session-desktop.conf' /run/user/${toString uid}/game-session/sway.conf")
+        machine.wait_for_open_port(47989)
+        machine.succeed(as_user("game-session stop"))
+        machine.wait_until_fails("pgrep -u ${user} -x sway", timeout=60)
   '';
 }

@@ -6,11 +6,15 @@
 #            Moonlight.
 #
 # Notes:
-# - `game-session start [WIDTHxHEIGHT[@RATE]]` starts the game-session user
-#   service: Sway with a virtual output (1920x1080@60 by default), Sunshine
-#   capturing it and Steam in Big Picture mode. `game-session stop` ends all
-#   three. It's Sway rather than Hyprland, so it can't collide with the normal
-#   desktop session.
+# - `game-session start [--desktop] [WIDTHxHEIGHT[@RATE]]` starts the
+#   game-session user service: Sway with a virtual output (1920x1080@60 by
+#   default), Sunshine capturing it and Steam in Big Picture mode.
+#   `game-session stop` ends all three. It's Sway rather than Hyprland, so it
+#   can't collide with the normal desktop session.
+# - `--desktop` starts the regular Steam client instead, and leaves windows
+#   tiled rather than fullscreen, so companion tools (Elite Dangerous's
+#   EDMarketConnector and the like) can run next to the game. It adds Super
+#   keybindings, a bar, Ghostty (Super+Return) and fuzzel (Super+D).
 # - Steam is single-instance: quit it in the Hyprland session first, or the
 #   game session's `steam` just forwards to that one. `start` refuses if it's
 #   running.
@@ -70,24 +74,68 @@ in
           encoder = "vaapi";
         };
 
-        swayConfig = pkgs.writeText "game-session-sway.conf" (
-          ''
-            # The output mode comes first, from the file game-session-run writes.
+        # `exec`s Steam with these arguments, unless the session leaves it out.
+        execSteam =
+          args: lib.optionalString cfg.steam "exec ${lib.getExe config.programs.steam.package}${args}";
+
+        # Shared by both kinds of session. The output mode comes first, from
+        # the file game-session-run writes. No idle, no screen locking: nobody
+        # is at this display.
+        swayCommon = ''
+          exec ${lib.getExe sunshine} ${sunshineConfig}
+        '';
+
+        swayConfigs = {
+          bigpicture = pkgs.writeText "game-session-bigpicture.conf" ''
+            ${swayCommon}
             default_border none
             default_floating_border none
             # Every window (Big Picture, games, launchers) fills the screen.
             for_window [all] fullscreen enable
-            # No idle, no screen locking: nobody is at this display.
 
-            exec ${lib.getExe sunshine} ${sunshineConfig}
-          ''
-          + lib.optionalString cfg.steam ''
-            exec ${lib.getExe config.programs.steam.package} -gamepadui
-          ''
-        );
+            ${execSteam " -gamepadui"}
+          '';
 
-        # Writes the Sway config with the output mode chosen by `game-session
-        # start` (or the default) and runs Sway.
+          # A small tiling desktop: the regular Steam client, with room for
+          # tools next to the game.
+          desktop = pkgs.writeText "game-session-desktop.conf" ''
+            ${swayCommon}
+            set $mod Mod4
+            floating_modifier $mod normal
+            default_border pixel 2
+
+            bindsym $mod+Return exec ${lib.getExe pkgs.ghostty}
+            bindsym $mod+d exec ${lib.getExe pkgs.fuzzel}
+            bindsym $mod+Shift+q kill
+            bindsym $mod+f fullscreen toggle
+            bindsym $mod+Shift+space floating toggle
+            bindsym $mod+e layout toggle split
+            bindsym $mod+w layout tabbed
+
+            bindsym $mod+Left focus left
+            bindsym $mod+Down focus down
+            bindsym $mod+Up focus up
+            bindsym $mod+Right focus right
+            bindsym $mod+Shift+Left move left
+            bindsym $mod+Shift+Down move down
+            bindsym $mod+Shift+Up move up
+            bindsym $mod+Shift+Right move right
+
+            ${lib.concatMapStrings (n: ''
+              bindsym $mod+${n} workspace number ${n}
+              bindsym $mod+Shift+${n} move container to workspace number ${n}
+            '') (map toString (lib.range 1 4))}
+            bar {
+              position top
+              status_command while date +'%Y-%m-%d %H:%M'; do sleep 30; done
+            }
+
+            ${execSteam ""}
+          '';
+        };
+
+        # Writes the Sway config with the output mode and kind of session
+        # chosen by `game-session start` (or the defaults) and runs Sway.
         runSession = pkgs.writeShellApplication {
           name = "game-session-run";
           runtimeInputs = [ pkgs.sway ];
@@ -95,9 +143,13 @@ in
             state="$XDG_RUNTIME_DIR/game-session"
             mkdir -p "$state"
             mode="$(cat "$state/mode" 2>/dev/null || echo ${lib.escapeShellArg defaultMode})"
+            case "$(cat "$state/kind" 2>/dev/null || echo bigpicture)" in
+              desktop) include=${swayConfigs.desktop} ;;
+              *) include=${swayConfigs.bigpicture} ;;
+            esac
             {
               echo "output HEADLESS-1 mode $mode"
-              echo "include ${swayConfig}"
+              echo "include $include"
             } >"$state/sway.conf"
             exec sway --config "$state/sway.conf"
           '';
@@ -114,7 +166,7 @@ in
 
             usage() {
               cat <<'EOF'
-            Usage: game-session start [WIDTHxHEIGHT[@RATE]]   (default ${defaultMode})
+            Usage: game-session start [--desktop] [WIDTHxHEIGHT[@RATE]]   (default ${defaultMode})
                    game-session stop
                    game-session status
                    game-session logs
@@ -123,7 +175,13 @@ in
 
             case "''${1:-status}" in
               start)
-                mode="''${2:-${defaultMode}}"
+                shift
+                kind=bigpicture
+                if [[ "''${1:-}" == --desktop ]]; then
+                  kind=desktop
+                  shift
+                fi
+                mode="''${1:-${defaultMode}}"
                 if [[ ! "$mode" =~ ^([0-9]+x[0-9]+)(@([0-9]+(\.[0-9]+)?)(Hz)?)?$ ]]; then
                   echo "game-session: '$mode' isn't WIDTHxHEIGHT or WIDTHxHEIGHT@RATE" >&2
                   exit 2
@@ -141,8 +199,9 @@ in
 
                 mkdir -p "$XDG_RUNTIME_DIR/game-session"
                 echo "$mode" >"$XDG_RUNTIME_DIR/game-session/mode"
+                echo "$kind" >"$XDG_RUNTIME_DIR/game-session/kind"
                 systemctl --user start "$unit"
-                echo "game-session: started at $mode; connect with Moonlight"
+                echo "game-session: started $kind at $mode; connect with Moonlight"
                 ;;
               stop)
                 systemctl --user stop "$unit"
@@ -169,7 +228,7 @@ in
         options.local.game-streaming.steam = lib.mkOption {
           type = lib.types.bool;
           default = true;
-          description = "Whether the game session runs Steam (Big Picture). The VM test turns it off.";
+          description = "Whether the game session runs Steam. The VM test turns it off.";
         };
 
         config = {
@@ -206,6 +265,8 @@ in
               XDG_SESSION_TYPE = "wayland";
               # Steam and games look up helpers (xdg-open and so on) on PATH.
               PATH = lib.mkForce "/run/wrappers/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
+              # fuzzel (and Steam) find .desktop files and icons through it.
+              XDG_DATA_DIRS = "/etc/profiles/per-user/%u/share:/run/current-system/sw/share";
             };
             serviceConfig = {
               ExecStart = lib.getExe runSession;

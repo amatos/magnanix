@@ -11,7 +11,8 @@ ssh fortuna game-session start              # 1920x1080@60
 ssh fortuna game-session start 2560x1440@60 # or another mode
 ```
 
-Open Moonlight on magnus, pick fortuna and start **Desktop**. Steam is already up in Big Picture mode.
+Open Moonlight on magnus, pick fortuna and start **Desktop**. Steam is already up in Big Picture mode, or as the
+regular client in [desktop mode](#desktop-mode).
 
 ```sh
 ssh fortuna game-session stop     # ends Sway, Sunshine and Steam
@@ -20,6 +21,33 @@ ssh fortuna game-session logs     # its last 100 journal lines
 ```
 
 To change the resolution, stop the session and start it again with the new mode.
+
+### Desktop mode
+
+```sh
+ssh fortuna game-session start --desktop              # 1920x1080@60
+ssh fortuna game-session start --desktop 2560x1440@60
+```
+
+`--desktop` starts the regular Steam client instead of Big Picture, and Sway tiles windows instead of making them all
+fullscreen. Use it for games with companion tools that run next to the game client, like Elite Dangerous with
+EDMarketConnector. Switch between Big Picture and desktop mode by stopping the session and starting it again.
+
+| Keys                         | Action                              |
+| ---------------------------- | ----------------------------------- |
+| Super+Return                 | Ghostty                             |
+| Super+D                      | fuzzel (app launcher)               |
+| Super+Shift+Q                | close window                        |
+| Super+F                      | toggle fullscreen                   |
+| Super+Shift+Space            | toggle floating                     |
+| Super+E / Super+W            | split layout / tabbed layout        |
+| Super+arrows                 | move focus                          |
+| Super+Shift+arrows           | move window                         |
+| Super+1–4 / Super+Shift+1–4  | go to workspace / move window there |
+| Super+drag, Super+right-drag | move / resize a floating window     |
+
+On magnus, Moonlight has to send Cmd as Super: turn on **Capture system keyboard shortcuts** in its settings and
+stream in fullscreen, or macOS keeps the shortcuts for itself.
 
 Steam runs only one instance per user. If it's running in the Hyprland desktop session, `start` refuses until you
 quit it there.
@@ -52,7 +80,7 @@ the aspect, so the web UI can't change them; edit `sunshineConfig` in the aspect
   keyboard, mouse and gamepads Sunshine creates through `/dev/uinput`. Over SSH there's no logind seat, so
   `LIBSEAT_BACKEND=noop` makes libinput open the devices directly; that's why alberth is in `input` and `uinput`.
 - Sunshine captures the output through wlr-screencopy and encodes with VAAPI on the Radeon.
-- Every window is made fullscreen, so games and launchers fill the stream.
+- In Big Picture mode every window is made fullscreen, so games and launchers fill the stream. Desktop mode tiles them.
 - Sunshine's streaming ports are open on `tailscale0` only.
 
 ## Troubleshooting
@@ -72,7 +100,8 @@ Start with `game-session logs`.
 `checks.<system>.game-streaming` (Linux only, needs KVM) is a NixOS VM test in
 `modules/flake/_game-streaming-test.nix`. It boots the aspect without Steam, then, as alberth, starts a session with
 `game-session`, checks that Sway and Sunshine run, that Sunshine listens on 47989 and its web UI answers, that the
-streaming ports are open on `tailscale0` only, and stops the session again. Run it on a NixOS host such as fortuna:
+streaming ports are open on `tailscale0` only, and stops the session again. It then does the same with `--desktop`.
+Run it on a NixOS host such as fortuna:
 
 ```sh
 nix build -L .#checks.x86_64-linux.game-streaming
