@@ -32,6 +32,8 @@
 # - Sunshine's own sunshine.service is installed but not started
 #   (autoStart = false); game-session runs Sunshine inside Sway instead.
 # - First-time setup is in documentation/game-streaming.md.
+# - `local.game-streaming.steam = false` leaves Steam out of the session. Only
+#   the VM test (modules/flake/_game-streaming-test.nix) sets it.
 let
   defaultMode = "1920x1080@60Hz";
   # Sunshine's base port and the offsets it listens on, minus the web UI (+1).
@@ -61,6 +63,7 @@ in
         ...
       }:
       let
+        cfg = config.local.game-streaming;
         sunshine = config.services.sunshine.package;
 
         sunshineConfig = (pkgs.formats.keyValue { }).generate "sunshine.conf" {
@@ -71,7 +74,9 @@ in
           encoder = "vaapi";
         };
 
-        steam = lib.getExe config.programs.steam.package;
+        # `exec`s Steam with these arguments, unless the session leaves it out.
+        execSteam =
+          args: lib.optionalString cfg.steam "exec ${lib.getExe config.programs.steam.package}${args}";
 
         # Shared by both kinds of session. The output mode comes first, from
         # the file game-session-run writes. No idle, no screen locking: nobody
@@ -88,7 +93,7 @@ in
             # Every window (Big Picture, games, launchers) fills the screen.
             for_window [all] fullscreen enable
 
-            exec ${steam} -gamepadui
+            ${execSteam " -gamepadui"}
           '';
 
           # A small tiling desktop: the regular Steam client, with room for
@@ -125,7 +130,7 @@ in
               status_command while date +'%Y-%m-%d %H:%M'; do sleep 30; done
             }
 
-            exec ${steam}
+            ${execSteam ""}
           '';
         };
 
@@ -220,45 +225,53 @@ in
         };
       in
       {
-        assertions = [
-          {
-            assertion = config.programs.steam.enable;
-            message = "game-streaming: include den.aspects.steam on this host too.";
-          }
-        ];
-
-        services.sunshine = {
-          enable = true;
-          # Run inside the game session, not in every graphical session.
-          autoStart = false;
+        options.local.game-streaming.steam = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Whether the game session runs Steam. The VM test turns it off.";
         };
 
-        networking.firewall.interfaces.${config.services.tailscale.interfaceName} = {
-          allowedTCPPorts = map (offset: basePort + offset) tcpOffsets;
-          allowedUDPPorts = map (offset: basePort + offset) udpOffsets;
-        };
+        config = {
+          assertions = [
+            {
+              assertion = !cfg.steam || config.programs.steam.enable;
+              message = "game-streaming: include den.aspects.steam on this host too.";
+            }
+          ];
 
-        environment.systemPackages = [ gameSession ];
-
-        systemd.user.services.game-session = {
-          description = "Headless Sway session running Sunshine and Steam";
-          environment = {
-            # A virtual output, plus libinput for Sunshine's virtual input devices.
-            # There's no logind seat over SSH, so libinput opens devices directly
-            # (hence the input group).
-            WLR_BACKENDS = "headless,libinput";
-            WLR_LIBINPUT_NO_DEVICES = "1";
-            LIBSEAT_BACKEND = "noop";
-            XDG_CURRENT_DESKTOP = "sway";
-            XDG_SESSION_TYPE = "wayland";
-            # Steam and games look up helpers (xdg-open and so on) on PATH.
-            PATH = lib.mkForce "/run/wrappers/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
-            # fuzzel (and Steam) find .desktop files and icons through it.
-            XDG_DATA_DIRS = "/etc/profiles/per-user/%u/share:/run/current-system/sw/share";
+          services.sunshine = {
+            enable = true;
+            # Run inside the game session, not in every graphical session.
+            autoStart = false;
           };
-          serviceConfig = {
-            ExecStart = lib.getExe runSession;
-            TimeoutStopSec = 30;
+
+          networking.firewall.interfaces.${config.services.tailscale.interfaceName} = {
+            allowedTCPPorts = map (offset: basePort + offset) tcpOffsets;
+            allowedUDPPorts = map (offset: basePort + offset) udpOffsets;
+          };
+
+          environment.systemPackages = [ gameSession ];
+
+          systemd.user.services.game-session = {
+            description = "Headless Sway session running Sunshine and Steam";
+            environment = {
+              # A virtual output, plus libinput for Sunshine's virtual input devices.
+              # There's no logind seat over SSH, so libinput opens devices directly
+              # (hence the input group).
+              WLR_BACKENDS = "headless,libinput";
+              WLR_LIBINPUT_NO_DEVICES = "1";
+              LIBSEAT_BACKEND = "noop";
+              XDG_CURRENT_DESKTOP = "sway";
+              XDG_SESSION_TYPE = "wayland";
+              # Steam and games look up helpers (xdg-open and so on) on PATH.
+              PATH = lib.mkForce "/run/wrappers/bin:/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
+              # fuzzel (and Steam) find .desktop files and icons through it.
+              XDG_DATA_DIRS = "/etc/profiles/per-user/%u/share:/run/current-system/sw/share";
+            };
+            serviceConfig = {
+              ExecStart = lib.getExe runSession;
+              TimeoutStopSec = 30;
+            };
           };
         };
       };

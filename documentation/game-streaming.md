@@ -95,6 +95,21 @@ Start with `game-session logs`.
   `tailscale0`, so fortuna's LAN address won't work.
 - **`start` says Steam is already running:** quit Steam in the Hyprland session first.
 
+## Testing
+
+`checks.<system>.game-streaming` (Linux only, needs KVM) is a NixOS VM test in
+`modules/flake/_game-streaming-test.nix`. It boots the aspect without Steam, then, as alberth, starts a session with
+`game-session`, checks that Sway and Sunshine run, that Sunshine listens on 47989 and its web UI answers, that the
+streaming ports are open on `tailscale0` only, and stops the session again. It then does the same with `--desktop`.
+Run it on a NixOS host such as fortuna:
+
+```sh
+nix build -L .#checks.x86_64-linux.game-streaming
+```
+
+The VM has no GPU, so Sunshine finds no encoder and nothing is streamed; it covers the session, not VAAPI or
+Moonlight. CI doesn't run it.
+
 ## Caveats
 
 - A keyboard or mouse plugged into fortuna also reaches the game session, and while the Hyprland session is logged in,

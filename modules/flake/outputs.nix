@@ -95,6 +95,13 @@ in
       // lib.optionalAttrs (lib.hasSuffix "-linux" system) {
         nixostron =
           config.flake.nixosConfigurations."nixostron-${lib.head (lib.splitString "-" system)}".config.system.build.toplevel;
+
+        # A VM test of den.aspects.game-streaming: headless Sway and Sunshine, no
+        # Steam. It needs KVM; see documentation/game-streaming.md.
+        game-streaming = import ./_game-streaming-test.nix {
+          inherit pkgs;
+          gameStreaming = config.den.aspects.game-streaming.nixos;
+        };
       }
     );
 
