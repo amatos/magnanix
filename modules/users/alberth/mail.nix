@@ -51,15 +51,16 @@ let
   # Fastmail calendar ID -> name shown in Thunderbird. The IDs come from a
   # PROPFIND of https://caldav.fastmail.com/dav/calendars/user/<email>/ (the
   # Inbox and Outbox collections there are for scheduling, not calendars).
+  # Left out: 2BBCCE76-3DB1-4EC7-A9C7-202FEA054152 (DEFAULT_TASK_CALENDAR_NAME),
+  # Fastmail's default tasks calendar, which can't be deleted and isn't used.
   calendars = {
-    "2556ba7a-e746-46b4-aff2-afaa4e071b39" = "Fastmail 2556ba7a";
-    "2BBCCE76-3DB1-4EC7-A9C7-202FEA054152" = "Fastmail 2BBCCE76";
-    "6e7ff7fd-1007-4ed2-a021-e4f50240ba10" = "Fastmail 6e7ff7fd";
-    "957c27ed-7327-4577-a4ff-01c8ee5b4892" = "Fastmail 957c27ed";
-    "A1195A37-2A56-40FE-91D3-F2391C8BC081" = "Fastmail A1195A37";
-    "F4EF100E-E844-11EC-8B17-2196AD52101A" = "Fastmail F4EF100E";
-    "a637cd5d-ddc5-4c01-9870-7960680d1cd0" = "Fastmail a637cd5d";
-    "eb82a51d-97af-4e62-be77-9fbdf5b907f4" = "Fastmail eb82a51d";
+    "2556ba7a-e746-46b4-aff2-afaa4e071b39" = "Calendar (iCloud)";
+    "6e7ff7fd-1007-4ed2-a021-e4f50240ba10" = "Personal";
+    "957c27ed-7327-4577-a4ff-01c8ee5b4892" = "Shared Parenting";
+    "A1195A37-2A56-40FE-91D3-F2391C8BC081" = "DeskMinder";
+    "F4EF100E-E844-11EC-8B17-2196AD52101A" = "Calendar (fastmail)";
+    "a637cd5d-ddc5-4c01-9870-7960680d1cd0" = "Family";
+    "eb82a51d-97af-4e62-be77-9fbdf5b907f4" = "Alberth & Llewellyn";
   };
 in
 {
@@ -97,7 +98,7 @@ in
         };
       };
 
-      # Every Fastmail calendar, over CalDAV.
+      # The Fastmail calendars in `calendars`, over CalDAV.
       accounts.calendar.accounts = lib.mapAttrs (calId: displayName: {
         remote = {
           type = "caldav";
