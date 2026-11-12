@@ -1,3 +1,5 @@
+[![CI/CD Build](https://github.com/amatos/magnanix/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/amatos/magnanix/actions/workflows/build.yml)
+
 # magnanix
 
 My nix flake, using the denful pattern for NixOS, nix-darwin, and home-manager, using Determinate Nix.
@@ -10,8 +12,6 @@ Every `.nix` file starts with a header that names its aspect, the platforms it c
 with notes on anything set differently from the defaults. When something is unclear, read that file's header first.
 
 Documentation is best-effort, and believed to be correct -- however, I write documentation so that future me can understand what I did when something breaks at 3am. So, adjust salinity as required, and double check the actual docs if you're _borrowing_ my config. I have started using Claude to keep the documentation more up-to-date, so, fair warning that claude may hallucinate documenting something that I don't catch.
-
-[![CI/CD Build](https://github.com/amatos/magnanix/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/amatos/magnanix/actions/workflows/build.yml)
 
 ## Hosts
 
