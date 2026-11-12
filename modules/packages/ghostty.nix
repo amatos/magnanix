@@ -12,6 +12,8 @@
 # - Font size 14 (default 13).
 # - copy-on-select = "clipboard": selections also go to the system clipboard,
 #   so Cmd-V and other apps can paste them.
+# - middle-click-action = "clipboard-paste": middle-click pastes the system
+#   clipboard (the default, the selection clipboard, does nothing on macOS).
 # - Shell integration adds sudo (keep terminfo under sudo), ssh-terminfo
 #   (install terminfo on remote hosts) and ssh-env (fall back to
 #   TERM=xterm-256color where that's impossible).
@@ -83,6 +85,11 @@
             # clipboard, which macOS lacks a system equivalent of; `clipboard` also
             # copies to the system clipboard, so Cmd+V and other apps can paste it.
             copy-on-select = "clipboard";
+
+            # Ghostty's default (`primary-paste`) pastes the selection clipboard,
+            # which does nothing on macOS; `clipboard-paste` pastes the system
+            # clipboard, so middle-click pastes what copy-on-select copied.
+            middle-click-action = "clipboard-paste";
 
             # Added to Ghostty's defaults (listed features are toggled, the rest
             # keep their defaults). `sudo` keeps Ghostty's terminfo under sudo;
