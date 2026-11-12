@@ -34,10 +34,17 @@ Each build job sets up the cache with the shared [`attic-cache`](../.github/acti
 action:
 
 1. Joins the Tailscale network via **Workload Identity Federation** (ephemeral GitHub OIDC token)
-2. Authenticates to the Attic cache with a scoped CI token
-3. Configures Nix to use the cache as a substituter
+2. Checks that muninn's Attic server answers on port 8080
+3. Authenticates to the Attic cache with a scoped CI token
+4. Configures Nix to use the cache as a substituter
 
 then builds its hosts and runs `attic push` on the results, even when a later build fails.
+
+The cache is optional. If muninn can't be reached when the job starts, the action fails with a warning, the job
+carries on without the cache (substituting from cache.nixos.org and building the rest on the runner) and skips the
+push. If muninn goes away mid-build, as it does while `muninn` itself is being switched, every
+`nix build` runs with `--fallback`, so Nix builds the paths it can no longer download instead of failing. Either way
+the job is slower but still passes.
 
 Changes that only touch Markdown, `documentation/` or `LICENSE` don't run the workflow. PRs from forks get no
 secrets, so only the evaluate tier works for them.

@@ -3,6 +3,9 @@
 # Shared by the build jobs in build.yml and by update-flake-lock.yml. Nix must
 # already be installed. Composite actions can't read secrets, so the caller
 # passes them in as inputs.
+#
+# Fails if muninn's Attic server can't be reached. Callers use it with
+# `continue-on-error: true` so the job carries on and builds without the cache.
 name: Attic cache
 description: Join Tailscale, log in to muninn's Attic cache and use it as a substituter
 
@@ -41,9 +44,17 @@ runs:
         sudo dscacheutil -flushcache
         sudo killall -HUP mDNSResponder
 
-    - name: Verify Tailscale connectivity to muninn
+    # Any HTTP response will do; only a failed connection or a timeout counts as
+    # unreachable. Stopping here leaves Nix without the substituter, so the
+    # caller's builds fall back to cache.nixos.org and building locally.
+    - name: Check muninn's Attic server is reachable
       shell: bash
-      run: tailscale ping muninn.ts.matos.cc || true
+      run: |
+        tailscale ping --c 3 muninn.ts.matos.cc || true
+        if ! curl -sS -o /dev/null --connect-timeout 10 --max-time 20 http://muninn.ts.matos.cc:8080/; then
+          echo "::warning::muninn's Attic cache is unreachable; building without it"
+          exit 1
+        fi
 
     - name: Install attic-client
       shell: bash

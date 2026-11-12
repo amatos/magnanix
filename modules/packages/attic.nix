@@ -158,6 +158,11 @@ in
         # user for sops-install-secrets to look up and activation fails.
         sops.secrets.atticd_env.restartUnits = [ "atticd.service" ];
 
+        # On SIGTERM atticd waits for open downloads to finish, so with a client
+        # mid-substitution it would sit out systemd's default 90 s and be killed
+        # anyway, keeping the cache down that much longer during a deploy.
+        systemd.services.atticd.serviceConfig.TimeoutStopSec = "10s";
+
         networking.firewall.allowedTCPPorts = [ port ];
       };
   };
