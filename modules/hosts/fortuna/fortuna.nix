@@ -81,6 +81,10 @@
     };
   };
 
-  # alberth is the primary user on fortuna (system.primaryUser on macOS, wheel on NixOS).
-  den.aspects.fortuna.provides.alberth.includes = [ den.batteries.primary-user ];
+  # alberth is the primary user on fortuna (system.primaryUser on macOS, wheel on NixOS),
+  # and reads mail (Fastmail in Thunderbird) here.
+  den.aspects.fortuna.provides.alberth.includes = [
+    den.batteries.primary-user
+    den.aspects.alberth.mail
+  ];
 }
