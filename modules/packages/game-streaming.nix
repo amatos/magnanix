@@ -25,8 +25,8 @@
 #   virtual devices reach Hyprland if it's logged in.
 # - The user lingers, so their systemd manager (and the session, and PipeWire)
 #   keeps running after the SSH connection closes.
-# - Sunshine's ports are open on tailscale0 only, except the web UI (47990):
-#   reach it through `ssh -L 47990:localhost:47990 <host>`. The settings are
+# - Sunshine's ports, the web UI (47990) included, are open on tailscale0
+#   only: browse to https://<host>:47990 from any tailnet device. The settings are
 #   read-only (they come from this file); credentials, paired clients and
 #   apps.json live in ~/.config/sunshine.
 # - Sunshine's own sunshine.service is installed but not started
@@ -36,11 +36,12 @@
 #   the VM test (modules/flake/_game-streaming-test.nix) sets it.
 let
   defaultMode = "1920x1080@60Hz";
-  # Sunshine's base port and the offsets it listens on, minus the web UI (+1).
+  # Sunshine's base port and the offsets it listens on, the web UI (+1) included.
   basePort = 47989;
   tcpOffsets = [
     (-5)
     0
+    1
     21
   ];
   udpOffsets = [

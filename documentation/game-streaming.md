@@ -57,14 +57,9 @@ quit it there.
 1. Apply the configuration on fortuna and on magnus (magnus gets the Moonlight cask). Log out of fortuna's desktop
    session once, or reboot, so the new `input`/`uinput` group membership takes effect.
 2. Start a session: `ssh fortuna game-session start`.
-3. Open Sunshine's web UI through an SSH tunnel (it isn't open on the network):
-
-   ```sh
-   ssh -L 47990:localhost:47990 fortuna
-   ```
-
-   Browse to <https://localhost:47990>, accept the self-signed certificate and create the web UI username and
-   password.
+3. Open Sunshine's web UI from any device on the tailnet (it's open on `tailscale0` only): browse to
+   <https://fortuna:47990> (fortuna's Tailscale name or IP), accept the self-signed certificate and create the web UI
+   username and password.
 4. In Moonlight on magnus, add fortuna by its Tailscale name or IP if it isn't listed, and click it.
    Moonlight shows a PIN; enter it on the web UI's **PIN** page.
 5. Start **Desktop** in Moonlight and sign in to Steam, including the Steam Guard check. Steam remembers the login,
@@ -81,7 +76,7 @@ the aspect, so the web UI can't change them; edit `sunshineConfig` in the aspect
   `LIBSEAT_BACKEND=noop` makes libinput open the devices directly; that's why alberth is in `input` and `uinput`.
 - Sunshine captures the output through wlr-screencopy and encodes with VAAPI on the Radeon.
 - In Big Picture mode every window is made fullscreen, so games and launchers fill the stream. Desktop mode tiles them.
-- Sunshine's streaming ports are open on `tailscale0` only.
+- Sunshine's ports, the web UI (47990) included, are open on `tailscale0` only.
 
 ## Troubleshooting
 
@@ -99,8 +94,9 @@ Start with `game-session logs`.
 
 `checks.<system>.game-streaming` (Linux only, needs KVM) is a NixOS VM test in
 `modules/flake/_game-streaming-test.nix`. It boots the aspect without Steam, then, as alberth, starts a session with
-`game-session`, checks that Sway and Sunshine run, that Sunshine listens on 47989 and its web UI answers, that the
-streaming ports are open on `tailscale0` only, and stops the session again. It then does the same with `--desktop`.
+`game-session`, checks that Sway and Sunshine run, that Sunshine listens on 47989 and its web UI answers, that its
+ports, the web UI included, are open on `tailscale0` only, and stops the session again. It then does the same with
+`--desktop`.
 Run it on a NixOS host such as fortuna:
 
 ```sh

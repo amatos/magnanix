@@ -61,10 +61,13 @@ pkgs.testers.runNixOSTest {
     with subtest("alberth lingers, so their systemd manager runs without a login"):
         machine.wait_for_unit("user@${toString uid}.service")
 
-    with subtest("Sunshine's streaming ports are open on tailscale0 only"):
+    with subtest("Sunshine's ports, the web UI included, are open on tailscale0 only"):
         rules = machine.succeed("iptables -S nixos-fw")
         assert "-i tailscale0 -p tcp -m tcp --dport 47989 " in rules, rules
-        assert "--dport 47990 " not in rules, rules
+        assert "-i tailscale0 -p tcp -m tcp --dport 47990 " in rules, rules
+        for rule in rules.splitlines():
+            if "--dport 479" in rule:
+                assert "-i tailscale0 " in rule, rule
 
     with subtest("game-session rejects a malformed mode"):
         machine.fail(as_user("game-session start 1080p"))
