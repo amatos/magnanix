@@ -19,10 +19,11 @@ dropped from `profiles.ini` on the next switch.
   flavor, with `alberth`'s `meta.email` and `meta.fullName`.
 - **Sign-in:** OAuth for mail, CalDAV and CardDAV. Thunderbird opens Fastmail's login page the first time and
   stores the token itself; no app password is needed.
-- **Calendars:** every Fastmail calendar over CalDAV, listed in `calendars` in `mail.nix` by Fastmail ID. Home
+- **Calendars:** the Fastmail calendars over CalDAV, listed in `calendars` in `mail.nix` by Fastmail ID. Home
   Manager derives Thunderbird's internal calendar ID from that key, so the display names next to them can change
-  without Thunderbird downloading the calendar again. The `Inbox` and `Outbox` collections are for meeting
-  invitations, not calendars, and are left out.
+  without Thunderbird downloading the calendar again. Left out: the `Inbox` and `Outbox` collections, which are
+  for meeting invitations, and Fastmail's default tasks calendar (`DEFAULT_TASK_CALENDAR_NAME`), which can't be
+  deleted and isn't used.
 - **Contacts:** the `Default` address book over CardDAV, shown as "Fastmail". The shared address book
   (`…Shared`) isn't added.
 

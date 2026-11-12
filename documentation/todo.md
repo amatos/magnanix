@@ -13,5 +13,3 @@
   `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from
   the pinned nixpkgs, tests included, so success means the override can go. The tests fail on both macOS and
   Linux, so one host is enough.
-- Replace the placeholder calendar names (`Fastmail <id prefix>`) in `modules/users/alberth/mail.nix` with
-  Fastmail's display names; see [Thunderbird](thunderbird.md#fastmail) for the command that lists them.
