@@ -28,38 +28,39 @@
   den.schema.user.classes = lib.mkDefault [ "homeManager" ];
 
   # Applied to every host that enables Home Manager.
+  #
+  # A plain attrset under `os` rather than a `{ host, ... }:` function: since
+  # Den 0.20 (#694) these includes also reach the user scope, where Den wraps
+  # function includes and calls them with a null context.
   den.schema.hm-host.includes = [
-    (
-      { host, ... }:
-      {
-        ${host.class} =
-          { pkgs, ... }:
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              extraSpecialArgs = {
-                inherit inputs;
-              };
-
-              # When a managed file collides with an existing, unmanaged file,
-              # get the existing one out of the way instead of aborting the
-              # switch: move it to the trash if a trash command is available,
-              # otherwise delete it. Home Manager calls this unquoted with the
-              # conflicting path as $1, so it must be a single executable.
-              backupCommand = pkgs.writeShellScript "home-manager-backup-command" ''
-                PATH="${lib.makeBinPath [ pkgs.trash-cli ]}:$PATH:/usr/bin:/run/current-system/sw/bin"
-                if command -v trash >/dev/null; then
-                  exec trash "$1"
-                elif command -v trash-put >/dev/null; then
-                  exec trash-put "$1"
-                else
-                  exec rm -rf -- "$1"
-                fi
-              '';
+    {
+      os =
+        { pkgs, ... }:
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = {
+              inherit inputs;
             };
+
+            # When a managed file collides with an existing, unmanaged file,
+            # get the existing one out of the way instead of aborting the
+            # switch: move it to the trash if a trash command is available,
+            # otherwise delete it. Home Manager calls this unquoted with the
+            # conflicting path as $1, so it must be a single executable.
+            backupCommand = pkgs.writeShellScript "home-manager-backup-command" ''
+              PATH="${lib.makeBinPath [ pkgs.trash-cli ]}:$PATH:/usr/bin:/run/current-system/sw/bin"
+              if command -v trash >/dev/null; then
+                exec trash "$1"
+              elif command -v trash-put >/dev/null; then
+                exec trash-put "$1"
+              else
+                exec rm -rf -- "$1"
+              fi
+            '';
           };
-      }
-    )
+        };
+    }
   ];
 }
