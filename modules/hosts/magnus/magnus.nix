@@ -74,7 +74,6 @@ in
       den.aspects.macos.kaleidoscope
       den.aspects.macos.languageTool
       den.aspects.macos.ledgerWallet
-      den.aspects.macos.magnet
       den.aspects.macos.mela
       den.aspects.macos.microsoftOffice
       den.aspects.macos.nepTunes

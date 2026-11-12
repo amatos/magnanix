@@ -113,6 +113,5 @@ Single apps: `acorn` (Acorn), `amphetamine` (Amphetamine), `autoMounter` (AutoMo
 Comic), `stecker` (Stecker), `texStage` (TexStage), `things` (Things), `transmit` (Transmit), `velja` (Velja),
 `windowsApp` (Windows App) and `zavala` (Zavala), all under `macos.`.
 
-Elsewhere: `macos._1password` (1Password for Safari, `modules/packages/1password/`), `macos.magnet` (Magnet,
-`modules/packages/magnet.nix`) and `tailscale` (Tailscale, `modules/packages/tailscale.nix`) also install App Store
-apps.
+Elsewhere: `macos._1password` (1Password for Safari, `modules/packages/1password/`) and `tailscale` (Tailscale,
+`modules/packages/tailscale.nix`) also install App Store apps.
