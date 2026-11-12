@@ -64,6 +64,8 @@ include one:
 
   A host aspect delivers only its system-level config on its own. The `homeManager` parts reach the host's users
   only if the user includes `den.batteries.host-aspects`, as `alberth` and `ephemeral` do.
+  The other way round, every host takes the system-level parts (`os`, `nixos`, `darwin`) of its users'
+  aspects, because `modules/den/base.nix` adds `den.batteries.user-aspects` to every host.
 
 - The user's aspect, for what follows that user to every host, such as `gpg`:
 

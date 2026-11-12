@@ -66,4 +66,10 @@
   };
 
   den.default.includes = [ den.aspects.base ];
+
+  # Every host accepts what its users' aspects write to `os`, `nixos` and
+  # `darwin` (login shell, SSH authorized keys, ...). Since Den 0.20 (#694)
+  # that content otherwise stays with the user once the transition default
+  # ends on 2027-01-01.
+  den.schema.host.includes = [ den.batteries.user-aspects ];
 }
