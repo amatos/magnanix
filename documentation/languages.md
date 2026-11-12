@@ -94,6 +94,10 @@ formatter through Home Manager. All of them are included by `alberth`.
 On macOS the C/C++ compiler, lldb and the whole Swift toolchain come from the Xcode Command Line Tools
 (`xcode-select --install`), which match the SDKs, so the `c` and `swift` aspects don't install them there.
 
+On NixOS, Swift bundles its own LLVM libraries (such as `lib/libclang.so`), which collide with clang-tools from
+the `c` aspect in the Home Manager profile. The `swift` aspect installs Swift at low priority (`lib.lowPrio`),
+so clang-tools' copies win; Swift still loads its own from its store path.
+
 Global installs go to writable directories on `PATH`: `npm install -g` to `~/.npm` (the npm prefix set in
 `~/.npmrc`), `pnpm add -g` to `PNPM_HOME`, Bun and Deno to `~/.bun/bin` and `~/.deno/bin`, `go install` to
 `~/go/bin` and `composer global require` to `~/.config/composer/vendor/bin`.
