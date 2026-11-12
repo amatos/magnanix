@@ -62,6 +62,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Secrets](documentation/secrets.md)                               | sops and age, YubiKeys, how secrets are wired, login passwords                            |
 | [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
 | [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
+| [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons        |
 | [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |
 | [Test VMs](documentation/testing-vms.md)                          | darwintron and nixostron: testing a branch before it lands                                |
 | [Continuous Integration](documentation/ci.md)                     | the build workflow, runners, cache access                                                 |

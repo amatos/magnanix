@@ -119,9 +119,11 @@ in
     };
   };
 
-  # alberth is the primary user on magnus, and signs commits with the GPG key here.
+  # alberth is the primary user on magnus, signs commits with the GPG key and reads mail
+  # (Fastmail in Thunderbird) here.
   den.aspects.magnus.provides.alberth.includes = [
     den.batteries.primary-user
     den.aspects.git.signing
+    den.aspects.alberth.mail
   ];
 }

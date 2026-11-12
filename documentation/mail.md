@@ -3,7 +3,7 @@
 Every host sends mail (cron output, `sendmail`, `mail`) through the network's SMTP smart relay, using
 `den.aspects.mail` (`modules/packages/mail.nix`), which `base` includes. The relay is muninn, which passes the
 mail on to Fastmail (see [The relay](#the-relay)). Other hosts only send; nothing on them listens for mail from the
-network.
+network. Reading mail is covered in [Thunderbird](thunderbird.md).
 
 - **Relay:** `smtp.home.matos.cc`, or `smtp.ts.matos.cc` on hosts that include `den.aspects.tailscale`. The `tailscale` aspect makes the switch by setting `local.mail.relayHost`. Mail goes to port 25
   without authentication, using STARTTLS when the relay offers it. Both names are CNAMEs for muninn, managed
