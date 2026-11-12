@@ -8,6 +8,11 @@ names the client used, so a client off the LAN can use the Tailscale name throug
 SQLite database live in `/var/lib/atticd`. Objects that were neither pushed nor downloaded in the last 3 months
 are garbage-collected.
 
+Switching `muninn` restarts atticd, so the cache can be unavailable for a minute or two. On SIGTERM atticd waits for
+open transfers to finish, so its stop timeout is cut from systemd's 90 s to 10 s: a client mid-download would
+otherwise keep the cache down for the full 90 s before atticd is killed anyway. Transfers cut off by the restart are
+retried (`attic watch-store`) or built locally instead (CI's `--fallback`, see [CI](ci.md)).
+
 The server signs its access tokens with `atticd_env` in `secrets/hosts/muninn.yaml`, an environment file that
 sets `ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64`. Replacing it invalidates every token issued with it. To rotate it,
 generate a key with `openssl genrsa -traditional 4096 | openssl base64 -A` and paste it in with

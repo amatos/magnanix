@@ -8,7 +8,9 @@
 #   is built and no secrets are needed, so it takes a minute or two.
 # - Build (pushes to main, the weekly update-flake-lock PR, a PR labelled
 #   `ci:build`, or a manual run): builds every host's system closure and pushes
-#   the results to muninn's Attic cache via Tailscale OIDC.
+#   the results to muninn's Attic cache via Tailscale OIDC. If muninn can't be
+#   reached, or drops out mid-build, the jobs build locally instead (`--fallback`)
+#   and skip the push.
 #     - aarch64-darwin: magnus, darwintron (macos-26)
 #     - x86_64-linux: muninn, fortuna, nixostron-x86_64 (ubuntu-latest)
 #     - aarch64-linux: nixostron-aarch64 (ubuntu-24.04-arm)
@@ -165,7 +167,11 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v12
 
-      - uses: ./.github/actions/attic-cache
+      # Optional: if muninn is unreachable the job builds without the cache.
+      - name: Use muninn's Attic cache
+        id: attic
+        continue-on-error: true
+        uses: ./.github/actions/attic-cache
         with:
           ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           ts-audience: ${{ secrets.TS_AUDIENCE }}
@@ -176,17 +182,19 @@ jobs:
           nix build .#darwinConfigurations.magnus.system \
             --out-link result-magnus \
             --accept-flake-config \
-            --max-jobs auto
+            --max-jobs auto \
+            --fallback
 
       - name: Build darwintron
         run: |
           nix build .#darwinConfigurations.darwintron.system \
             --out-link result-darwintron \
             --accept-flake-config \
-            --max-jobs auto
+            --max-jobs auto \
+            --fallback
 
       - name: Push to Attic cache
-        if: always()
+        if: always() && steps.attic.outcome == 'success'
         run: attic push magnanix result-* || true
 
   build-linux-x86:
@@ -203,7 +211,11 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
 
-      - uses: ./.github/actions/attic-cache
+      # Optional: if muninn is unreachable the job builds without the cache.
+      - name: Use muninn's Attic cache
+        id: attic
+        continue-on-error: true
+        uses: ./.github/actions/attic-cache
         with:
           ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           ts-audience: ${{ secrets.TS_AUDIENCE }}
@@ -214,24 +226,27 @@ jobs:
           nix build .#nixosConfigurations.muninn.config.system.build.toplevel \
             --out-link result-muninn \
             --accept-flake-config \
-            --max-jobs auto
+            --max-jobs auto \
+            --fallback
 
       - name: Build fortuna
         run: |
           nix build .#nixosConfigurations.fortuna.config.system.build.toplevel \
             --out-link result-fortuna \
             --accept-flake-config \
-            --max-jobs auto
+            --max-jobs auto \
+            --fallback
 
       - name: Build nixostron-x86_64
         run: |
           nix build .#nixosConfigurations.nixostron-x86_64.config.system.build.toplevel \
             --out-link result-nixostron-x86_64 \
             --accept-flake-config \
-            --max-jobs auto
+            --max-jobs auto \
+            --fallback
 
       - name: Push to Attic cache
-        if: always()
+        if: always() && steps.attic.outcome == 'success'
         run: attic push magnanix result-* || true
 
   build-linux-aarch64:
@@ -248,7 +263,11 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
 
-      - uses: ./.github/actions/attic-cache
+      # Optional: if muninn is unreachable the job builds without the cache.
+      - name: Use muninn's Attic cache
+        id: attic
+        continue-on-error: true
+        uses: ./.github/actions/attic-cache
         with:
           ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           ts-audience: ${{ secrets.TS_AUDIENCE }}
@@ -259,8 +278,9 @@ jobs:
           nix build .#nixosConfigurations.nixostron-aarch64.config.system.build.toplevel \
             --out-link result-nixostron-aarch64 \
             --accept-flake-config \
-            --max-jobs auto
+            --max-jobs auto \
+            --fallback
 
       - name: Push to Attic cache
-        if: always()
+        if: always() && steps.attic.outcome == 'success'
         run: attic push magnanix result-* || true
