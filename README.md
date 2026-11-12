@@ -11,6 +11,8 @@ with notes on anything set differently from the defaults. When something is uncl
 
 Documentation is best-effort, and believed to be correct -- however, I write documentation so that future me can understand what I did when something breaks at 3am. So, adjust salinity as required, and double check the actual docs if you're _borrowing_ my config. I have started using Claude to keep the documentation more up-to-date, so, fair warning that claude may hallucinate documenting something that I don't catch.
 
+[![CI/CD Build](https://github.com/amatos/magnanix/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/amatos/magnanix/actions/workflows/build.yml)
+
 ## Hosts
 
 | Host                | Platform         | Kind       | User        | Notes                                                                                                           |
