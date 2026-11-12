@@ -8,7 +8,14 @@
 #   it; install steps and the rules that keep Windows possible are below.
 # - Audio defaults to the GPU's HDMI output (WirePlumber priority rule).
 # - NetworkManager handles networking (Noctalia's Wi-Fi widget uses it).
+# - Requests certificates for fortuna.home.matos.cc and fortuna.ts.matos.cc
+#   (for Syncthing and the like later; Sunshine keeps its own self-signed one,
+#   since Moonlight pins the certificate it paired with).
 { den, ... }:
+let
+  hostName = "fortuna";
+  certbotOwners = "alberth@matos.cc";
+in
 {
   # Den sets nixpkgs.hostPlatform from this key; it matches the x86_64-linux in
   # _hardware-configuration.nix.
@@ -41,6 +48,7 @@
       den.aspects.bluetooth
       den.aspects.browsers
       den.aspects.browsers.linux.helium
+      den.aspects.certbot
       den.aspects.disko
       den.aspects.elgato
       den.aspects.fonts
@@ -76,6 +84,14 @@
 
       networking.networkmanager.enable = true;
       users.users.alberth.extraGroups = [ "networkmanager" ];
+
+      local.certbot = {
+        email = "${certbotOwners}";
+        fqdns = [
+          "${hostName}.home.matos.cc"
+          "${hostName}.ts.matos.cc"
+        ];
+      };
 
       system.stateVersion = "26.05";
     };
