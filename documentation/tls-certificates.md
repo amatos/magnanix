@@ -11,8 +11,10 @@ local.certbot = {
 };
 ```
 
-Hosts using it request `<host>.home.matos.cc` and `<host>.ts.matos.cc`. The SMTP relay host also gets
-`smtp.home.matos.cc` and `smtp.ts.matos.cc` (see [Mail](mail.md)).
+magnus, muninn and fortuna use it, each requesting `<host>.home.matos.cc` and `<host>.ts.matos.cc`. The SMTP relay
+host also gets `smtp.home.matos.cc` and `smtp.ts.matos.cc` (see [Mail](mail.md)). Fortuna's are for services added
+later (Syncthing and the like); Sunshine keeps its own self-signed certificate, because Moonlight pins the certificate
+it paired with and would need re-pairing after every renewal.
 
 - **Issuing:** a service started at boot (launchd on macOS, systemd on NixOS) requests each listed name that has no
   certificate yet, and retries every 15 minutes until all succeed. Names that already have one are skipped.
