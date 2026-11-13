@@ -2,7 +2,7 @@
 
 ## Python
 
-The `python` aspect (`modules/packages/languages/python.nix`, included by `alberth`) installs nixpkgs' default
+The `python` aspect (`modules/packages/languages/python.nix`, included by `base`, so every host has it) installs nixpkgs' default
 `python3` for ad-hoc scripts and leaves per-project Python versions to uv. It also installs:
 
 | Tool                                                   | Use                                                                         |
@@ -21,7 +21,7 @@ have. On NixOS the aspect enables `programs.nix-ld`, which provides one, so thos
 
 ## Ruby
 
-The `ruby` aspect (`modules/packages/languages/ruby.nix`, included by `alberth`) installs Ruby 4.0 (`ruby_4_0`)
+The `ruby` aspect (`modules/packages/languages/ruby.nix`, included by `alberth.dev`) installs Ruby 4.0 (`ruby_4_0`)
 through Home Manager. Ruby 4 ships gem, Bundler, irb, rake, debug and rbs. The aspect also installs:
 
 | Tool                                                      | Use                                                                                     |
@@ -42,7 +42,7 @@ version. In a project, `mise use ruby@3.3` writes `mise.toml` and installs that 
 
 ## Rust
 
-The `rust` aspect (`modules/packages/languages/rust.nix`, included by `alberth`) installs the toolchain
+The `rust` aspect (`modules/packages/languages/rust.nix`, included by `alberth.dev`) installs the toolchain
 through [rustup](https://rustup.rs) rather than a fixed nixpkgs `rustc`, so a project's `rust-toolchain.toml`
 picks its own channel, components and targets. rustup's proxies provide `cargo`, `rustc`, `clippy`, `rustfmt`
 and `rust-analyzer`; `~/.cargo/bin` is on `PATH` for anything installed with `cargo install`. It also installs:
@@ -75,7 +75,9 @@ it uses rustup's toolchain and `llvm-tools-preview`. Remove the override once ni
 ## Other languages
 
 Each aspect in `modules/packages/languages/` installs a language's runtime or compiler, its language server and
-formatter through Home Manager. All of them are included by `alberth`.
+formatter through Home Manager. All of them except `python` (in `base`) are bundled by `alberth.dev`
+(`modules/users/alberth/dev.nix`), which hosts opt into from `den.aspects.<host>.provides.alberth`: magnus and
+fortuna do, the headless muninn doesn't.
 
 | Aspect        | Installs                                                                                                   |
 | ------------- | ---------------------------------------------------------------------------------------------------------- |

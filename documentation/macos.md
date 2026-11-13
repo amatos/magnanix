@@ -8,8 +8,10 @@
 `CustomUserPreferences` for keys nix-darwin has no option for). `darwin.nix` bundles them as
 `den.aspects.darwin.customizations`, which `base` includes, so they apply to every macOS host.
 
-- `den.aspects.alberth.macos.dock` (`modules/users/alberth/dock.nix`) is the exception: it follows alberth rather
-  than applying to every macOS host, so hosts without alberth keep the default Dock.
+- `den.aspects.alberth.macos.dock` (`modules/users/alberth/dock.nix`) is the exception: it belongs to alberth rather
+  than applying to every macOS host, so hosts without alberth keep the default Dock. It's bundled with alberth's
+  Mac apps in `den.aspects.alberth.macDesktop` (`modules/users/alberth/mac-desktop.nix`), which a host opts into
+  from `den.aspects.<host>.provides.alberth`, next to `den.batteries.primary-user`.
 - `dock` and `screencapture` build paths such as `/Users/<name>/Downloads` from `system.primaryUser`, which each
   host sets with `den.batteries.primary-user`.
 - `screencapture` creates its target directory (`~/Pictures/Screenshots/unsorted`) in a `postActivation` script,

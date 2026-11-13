@@ -2,7 +2,7 @@
 # Platforms: nixos, darwin, home-manager (through the aspects it includes)
 # Purpose:   The baseline every host and user gets: hostname, shells, macOS
 #            defaults, sudo, mail, the binary cache client, git, Neovim and the
-#            everyday CLI/TUI tools.
+#            everyday CLI/TUI tools, and Python (python3, uv, Ruff).
 #
 # Notes:
 # - To give something to every machine, include it here. To give it to one
@@ -31,6 +31,7 @@
       den.aspects.nix-tools
       den.aspects.nixosKernel # NixOS-only: defines just the `nixos` class
       den.aspects.nushell
+      den.aspects.python
       den.aspects.shell.bash
       den.aspects.shell.fish
       den.aspects.shell.zsh
