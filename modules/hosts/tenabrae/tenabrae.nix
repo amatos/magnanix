@@ -16,6 +16,7 @@
 #   half is in 1Password). Before first boot, copy it onto the card's FAT
 #   partition as ssh_host_ed25519_key; the `tenabrae-host-key` activation script
 #   moves it to /etc/ssh and deletes it from the card before sops-nix runs.
+#   A key copied there later replaces the installed one at the next boot.
 # - Secrets (secrets/hosts/tenabrae.yaml): `wireless_env` (psk_vox=<passphrase>)
 #   and `pihole_env` (see modules/packages/pihole.nix).
 # - Interface names are the kernel's (wlan0), not predictable names, so the
@@ -107,26 +108,38 @@ in
           '';
         };
 
-        # Mount the firmware partition in the initrd (sd-image leaves it `noauto`),
-        # so the host key copied onto it is readable during activation.
+        # Mount the firmware partition in the initrd, so the host key copied onto
+        # it is readable during activation, which runs there (chrooted into
+        # /sysroot, before switch-root). sd-image declares it `nofail noauto`,
+        # so the list is replaced with mkForce, which also drops the
+        # `x-initrd.mount` NixOS adds for neededForBoot; it's restored by hand.
+        # Not `nofail`: systemd wouldn't order the mount before initrd-fs.target,
+        # so activation could still run first. The partition is on the boot
+        # card, so it's always there. (tenabrae's first boot mounted it only
+        # after switch-root, and activation never saw the key.)
         fileSystems.${firmwareMount} = {
           options = lib.mkForce [
-            "nofail"
+            "x-initrd.mount"
             "umask=0077"
           ];
           neededForBoot = true;
         };
 
-        # Install the host key from the card, once, before sops-nix needs it.
+        # Install the host key from the card before sops-nix needs it. A key on
+        # the card always wins, replacing whatever /etc/ssh holds (e.g. one sshd
+        # generated on a boot that missed it), so copying a key there is also how
+        # to replace it. Removes it from the card afterwards, along with the
+        # AppleDouble (`._*`) files macOS leaves next to it.
         system.activationScripts.tenabrae-host-key = lib.stringAfter [ "specialfs" ] ''
           src=${firmwareMount}/ssh_host_ed25519_key
           if [ -f "$src" ]; then
-            if [ ! -s ${hostKey} ]; then
-              ${pkgs.coreutils}/bin/install -D -m 600 -o root -g root "$src" ${hostKey}
-              ${pkgs.openssh}/bin/ssh-keygen -y -f ${hostKey} > ${hostKey}.pub
-              ${pkgs.coreutils}/bin/chmod 644 ${hostKey}.pub
-            fi
-            ${pkgs.coreutils}/bin/rm -f "$src" "$src.pub"
+            echo "tenabrae-host-key: installing the host key from ${firmwareMount}" >&2
+            ${pkgs.coreutils}/bin/install -D -m 600 -o root -g root "$src" ${hostKey}
+            ${pkgs.openssh}/bin/ssh-keygen -y -f ${hostKey} > ${hostKey}.pub
+            ${pkgs.coreutils}/bin/chmod 644 ${hostKey}.pub
+            ${pkgs.coreutils}/bin/rm -f "$src" "$src.pub" ${firmwareMount}/._ssh_host_ed25519_key*
+          elif [ ! -d ${firmwareMount} ] || ! ${pkgs.util-linux}/bin/mountpoint -q ${firmwareMount}; then
+            echo "tenabrae-host-key: ${firmwareMount} is not mounted; can't check for a host key" >&2
           fi
         '';
         system.activationScripts.setupSecretsForUsers.deps = [ "tenabrae-host-key" ];
