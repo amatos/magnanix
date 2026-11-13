@@ -1,10 +1,15 @@
 # Shells
 
 Shell configuration lives in `modules/packages/shells/`, one aspect per shell plus shared pieces. The `base` aspect
-includes `shell.zsh`, `shell.fish` and `shell.bash`, so every host and user gets all three:
+includes `shell.zsh`, `shell.fish`, `shell.bash` and `shell.nushell`, so every host and user gets all four:
 
 ```nix
-den.aspects.base.includes = [ den.aspects.shell.bash den.aspects.shell.fish den.aspects.shell.zsh ];
+den.aspects.base.includes = [
+  den.aspects.shell.bash
+  den.aspects.shell.fish
+  den.aspects.shell.nushell
+  den.aspects.shell.zsh
+];
 ```
 
 | Aspect                 | File                        | What it does                                                                                |
@@ -12,12 +17,13 @@ den.aspects.base.includes = [ den.aspects.shell.bash den.aspects.shell.fish den.
 | `shell.zsh`            | `zsh.nix`                   | Home Manager `programs.zsh`                                                                 |
 | `shell.fish`           | `fish.nix`                  | Home Manager `programs.fish`, plus system-level fish on NixOS and macOS                     |
 | `shell.bash`           | `bash.nix`                  | Home Manager `programs.bash`                                                                |
+| `shell.nushell`        | `nushell.nix`               | Home Manager `programs.nushell`, without the shared aliases or functions                    |
 | `shell.starship`       | `starship.nix`              | Home Manager `programs.starship` with a default `starship.toml`; the prompt for every shell |
 | `shell.shellAliases`   | `shell-aliases.nix`         | aliases shared by the shells, and per-OS `environment.shellAliases`                         |
 | `shell.posixFunctions` | `shell-functions-posix.nix` | shared functions for zsh and bash                                                           |
 | `shell.fishFunctions`  | `shell-functions-fish.nix`  | the same functions, written for fish                                                        |
 
-Each shell aspect includes the aliases, functions and `shell.starship` aspects it needs.
+Each POSIX and fish shell aspect includes the aliases, functions and `shell.starship` aspects it needs.
 
 **Login shell.** `alberth`'s login shell is Nix's zsh on every host, set in `modules/users/alberth/alberth.nix`
 (`shell.zsh` also enables `programs.zsh` at system level, which the setting requires). `ephemeral` does the same in
@@ -56,7 +62,7 @@ its own file:
 - **1Password CLI:** zsh and fish both load `$XDG_CONFIG_HOME/op/plugins.sh` if it exists (fish through `bass`).
   The `_1password` aspect adds `op` completions to bash, zsh and fish, so they only load on hosts that include it.
 - **Aliases and functions:** the common aliases (`rm`/`mv`/`cp` with `-i`, the `ssh*` variants, `git-log`,
-  `git-author`) apply to zsh and fish. `cliutils` adds `ls`, `ll`, `la` and `lt` as `eza --icons auto` aliases
+  `git-author`) apply to zsh and fish. `cli.utils` adds `ls`, `ll`, `la` and `lt` as `eza --icons auto` aliases
   (plus `cat` → `bat`, `top` → `btm`, `df` → `duf`; `btop` is installed but not aliased) to bash, zsh and fish;
   Nushell keeps its built-in structured `ls`. The functions cover GPG and YubiKey resets, Docker cleanup, Tailscale
   and DNS fixes, network info, and a zoxide and fzf directory jumper (`zox`). They are written once for POSIX
