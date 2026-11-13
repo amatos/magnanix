@@ -2,7 +2,7 @@
 # Platforms: nixos, darwin, home-manager (through the aspects it includes)
 # Purpose:   The baseline every host and user gets: hostname, shells, macOS
 #            defaults, sudo, mail, the binary cache client, git, Neovim and the
-#            everyday CLI/TUI tools.
+#            everyday CLI/TUI tools, and Python (python3, uv, Ruff).
 #
 # Notes:
 # - To give something to every machine, include it here. To give it to one
@@ -20,30 +20,31 @@
       den.batteries.hostname
 
       den.aspects.attic.client
-      den.aspects.cliutils
+      den.aspects.cli.fastfetch
+      den.aspects.cli.fwupd
+      den.aspects.cli.imagemagick
+      den.aspects.cli.tealdeer
+      den.aspects.cli.trash
+      den.aspects.cli.utils
+      den.aspects.cli.yubikey
+      den.aspects.cli.zoxide
       den.aspects.darwin.customizations
-      den.aspects.fwupd
       den.aspects.ghostty.terminfo
       den.aspects.git
-      den.aspects.imagemagick
       den.aspects.mail
-      den.aspects.neovim
       den.aspects.nix-tools
       den.aspects.nixosKernel # NixOS-only: defines just the `nixos` class
-      den.aspects.nushell
+      den.aspects.python
       den.aspects.shell.bash
       den.aspects.shell.fish
+      den.aspects.shell.nushell
       den.aspects.shell.zsh
       den.aspects.sudo
       den.aspects.systemdBoot # NixOS-only: defines just the `nixos` class
       den.aspects.tui.atuin
-      den.aspects.tui.fastfetch
-      den.aspects.tui.tealdeer
-      den.aspects.tui.trash
+      den.aspects.tui.neovim
       den.aspects.tui.yazi
-      den.aspects.tui.yubikey
       den.aspects.tui.zellij
-      den.aspects.tui.zoxide
       den.aspects.tzdata
     ];
 

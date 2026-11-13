@@ -53,9 +53,9 @@ where something includes them. An aspect's name doesn't have to match its path (
 [macOS defaults](macos.md#macos-defaults) under `darwin.*`, whose group name already says so. There are three places to
 include one:
 
-- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `git`, `imagemagick`,
-  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.fastfetch`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey`, `tui.zellij` and
-  `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cli.fastfetch`, `cli.imagemagick`,
+  `cli.tealdeer`, `cli.trash`, `cli.utils`, `cli.yubikey`, `cli.zoxide`, `git`, `mail`, `nix-tools`, `python`, `sudo`, `tzdata`, `tui.atuin`, `tui.neovim`,
+  `tui.yazi` and `tui.zellij`. NixOS hosts also get `cli.fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where most desktop apps are included:
 
@@ -72,6 +72,15 @@ include one:
 
   ```nix
   den.aspects.alberth.includes = [ den.aspects.gpg ];
+  ```
+
+- The host's `provides.<user>`, for what one user gets on some hosts but not others. `alberth`'s heavier sets
+  are opted into this way: `alberth.dev` (language toolchains and `gh`) on magnus and fortuna,
+  `alberth.macDesktop` (Dock and Mac apps) on magnus and `alberth.mail` on magnus and fortuna. muninn, being
+  headless, takes none of them:
+
+  ```nix
+  den.aspects.<host>.provides.alberth.includes = [ den.aspects.alberth.dev ];
   ```
 
 A feature can target several classes at once. `gpg`, for example, sets Home Manager options (`homeManager`) and

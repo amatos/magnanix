@@ -48,7 +48,6 @@ in
       den.aspects.fonts
       den.aspects.game-streaming
       den.aspects.ghostty
-      den.aspects.java
       den.aspects.macos._1password
       den.aspects.macos.acorn
       den.aspects.macos.amphetamine
@@ -100,7 +99,6 @@ in
       den.aspects.openssh
       # aarch64-linux builds here; x86_64-linux goes to fortuna, then muninn
       den.aspects.remote-build.client
-      den.aspects.ruby
       den.aspects.steam
       den.aspects.tailscale
       den.aspects.tex
@@ -123,11 +121,14 @@ in
     };
   };
 
-  # alberth is the primary user on magnus, signs commits with the GPG key and reads mail
-  # (Fastmail in Thunderbird) here.
+  # alberth is the primary user on magnus, signs commits with the GPG key, reads mail
+  # (Fastmail in Thunderbird), develops (language toolchains) and has their Mac
+  # desktop (Dock and apps) here.
   den.aspects.magnus.provides.alberth.includes = [
     den.batteries.primary-user
     den.aspects.git.signing
+    den.aspects.alberth.dev
+    den.aspects.alberth.macDesktop
     den.aspects.alberth.mail
   ];
 }

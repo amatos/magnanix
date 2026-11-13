@@ -1,6 +1,6 @@
 # Fastfetch
 
-The `tui.fastfetch` feature (`modules/packages/fastfetch/`, included by `base`) installs
+The `cli.fastfetch` feature (`modules/packages/fastfetch/`, included by `base`) installs
 [fastfetch](https://github.com/fastfetch-cli/fastfetch) through Home Manager. Its config is written in Nix as
 `programs.fastfetch.settings` and lands in `~/.config/fastfetch/config.jsonc`. It shows hardware, OS, uptime and
 networking under boxed section banners. `bluetooth` (it crashed fastfetch 2.63.1 on Apple Silicon) and `publicip`

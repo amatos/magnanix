@@ -10,7 +10,7 @@
 #   /usr/local/bin/gpg symlink after every switch so the Nix gpg wins.
 # - Linux: scdaemon goes through pcscd (disable-ccid, pcsc-shared), so gpg,
 #   OpenSC, ssh PKCS#11 and yubioath can share the one smartcard reader instead
-#   of fighting over it. pcscd itself is enabled by tui.yubikey.
+#   of fighting over it. pcscd itself is enabled by cli.yubikey.
 # - Users without gpgKey / gpgPublicKey still work; those parts are skipped.
 { den, ... }:
 {

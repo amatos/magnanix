@@ -1,4 +1,4 @@
-# Aspect:    den.aspects.tui.fastfetch (included by base)
+# Aspect:    den.aspects.cli.fastfetch (included by base)
 # Platforms: home-manager
 # Purpose:   fastfetch system summary, configured in Nix (written to
 #            ~/.config/fastfetch/config.jsonc) and shown when a login shell starts.
@@ -17,7 +17,7 @@
 #   Silicon; publicip is off for privacy (it shows in screenshots) and speed.
 # - Full details: documentation/fastfetch.md.
 {
-  den.aspects.tui.fastfetch = {
+  den.aspects.cli.fastfetch = {
     homeManager =
       { lib, pkgs, ... }:
       let

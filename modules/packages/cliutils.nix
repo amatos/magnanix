@@ -1,14 +1,14 @@
-# Aspect:    den.aspects.cliutils (included by base)
+# Aspect:    den.aspects.cli.utils (included by base)
 # Platforms: home-manager
 # Purpose:   Modern replacements and companions for the classic Unix tools
-#            (ripgrep, fd, fzf, bat, eza, jq, bottom, btop, ...).
+#            (ripgrep, fd, fzf, bat, eza, jq, bottom, btop, htop, ...).
 #
 # Notes:
 # - Aliases ls/ll/la/lt -> eza, cat -> bat, top -> btm and df -> duf, in bash,
 #   zsh and fish only. Nushell keeps its built-in, structured `ls`.
 # - To get the original tool, bypass the alias: `command ls` or `\ls`.
 {
-  den.aspects.cliutils = {
+  den.aspects.cli.utils = {
     homeManager =
       { pkgs, ... }:
       let
@@ -48,6 +48,7 @@
           # ── System inspection ──────────────────────────────────────────────────
           bottom # btm — top with graphs
           btop # resource monitor with a full-screen TUI
+          htop # the classic interactive process viewer
           procs # ps with readable, searchable output
           dust # du as a sorted tree
           duf # df as a readable table
