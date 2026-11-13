@@ -53,6 +53,21 @@ After the first switch:
 
 Mac Mouse Fix's settings live in the app, not in this repo. It's a paid app after a free trial.
 
+## App inspection
+
+`den.aspects.macos.appInspection` (`modules/packages/app-inspection.nix`), included by alberth, installs three
+Homebrew casks for checking apps and installers before trusting them:
+
+| App                | Cask                 | What it shows                                                         |
+| ------------------ | -------------------- | --------------------------------------------------------------------- |
+| Apparency          | `apparency`          | an app bundle's signature, notarization, entitlements and components  |
+| Suspicious Package | `suspicious-package` | a `.pkg` installer's files and install scripts, without installing it |
+| What's Your Sign?  | `whatsyoursign`      | any file's code-signing information, from Finder's context menu       |
+
+What's Your Sign? works through a Finder extension: after the first switch, open the app once, then turn the
+extension on in System Settings > General > Login Items & Extensions if Finder's context menu doesn't show
+"Signing Info".
+
 ## OrbStack
 
 `den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`) installs OrbStack from nixpkgs

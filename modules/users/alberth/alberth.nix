@@ -64,6 +64,7 @@ in
       den.aspects.javascript
       den.aspects.kotlin
       den.aspects.lua
+      den.aspects.macos.appInspection
       den.aspects.macos.macMouseFix
       den.aspects.macos.mas
       den.aspects.macos.setapp
