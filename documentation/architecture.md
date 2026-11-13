@@ -22,7 +22,8 @@ documentation/                 this documentation, plus CICD_PLAN.md, TAILSCALE_
 pkgs/                          the darwintron-vm / nixostron-vm scripts and locally packaged software
 modules/
 ├── den/                       the framework and what every host shares: base, Determinate Nix, sops, Homebrew,
-│                              Home Manager integration, disko, magnanix.repoDir and magnanix.draculaPro options
+│                              Home Manager integration, disko, magnanix.repoDir and magnanix.draculaPro options,
+│                              and _versions.nix (the branch each core input tracks)
 ├── flake/outputs.nix          the flake's outputs: configurations, nh wrappers, checks, dev shell, formatter
 ├── packages/                  opt-in aspects that hosts, users or `base` include, one feature per file
 │   ├── appstore/              Mac App Store apps, one aspect per app or group of apps
@@ -141,6 +142,30 @@ Inputs are declared in the module that uses them, with `flake-file.inputs`, and 
 `.githooks/pre-commit` (`git config core.hooksPath .githooks`), which checks that staged `.nix` files are formatted
 and that `nix run .#write-flake` leaves `flake.nix` and `flake.lock` unchanged. Skip it once with
 `git commit --no-verify`.
+
+## Channel versions
+
+The branch or tag of the four core inputs is set in one place, `modules/den/_versions.nix`, so they can be moved
+between unstable and stable together:
+
+| Input          | Declared in                    | Current            | Stable form           |
+| -------------- | ------------------------------ | ------------------ | --------------------- |
+| `nixpkgs`      | `modules/den/flake-file.nix`   | `nixpkgs-unstable` | `nixos-YY.MM`         |
+| `home-manager` | `modules/den/home-manager.nix` | `master`           | `release-YY.MM`       |
+| `nix-darwin`   | `modules/den/nix-darwin.nix`   | `master`           | `nix-darwin-YY.MM`    |
+| `determinate`  | `modules/den/determinate.nix`  | `main`             | a tag, e.g. `v3.24.2` |
+
+The input declarations (and their `follows` settings) stay in the files listed; they only read the ref with
+`import ./_versions.nix`. The file starts with `_`, so import-tree does not load it as a module. nixpkgs,
+home-manager and nix-darwin must be on matching releases, so change all three at once, then run
+`nix run .#write-flake`. The Nix version itself comes from the `determinate` input.
+
+All inputs are fetched from GitHub. Determinate's own nested inputs (`nix`, its nixpkgs mirror, `flake-parts`,
+`git-hooks-nix`) still come from FlakeHub, because Determinate's flake declares them that way and `nix` has to
+match the Determinate release.
+
+`stateVersion` is deliberately not in `_versions.nix`: it is set per host and per user at install time and does
+not change when the channels do.
 
 ## Formatting
 
