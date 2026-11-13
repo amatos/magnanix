@@ -82,14 +82,16 @@
       "locked": {
         "lastModified": 1793885443,
         "narHash": "sha256-Df2nK3Hzj+DL4xpM5wRkYG/wS6VyUqIgHgxMI3e743o=",
+        "owner": "DeterminateSystems",
+        "repo": "determinate",
         "rev": "558e026d9d3c78351170d8f8a797fa0fac541ccf",
-        "revCount": 457,
-        "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/determinate/3.24.2/01a1abec-122b-7762-9bf3-b517e8361a53/source.tar.gz"
+        "type": "github"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://flakehub.com/f/DeterminateSystems/determinate/3"
+        "owner": "DeterminateSystems",
+        "ref": "main",
+        "repo": "determinate",
+        "type": "github"
       }
     },
     "determinate-nixd-aarch64-darwin": {
@@ -303,14 +305,16 @@
       "locked": {
         "lastModified": 1794278858,
         "narHash": "sha256-rkrJwLgLSHBnXfgoSKIDa+2LLGdTqynsV3GAxOTGhUU=",
+        "owner": "nix-community",
+        "repo": "home-manager",
         "rev": "82ce401aa350502897c3f2e85f384d61cd3b0b6d",
-        "revCount": 7602,
-        "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.7602%2Brev-82ce401aa350502897c3f2e85f384d61cd3b0b6d/01a1c35b-e2fa-7240-ab05-e11bee47ee77/source.tar.gz"
+        "type": "github"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://flakehub.com/f/nix-community/home-manager/0.1"
+        "owner": "nix-community",
+        "ref": "master",
+        "repo": "home-manager",
+        "type": "github"
       }
     },
     "import-tree": {
@@ -380,14 +384,16 @@
       "locked": {
         "lastModified": 1793418699,
         "narHash": "sha256-+RpTlcdh9KqZ+ZiLkNSTvibQWm935EcIdBzRPCTFsrQ=",
+        "owner": "nix-darwin",
+        "repo": "nix-darwin",
         "rev": "ff0e21a414d4547183396da1b44a66f2577b65e9",
-        "revCount": 2427,
-        "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2427%2Brev-ff0e21a414d4547183396da1b44a66f2577b65e9/01a19075-1230-7dc2-9688-98b552251408/source.tar.gz"
+        "type": "github"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://flakehub.com/f/nix-darwin/nix-darwin/0.1"
+        "owner": "nix-darwin",
+        "ref": "master",
+        "repo": "nix-darwin",
+        "type": "github"
       }
     },
     "nix-homebrew": {

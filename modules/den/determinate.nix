@@ -12,6 +12,8 @@
 #   in the darwin/nixos block if only one platform should.
 { den, inputs, ... }:
 let
+  versions = import ./_versions.nix;
+
   # Determinate Nix settings shared by every host. nix-darwin takes them as
   # `determinateNix.customSettings`; NixOS takes them as `nix.settings`.
   sharedSettings = {
@@ -49,9 +51,9 @@ in
     };
   };
 
-  # Determinate 3.* module
+  # Determinate module; the branch or tag is set in ./_versions.nix
   flake-file.inputs.determinate = {
-    url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
+    url = "github:DeterminateSystems/determinate/${versions.determinate}";
     inputs.nixpkgs.follows = "nixpkgs";
     # Keep the nixpkgs that Determinate's own `nix` input pins. Making it follow
     # ours (what auto-follow would do) changed the nixostron closure.

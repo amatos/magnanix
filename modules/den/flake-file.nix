@@ -5,6 +5,9 @@
 #            outputs expression, and the nixpkgs, import-tree and flake-file
 #            inputs. Never edit flake.nix by hand; run `nix run .#write-flake`.
 { inputs, ... }:
+let
+  versions = import ./_versions.nix;
+in
 {
   # flake-file generates flake.nix from the `flake-file.*` options declared in
   # these modules. Inputs are declared next to the aspect that uses them; this
@@ -29,9 +32,9 @@
     inputs = {
       # flake-file generates flake.nix, so it has to be an input of it
       flake-file.url = "github:denful/flake-file";
-      # Unstable Nixpkgs, straight from the nixpkgs-unstable channel branch so
+      # Nixpkgs, straight from a channel branch (set in ./_versions.nix) so
       # the lock tracks Hydra-cached revisions without waiting on FlakeHub.
-      nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+      nixpkgs.url = "github:NixOS/nixpkgs/${versions.nixpkgs}";
       # Previously pulled from FlakeHub, which mirrors the same channel but can
       # lag behind it (that lag once pinned an atuin build that failed on Hydra,
       # so it had no cached binary). To switch back, use this URL instead

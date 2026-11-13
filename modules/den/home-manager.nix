@@ -15,10 +15,13 @@
   lib,
   ...
 }:
+let
+  versions = import ./_versions.nix;
+in
 {
-  # Unstable Home Manager (master; use 0 for stable)
+  # Home Manager; the branch is set in ./_versions.nix
   flake-file.inputs.home-manager = {
-    url = "https://flakehub.com/f/nix-community/home-manager/0.1";
+    url = "github:nix-community/home-manager/${versions.home-manager}";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
