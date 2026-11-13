@@ -1,10 +1,10 @@
-# Aspect:    den.aspects.tui.tealdeer (included by base)
+# Aspect:    den.aspects.cli.tealdeer (included by base)
 # Platforms: home-manager
 # Purpose:   tealdeer, a fast `tldr` client (short, example-based man pages).
 #            auto_update refreshes the page cache when it gets old, so it never
 #            needs a manual `tldr --update`.
 {
-  den.aspects.tui.tealdeer = {
+  den.aspects.cli.tealdeer = {
     homeManager = {
       programs = {
         tealdeer = {

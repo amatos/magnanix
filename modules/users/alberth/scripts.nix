@@ -19,7 +19,7 @@
 #   velja-open.sh     `open "$@"`; used with the Velja browser picker
 #   yubi-enable / yubi-disable   turn the OpenPGP USB interface on/off of
 #                     YubiKey 32146072, which lives permanently in magnus
-#                     (ykman from PATH, installed by tui.yubikey)
+#                     (ykman from PATH, installed by cli.yubikey)
 {
   den.aspects.alberth.scripts = {
     homeManager = { ... }: {

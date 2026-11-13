@@ -1,6 +1,6 @@
 # Neovim
 
-`den.aspects.neovim` (`modules/packages/neovim.nix`, included by `base`) installs Neovim with
+`den.aspects.tui.neovim` (`modules/packages/neovim.nix`, included by `base`) installs Neovim with
 [LazyVim](https://www.lazyvim.org) on every host, through the [lazyvim-nix](https://github.com/pfassina/lazyvim-nix)
 Home Manager module, and sets `EDITOR=nvim`. `vi`, `vim` and `vimdiff` run Neovim too.
 
