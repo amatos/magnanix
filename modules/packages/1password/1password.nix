@@ -8,6 +8,9 @@
 #   /Applications for browser integration and its code-signature checks.
 # - NixOS: programs._1password(-gui), with the user as polkit policy owner so
 #   CLI integration and system authentication (unlock with system password) work.
+# - Completions call `op` by full path on macOS (/opt/homebrew/bin/op), so they
+#   load even in shells where Homebrew isn't on PATH. On NixOS `op` is the
+#   programs._1password wrapper in /run/wrappers/bin, which is always on PATH.
 # - SSH: sets IdentityAgent to 1Password's agent socket and includes
 #   ~/.ssh/1Password/config. This only takes effect for users who enable
 #   programs.ssh themselves; enable the agent in 1Password > Settings > Developer.
@@ -50,18 +53,22 @@
             "\"${home}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock\""
           else
             "${home}/.1password/agent.sock";
+
+        # The `op` CLI: the 1password-cli cask's link on macOS, the NixOS wrapper
+        # (on PATH) elsewhere.
+        op = if pkgs.stdenv.hostPlatform.isDarwin then "/opt/homebrew/bin/op" else "op";
       in
       {
         programs.bash.initExtra = ''
-          source <(op completion bash)
+          source <(${op} completion bash)
         '';
 
         programs.fish.interactiveShellInit = ''
-          op completion fish | source
+          ${op} completion fish | source
         '';
 
         programs.zsh.initContent = ''
-          eval "$(op completion zsh)"
+          eval "$(${op} completion zsh)"
           compdef _op op
         '';
 

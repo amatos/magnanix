@@ -16,8 +16,10 @@
 #   already in the file win. The file is only rewritten when something is added.
 # - If magnanix.repoDir isn't a git checkout, the settings step is skipped with
 #   a warning rather than creating a stray directory.
-# - VISUAL = "zed --wait" on macOS, "zeditor --wait" on Linux, so git, crontab
-#   and friends open Zed and wait for the tab to close. EDITOR stays Neovim.
+# - VISUAL = "/opt/homebrew/bin/zed --wait" on macOS, "zeditor --wait" on
+#   Linux, so git, crontab and friends open Zed and wait for the tab to close.
+#   EDITOR stays Neovim. The full path keeps it working in shells where
+#   Homebrew isn't on PATH (e.g. after a macOS update, until the next switch).
 # - File associations: duti on macOS (by extension), xdg.mimeApps on Linux
 #   (by MIME type).
 { inputs, ... }:
@@ -259,9 +261,10 @@
 
         # Use Zed for $VISUAL; --wait blocks until the file's tab is closed so
         # callers (git commit, crontab -e, …) see the edited result. On macOS the
-        # cask links the `zed` CLI onto PATH; on Linux nixpkgs names it `zeditor`.
+        # cask links the `zed` CLI into /opt/homebrew/bin, used by full path since
+        # Homebrew isn't always on PATH; on Linux nixpkgs names it `zeditor`.
         home.sessionVariables.VISUAL =
-          if isDarwin then "zed --wait" else "${lib.getExe pkgs.zed-editor-fhs} --wait";
+          if isDarwin then "/opt/homebrew/bin/zed --wait" else "${lib.getExe pkgs.zed-editor-fhs} --wait";
 
         xdg.configFile."zed/settings.json".source = config.lib.file.mkOutOfStoreSymlink settingsFile;
 

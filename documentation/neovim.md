@@ -12,7 +12,7 @@ Home Manager module, and sets `EDITOR=nvim`. `vi`, `vim` and `vimdiff` run Neovi
 - **Languages:** the `lang.nix`, `json`, `markdown`, `toml` and `yaml` extras. Tools that lazyvim-nix doesn't map to
   a package (such as `yaml-language-server`, `marksman` and `lua-language-server`) are listed in `extraPackages`;
   with Mason disabled, a missing language server is an error whenever a file of its type opens.
-- **`EDITOR` and `VISUAL`:** the aspect sets only `EDITOR`. Hosts with Zed set `VISUAL=zed --wait` on macOS
+- **`EDITOR` and `VISUAL`:** the aspect sets only `EDITOR`. Hosts with Zed set `VISUAL=/opt/homebrew/bin/zed --wait` on macOS
   or `VISUAL=zeditor --wait` on Linux (from `zed-editor-fhs`; `modules/packages/zed/zed.nix`), and most programs (git, crontab, ...) prefer `VISUAL`, so on those hosts they
   open Zed. Elsewhere `VISUAL` is unset and they use Neovim. Home Manager's `programs.neovim.defaultEditor` stays off
   because it would also set `VISUAL`, and the two definitions would fail evaluation.
