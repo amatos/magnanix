@@ -1,11 +1,12 @@
 # Remote builders
 
-magnus (aarch64-darwin) builds Linux derivations in two ways:
+magnus (aarch64-darwin) can't build Linux derivations itself, so it sends them to fortuna, then muninn:
 
-- **aarch64-linux** builds on magnus itself, in Determinate's Native Linux Builder. Each build runs in a
-  short-lived VM (macOS Virtualization framework) that exits when the build finishes, so nothing sits idle.
-- **x86_64-linux** goes to fortuna, then muninn. If neither answers, it runs on magnus under Rosetta, in the
-  same Native Linux Builder.
+- **x86_64-linux** builds natively there.
+- **aarch64-linux** builds under QEMU emulation on those x86_64 machines.
+
+If neither builder answers, Determinate's Native Linux Builder on magnus is the last resort. It can't build
+NixOS systems (see below).
 
 With this in place, `nix build .#nixosConfigurations.<host>.config.system.build.toplevel` works on magnus for any
 NixOS host, including `tenabrae`, which never builds anything itself.
@@ -14,25 +15,31 @@ The configuration is in `modules/packages/remote-build.nix`:
 
 - **`den.aspects.remote-build.server`** (fortuna, muninn) sets up `nix.sshServe` with `ssh-ng`. That creates
   `nix-ssh`, a trusted Nix user whose only command is `nix-daemon --stdio`, and lets only magnus's builder key log
-  in as it.
+  in as it. It also registers QEMU (`boot.binfmt.emulatedSystems`) on x86_64.
 - **`den.aspects.remote-build.client`** (magnus):
-  - enables the Native Linux Builder, at 4 GiB and 1 CPU per build VM;
   - sets `determinateNix.buildMachines` and `distributedBuilds`, which together write `/etc/nix/machines`;
   - sets `builders-use-substitutes`, so builders download dependencies from the caches themselves instead of
-    through magnus.
+    through magnus;
+  - keeps the Native Linux Builder enabled, at 4 GiB and 1 CPU per build VM.
 
-| Builder                       | Systems                  | Order                           |
-| ----------------------------- | ------------------------ | ------------------------------- |
-| magnus (Native Linux Builder) | aarch64-linux            | always                          |
-| `fortuna`                     | x86_64-linux             | first (speed 4, 8 jobs)         |
-| `muninn`                      | x86_64-linux             | fallback (speed 1, 4 jobs)      |
-| magnus (Rosetta)              | x86_64-linux             | when neither fortuna nor muninn |
+| Builder                       | Systems                            | Order                      |
+| ----------------------------- | ---------------------------------- | -------------------------- |
+| `fortuna`                     | x86_64-linux, aarch64-linux (QEMU) | first (speed 4, 8 jobs)    |
+| `muninn`                      | x86_64-linux, aarch64-linux (QEMU) | fallback (speed 1, 4 jobs) |
+| magnus (Native Linux Builder) | aarch64-linux, x86_64-linux        | last resort                |
 
 When a reachable remote builder supports a derivation's system, Nix sends the build there rather than building
-locally. That's why the remote builders list only `x86_64-linux`. If they also listed `aarch64-linux`, aarch64
-builds would leave magnus and run under emulation.
+locally. Builds only fall back to magnus when fortuna and muninn are both unreachable.
+
+Emulated aarch64 is several times slower than native. That's fine when the heavy parts come from cache.nixos.org
+or Attic, as with tenabrae. It's slow if something large misses the cache.
 
 ## Native Linux Builder
+
+**It can't build NixOS systems.** Its VM reads magnus's `/nix/store`, which is case-insensitive APFS. Some Linux
+store paths contain names that differ only by case, such as ncurses' `terminfo/L` and `terminfo/l`, or netfilter's
+`xt_DSCP` and `xt_dscp`. To store both on magnus, Nix renames one of them (`l~nix~case~hack~1`), and the VM sees the
+renamed copy. tenabrae's initrd failed this way, looking for `terminfo/l/linux`. Small derivations work.
 
 - **Login:** it needs magnus logged in to FlakeHub (`sudo determinate-nixd login`). A free account is enough.
   Check with `determinate-nixd status`.
@@ -43,8 +50,7 @@ builds would leave magnus and run under emulation.
 
 ## Attic
 
-Builds done on fortuna and muninn are pushed to Attic by their own `attic.push` watchers. Builds done on magnus,
-including aarch64 builds in the Native Linux Builder, are pushed by magnus's watcher. fortuna's watcher only starts once `attic_push_token` is in `secrets/hosts/fortuna.yaml`. To set
+Builds done on fortuna and muninn are pushed to Attic by their own `attic.push` watchers. fortuna's watcher only starts once `attic_push_token` is in `secrets/hosts/fortuna.yaml`. To set
 it up, see "Pushing to the cache" in [Binary cache](binary-cache.md).
 
 ## Keys
@@ -69,5 +75,5 @@ it up, see "Pushing to the cache" in [Binary cache](binary-cache.md).
 sudo ssh -i /etc/nix/builder_ed25519 nix-ssh@fortuna.home.matos.cc   # should hang waiting for the daemon protocol; Ctrl-C
 nix store info --store ssh-ng://nix-ssh@fortuna.home.matos.cc        # as root, or via the daemon
 nix build --rebuild nixpkgs#legacyPackages.x86_64-linux.hello -L     # should print "building ... on ssh-ng://nix-ssh@fortuna..."
-nix build --rebuild nixpkgs#legacyPackages.aarch64-linux.hello -L    # builds locally, in the Native Linux Builder
+nix build --rebuild nixpkgs#legacyPackages.aarch64-linux.hello -L    # also on fortuna, under QEMU
 ```

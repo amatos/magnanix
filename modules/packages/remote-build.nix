@@ -5,8 +5,9 @@
 # Purpose:   Lets magnus build Linux derivations, so a plain
 #            `nix build .#nixosConfigurations.<linux host>...` works on the Mac:
 #            - x86_64-linux on fortuna (first choice), then muninn
-#            - aarch64-linux on magnus itself, with Determinate's Native Linux
-#              Builder (a short-lived VM per build, nothing left running)
+#            - aarch64-linux on the same two, under QEMU emulation
+#            - either, as a last resort, on magnus itself in Determinate's
+#              Native Linux Builder (a short-lived VM per build)
 #
 # Notes:
 # - Transport: magnus's nix-daemon connects over SSH (ssh-ng) as `nix-ssh`, a
@@ -19,12 +20,18 @@
 # - Builders' host keys are pinned below (publicHostKey), so root on magnus
 #   needs no known_hosts entry. They are the same keys the hosts decrypt sops
 #   secrets with; re-pin here if one is ever replaced.
+# - aarch64-linux on the x86_64 builders runs under QEMU user emulation
+#   (binfmt): several times slower than native, so it suits configs whose heavy
+#   parts come from a cache (tenabrae), not compiling big packages.
 # - Native Linux Builder: needs magnus logged in to FlakeHub (a free account,
 #   `sudo determinate-nixd login`). It registers itself as an external builder
 #   for aarch64-linux (native) and x86_64-linux (Rosetta). Nix prefers a
-#   reachable remote builder over building locally, so the remote builders list
-#   only x86_64-linux: aarch64 stays on magnus, and x86_64 goes to fortuna or
-#   muninn, falling back to Rosetta on magnus only when neither answers.
+#   reachable remote builder over building locally, so it only gets builds when
+#   neither fortuna nor muninn answers.
+# - It can't build NixOS systems: its VM reads magnus's case-insensitive
+#   /nix/store, where Nix renames Linux files that differ only by case
+#   (`l~nix~case~hack~1`), so e.g. an initrd that needs ncurses'
+#   terminfo/l/linux fails. Small derivations work.
 # - Each build VM gets 1 CPU (Determinate's advice) and `nativeBuilderMemory`;
 #   several builds at once means several VMs, so it's kept below the 8 GiB
 #   default to leave magnus usable.
@@ -75,19 +82,28 @@ let
   ];
 in
 {
-  # A NixOS host that accepts builds for its own system from the client key.
+  # A NixOS host that accepts builds from the client key, for its own system
+  # and, on x86_64, aarch64-linux through QEMU.
   den.aspects.remote-build.server = {
-    nixos.nix.sshServe = {
-      enable = true;
-      protocol = "ssh-ng";
-      write = true;
-      trusted = true;
-      keys = clientKeys;
-    };
+    nixos =
+      { lib, pkgs, ... }:
+      {
+        nix.sshServe = {
+          enable = true;
+          protocol = "ssh-ng";
+          write = true;
+          trusted = true;
+          keys = clientKeys;
+        };
+
+        # Registers QEMU with binfmt_misc and adds aarch64-linux to Nix's
+        # extra-platforms (and the emulator to the build sandbox).
+        boot.binfmt.emulatedSystems = lib.optional pkgs.stdenv.hostPlatform.isx86_64 "aarch64-linux";
+      };
   };
 
-  # A Mac that builds aarch64-linux itself and sends x86_64-linux to the
-  # builders above.
+  # A Mac that sends its Linux builds to the builders above, and keeps the
+  # Native Linux Builder for when neither answers.
   den.aspects.remote-build.client = {
     darwin = {
       determinateNix = {
@@ -108,8 +124,10 @@ in
           protocol = "ssh-ng";
           sshUser = "nix-ssh";
           sshKey = "/etc/nix/builder_ed25519";
-          # Not aarch64-linux: that stays on the Native Linux Builder (see the header).
-          systems = [ "x86_64-linux" ];
+          systems = [
+            "x86_64-linux"
+            "aarch64-linux"
+          ];
         }) builders;
         customSettings.builders-use-substitutes = true;
       };

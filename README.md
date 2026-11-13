@@ -64,7 +64,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                                 |
 | [Secrets](documentation/secrets.md)                               | sops and age, YubiKeys, how secrets are wired, login passwords                            |
 | [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
-| [Remote builders](documentation/remote-builders.md)               | aarch64-linux on magnus (Native Linux Builder), x86_64-linux on fortuna and muninn       |
+| [Remote builders](documentation/remote-builders.md)               | magnus building Linux (x86_64, aarch64 under QEMU) on fortuna and muninn                  |
 | [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
 | [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons        |
 | [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |

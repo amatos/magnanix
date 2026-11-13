@@ -17,8 +17,8 @@ its own closures. So:
 - **Install:** flash an SD image built from tenabrae's own configuration.
 - **Updates:** build elsewhere, then have the Pi fetch the result from Attic and switch to it. There are two
   places to build:
-  - **From magnus:** a plain `nix build` runs in Determinate's Native Linux Builder on magnus (see
-    [remote builders](remote-builders.md)). Magnus's `attic watch-store` pushes the result to Attic.
+  - **From magnus:** a plain `nix build` goes to the [remote builders](remote-builders.md) (fortuna, then
+    muninn, under QEMU), whose `attic watch-store` pushes the result to Attic.
   - **CI:** the `ubuntu-24.04-arm` runner builds tenabrae on every push to `main` and pushes it to Attic.
 
 `deploy-magnanix` and `update-all-magnanix` won't work on tenabrae. It's left out of the latter's default
@@ -40,8 +40,8 @@ generated off-host. Its age recipient is `host_tenabrae` in `.sops.yaml`, and th
 ## Installing
 
 1. Make sure tenabrae can decrypt `common.yaml`: `sops updatekeys secrets/common.yaml` (it is listed there).
-2. Build the image on magnus. The Native Linux Builder does the work, and anything already in Attic is
-   downloaded instead of built:
+2. Build the image on magnus. The remote builders do the work, and anything already in Attic is downloaded
+   instead of built:
 
    ```sh
    nix build --out-link tenabrae-image -L \
@@ -71,8 +71,8 @@ mini-HDMI.
 
 ## Deploying a change
 
-From magnus, build the change (in the Native Linux Builder, or fetch CI's build with `--max-jobs 0`), then have
-the Pi switch to it:
+From magnus, build the change (on the remote builders, or fetch CI's build with `--max-jobs 0`), then have the
+Pi switch to it:
 
 ```sh
 path=$(nix build --no-link --print-out-paths \
@@ -83,7 +83,7 @@ ssh -t alberth@tenabrae "sudo nix-store --realise $path \
 ```
 
 The Pi downloads the closure from Attic itself; nothing is copied through magnus. If you built it just now,
-give magnus's `attic watch-store` a moment to finish pushing before you run the `ssh` line.
+give the builder's `attic watch-store` a moment to finish pushing before you run the `ssh` line.
 
 ## Clock and DoT
 
