@@ -60,8 +60,8 @@ to restore `/etc/zshrc` and `/etc/zprofile`, then open a new shell.
 ## Mouse buttons
 
 macOS ignores the extra side buttons (buttons 4 and 5) on most third-party mice, so they don't go back and forward
-in browsers or Finder. `den.aspects.macos.macMouseFix` (`modules/packages/mac-mouse-fix.nix`), included by alberth,
-installs the Mac Mouse Fix Homebrew cask to make them work.
+in browsers or Finder. `den.aspects.macos.macMouseFix` (`modules/packages/mac-mouse-fix.nix`), included by
+`alberth.macDesktop`, installs the Mac Mouse Fix Homebrew cask to make them work.
 
 After the first switch:
 
@@ -73,8 +73,8 @@ Mac Mouse Fix's settings live in the app, not in this repo. It's a paid app afte
 
 ## App inspection
 
-`den.aspects.macos.appInspection` (`modules/packages/app-inspection.nix`), included by alberth, installs three
-Homebrew casks for checking apps and installers before trusting them:
+`den.aspects.macos.appInspection` (`modules/packages/app-inspection.nix`), included by `alberth.macDesktop`,
+installs three Homebrew casks for checking apps and installers before trusting them:
 
 | App                | Cask                 | What it shows                                                         |
 | ------------------ | -------------------- | --------------------------------------------------------------------- |

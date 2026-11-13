@@ -2,8 +2,8 @@
 
 ## Python
 
-The `python` aspect (`modules/packages/languages/python.nix`, included by `base`, so every host has it) installs nixpkgs' default
-`python3` for ad-hoc scripts and leaves per-project Python versions to uv. It also installs:
+The `python` aspect (`modules/packages/languages/python.nix`, included by `base`, so every host has it) installs
+nixpkgs' default `python3` for ad-hoc scripts and leaves per-project Python versions to uv. It also installs:
 
 | Tool                                                   | Use                                                                         |
 | ------------------------------------------------------ | --------------------------------------------------------------------------- |
