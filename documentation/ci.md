@@ -28,7 +28,10 @@ It builds and pushes to the cache:
 
 - **aarch64-darwin:** `magnus` and `darwintron`
 - **x86_64-linux:** `muninn`, `fortuna` and `nixostron-x86_64`
-- **aarch64-linux:** `nixostron-aarch64`
+- **aarch64-linux:** `nixostron-aarch64` and `tenabrae`
+
+A manual run with **tenabrae-sd-image** ticked also builds tenabrae's flashable SD image and pushes it to the
+cache. It's off by default, because the image holds the whole closure. See [tenabrae](tenabrae.md).
 
 Each build job sets up the cache with the shared [`attic-cache`](../.github/actions/attic-cache/action.yml) composite
 action:

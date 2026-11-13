@@ -13,7 +13,8 @@
 5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in
    `modules/hosts/<hostname>/`, as `_hardware-configuration.nix`. The leading `_` stops import-tree loading
    it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`). The boot loader comes from `base`
-   (`systemdBoot`).
+   (`systemdBoot`). A board without UEFI, such as a Raspberry Pi, overrides it instead; `tenabrae/tenabrae.nix`
+   boots an SD image through U-Boot and extlinux, and needs no hardware configuration.
 6. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user

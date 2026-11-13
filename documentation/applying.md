@@ -28,9 +28,12 @@ from another branch with uncommitted changes, and stops with an error if `magnan
 a git checkout. Because it is a script on `PATH` rather than a shell alias, it also runs over SSH, for example
 `ssh <host> deploy-magnanix`. Deploy after CI passes on `main`.
 
+tenabrae (the Raspberry Pi Zero 2 W) is too small to evaluate the flake, so `deploy-magnanix` doesn't work there.
+Build it from magnus and switch it over SSH instead; see [tenabrae](tenabrae.md#deploying-a-change).
+
 To deploy the whole fleet at once, run `update-all-magnanix` (`modules/users/alberth/scripts/update-all-magnanix`).
-It runs `deploy-magnanix` on fortuna, magnus and muninn in parallel (the test VMs are left out; pass host names
-to deploy only those), over SSH for the other hosts and directly on the machine it runs on, since macOS sudo can't
+It runs `deploy-magnanix` on fortuna, magnus and muninn in parallel (the test VMs and tenabrae are left out; pass
+host names to deploy only those), over SSH for the other hosts and directly on the machine it runs on, since macOS sudo can't
 prompt over a non-interactive SSH session. Output is prefixed with each host's name. At the end it prints a
 summary, and for each failed host the end of its log; it exits non-zero if any host failed. Remote hosts must
 accept your SSH key without a prompt (it uses `BatchMode`).
