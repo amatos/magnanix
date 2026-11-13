@@ -1,4 +1,4 @@
-# Aspect:    den.aspects.tui.zoxide (included by base)
+# Aspect:    den.aspects.cli.zoxide (included by base)
 # Platforms: home-manager
 # Purpose:   zoxide, a `cd` that learns your most-used directories (`z proj`
 #            jumps to the best match), with bash, zsh and fish integration.
@@ -7,7 +7,7 @@
 # - `cd` is aliased to `z` in zsh and fish, so plain `cd` also learns and
 #   accepts fuzzy matches. Use `builtin cd` to bypass it.
 {
-  den.aspects.tui.zoxide = {
+  den.aspects.cli.zoxide = {
     homeManager =
       { ... }:
       let

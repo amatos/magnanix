@@ -1,4 +1,4 @@
-# Aspect:    den.aspects.neovim (included by base)
+# Aspect:    den.aspects.tui.neovim (included by base)
 # Platforms: home-manager
 # Purpose:   Neovim with LazyVim (via lazyvim-nix), as $EDITOR; vi, vim and
 #            vimdiff run it too.
@@ -23,7 +23,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  den.aspects.neovim = {
+  den.aspects.tui.neovim = {
     homeManager =
       { config, pkgs, ... }:
       let

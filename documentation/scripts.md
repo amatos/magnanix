@@ -84,6 +84,6 @@ without unplugging the key:
   `gpg-connect-agent "scd serialno" "learn --force" /bye`, like `switch-yubikey`, so gpg's key stubs point at
   this key again.
 
-Both take `ykman` from `PATH`; the `tui.yubikey` aspect installs it. Without it they exit 1 with
+Both take `ykman` from `PATH`; the `cli.yubikey` aspect installs it. Without it they exit 1 with
 `ykman not found`. If `ykman` fails (for example, the key isn't plugged in), they exit 1 with
 `ykman failed to enable OpenPGP` or `ykman failed to disable OpenPGP`, and `yubi-enable` skips the gpg step.

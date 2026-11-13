@@ -53,9 +53,9 @@ where something includes them. An aspect's name doesn't have to match its path (
 [macOS defaults](macos.md#macos-defaults) under `darwin.*`, whose group name already says so. There are three places to
 include one:
 
-- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cliutils`, `git`, `imagemagick`,
-  `mail`, `neovim`, `nix-tools`, `nushell`, `sudo`, `tzdata`, `tui.atuin`, `tui.fastfetch`, `tui.tealdeer`, `tui.trash`, `tui.yazi`, `tui.yubikey`, `tui.zellij` and
-  `tui.zoxide`. NixOS hosts also get `fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
+- `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cli.fastfetch`, `cli.imagemagick`,
+  `cli.tealdeer`, `cli.trash`, `cli.utils`, `cli.yubikey`, `cli.zoxide`, `git`, `mail`, `nix-tools`, `sudo`, `tzdata`, `tui.atuin`, `tui.neovim`,
+  `tui.yazi` and `tui.zellij`. NixOS hosts also get `cli.fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where most desktop apps are included:
 
