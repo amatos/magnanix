@@ -39,6 +39,22 @@ and `defaults read -g KeyRepeat` rather than trusting a documented default.
 bar, `false` hides it, and leaving the option unset keeps macOS's own choice. Bluetooth, Sound, Focus and Now
 Playing are shown; Display and the battery percentage are hidden.
 
+## Homebrew commands and PATH
+
+Homebrew's `bin` directory gets onto `PATH` only through `brew shellenv` in nix-darwin's `/etc/zshrc` (and the
+bash/fish equivalents). A macOS update replaces `/etc/zshrc` and `/etc/zprofile` with Apple's defaults, so until the
+next switch, new shells have no `/opt/homebrew/bin`, and Nushell never has it. Anything this repo runs from a
+Homebrew cask or formula therefore uses the full path:
+
+| Command | Used in                                                        | Path                    |
+| ------- | -------------------------------------------------------------- | ----------------------- |
+| `zed`   | `VISUAL` (`modules/packages/zed/zed.nix`)                      | `/opt/homebrew/bin/zed` |
+| `op`    | shell completions (`modules/packages/1password/1password.nix`) | `/opt/homebrew/bin/op`  |
+| `tag`   | yazi's mactag plugin (`modules/packages/yazi.nix`)             | `/opt/homebrew/bin/tag` |
+
+Do the same for any new Homebrew command the configuration calls. After a macOS update, run `apply-configuration`
+to restore `/etc/zshrc` and `/etc/zprofile`, then open a new shell.
+
 ## Mouse buttons
 
 macOS ignores the extra side buttons (buttons 4 and 5) on most third-party mice, so they don't go back and forward
