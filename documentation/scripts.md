@@ -64,7 +64,8 @@ comment at the top of the script describes how the keys were copied to both Yubi
 
 ## update-all-magnanix
 
-Deploys the whole fleet: it runs `deploy-magnanix` on fortuna, magnus and muninn in parallel. See
+Deploys the whole fleet: it runs `deploy-magnanix` on fortuna, magnus and muninn in parallel. tenabrae is left
+out because it can't evaluate the flake itself; see [tenabrae](tenabrae.md#deploying-a-change). See
 [Applying and updating](applying.md) for how it reaches each host and how it reports failures.
 
 ## velja-open.sh

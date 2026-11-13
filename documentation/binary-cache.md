@@ -55,10 +55,11 @@ Pulling needs no token because the cache is public. Pushing by hand (`attic push
 
 ## Pushing to the cache
 
-`den.aspects.attic.push` (in `attic.nix`) runs `attic watch-store` as root,
-which pushes every store path that becomes valid on the host, with its closure, to `magnanix`. That covers both
+`den.aspects.attic.push` (in `attic.nix`) runs `attic watch-store` as root on magnus, muninn and fortuna. The
+watcher pushes every store path that becomes valid on the host, with its closure, to `magnanix`. That covers both
 builds and downloads, but paths signed by cache.nixos.org are skipped, so in practice it pushes the host's own
-builds and the unfree packages. On NixOS it is the `attic-watch-store` systemd service; on macOS it is the
+builds and the unfree packages. On fortuna and muninn that includes what they build for magnus as
+[remote builders](remote-builders.md). On NixOS it is the `attic-watch-store` systemd service; on macOS it is the
 `org.nixos.attic-watch-store` launchd daemon, which logs to `/var/log/attic-watch-store.log` (rotated by
 `newsyslog`).
 

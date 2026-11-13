@@ -76,8 +76,8 @@ include one:
 
 - The host's `provides.<user>`, for what one user gets on some hosts but not others. `alberth`'s heavier sets
   are opted into this way: `alberth.dev` (language toolchains and `gh`) on magnus and fortuna,
-  `alberth.macDesktop` (Dock and Mac apps) on magnus and `alberth.mail` on magnus and fortuna. muninn, being
-  headless, takes none of them:
+  `alberth.macDesktop` (Dock and Mac apps) on magnus and `alberth.mail` on magnus and fortuna. muninn and
+  tenabrae, being headless, take none of them:
 
   ```nix
   den.aspects.<host>.provides.alberth.includes = [ den.aspects.alberth.dev ];

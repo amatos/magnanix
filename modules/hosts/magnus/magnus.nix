@@ -10,6 +10,9 @@
 # - alberth is the primary user and signs commits with their GPG key here
 #   (git.signing), because the key (on a YubiKey) is usable here.
 # - Requests certificates for magnus.home.matos.cc and magnus.ts.matos.cc.
+# - Sends Linux builds (x86_64 and aarch64) to fortuna, then muninn, with
+#   Determinate's Native Linux Builder as a last resort (remote-build.client). See
+#   documentation/remote-builders.md.
 {
   den,
   inputs,
@@ -94,6 +97,8 @@ in
       den.aspects.macos.windowsApp
       den.aspects.macos.zavala
       den.aspects.openssh
+      # Linux builds go to fortuna, then muninn, then the Native Linux Builder
+      den.aspects.remote-build.client
       den.aspects.steam
       den.aspects.tailscale
       den.aspects.tex

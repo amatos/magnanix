@@ -13,7 +13,10 @@
 #   and skip the push.
 #     - aarch64-darwin: magnus, darwintron (macos-26)
 #     - x86_64-linux: muninn, fortuna, nixostron-x86_64 (ubuntu-latest)
-#     - aarch64-linux: nixostron-aarch64 (ubuntu-24.04-arm)
+#     - aarch64-linux: nixostron-aarch64, tenabrae (ubuntu-24.04-arm)
+# - tenabrae's SD image (manual run with `tenabrae-sd-image` ticked): builds
+#   the flashable image on ubuntu-24.04-arm and pushes it to Attic, so magnus
+#   can fetch it without an aarch64-linux builder. See documentation/tenabrae.md.
 #
 # Changes that only touch documentation skip the workflow entirely.
 #
@@ -35,6 +38,11 @@ on:
       - "documentation/**"
       - "LICENSE"
   workflow_dispatch:
+    inputs:
+      tenabrae-sd-image:
+        description: Also build tenabrae's SD image and push it to Attic
+        type: boolean
+        default: false
 
 # Adding a label other than ci:build gets its own group, so it doesn't cancel a
 # run in progress (its own run skips every job).
@@ -277,6 +285,25 @@ jobs:
         run: |
           nix build .#nixosConfigurations.nixostron-aarch64.config.system.build.toplevel \
             --out-link result-nixostron-aarch64 \
+            --accept-flake-config \
+            --max-jobs auto \
+            --fallback
+
+      - name: Build tenabrae
+        run: |
+          nix build .#nixosConfigurations.tenabrae.config.system.build.toplevel \
+            --out-link result-tenabrae \
+            --accept-flake-config \
+            --max-jobs auto \
+            --fallback
+
+      # Only on request: the image holds the whole closure, so pushing one on
+      # every run would fill the cache.
+      - name: Build tenabrae SD image
+        if: github.event_name == 'workflow_dispatch' && inputs.tenabrae-sd-image
+        run: |
+          nix build .#nixosConfigurations.tenabrae.config.system.build.sdImage \
+            --out-link result-tenabrae-sd-image \
             --accept-flake-config \
             --max-jobs auto \
             --fallback
