@@ -144,9 +144,11 @@ logdirs() { find "$TMPDIR" -maxdepth 1 -name 'update-all-magnanix.*'; }
   ! kill -0 "$(cat "$TEST_TMP/sleep.pid")" 2>/dev/null
 }
 
-@test "by default deploys every host in modules/hosts except the VMs" {
+@test "by default deploys every host in modules/hosts except the VMs and tenabrae" {
+  # tenabrae (a Pi Zero 2 W) can't evaluate the flake, so deploy-magnanix can't
+  # run there; it's deployed from magnus (documentation/tenabrae.md).
   expected=$(find "$BATS_TEST_DIRNAME/../../../hosts" -mindepth 1 -maxdepth 1 -type d \
-    ! -name virtual ! -name templates -exec basename {} \; | sort)
+    ! -name virtual ! -name templates ! -name tenabrae -exec basename {} \; | sort)
   [ -n "$expected" ]
 
   run bash "$SCRIPT"

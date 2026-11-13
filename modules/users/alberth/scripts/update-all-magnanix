@@ -6,7 +6,7 @@
 # Usage: update-all-magnanix [host ...]
 #
 # With no arguments it deploys the physical hosts (the test VMs in
-# modules/hosts/virtual are left out). Remote hosts run it over SSH; the host
+# modules/hosts/virtual and tenabrae are left out). Remote hosts run it over SSH; the host
 # this runs on runs it directly, since sudo on macOS needs Touch ID or a
 # password and can't prompt over a non-interactive SSH session.
 #
@@ -16,6 +16,8 @@
 
 set -uo pipefail
 
+# Not tenabrae: it can't evaluate the flake, so it's deployed from magnus
+# (documentation/tenabrae.md).
 default_hosts=(fortuna magnus muninn)
 
 if [ $# -gt 0 ]; then
