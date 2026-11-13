@@ -66,7 +66,14 @@ generated off-host. Its age recipient is `host_tenabrae` in `.sops.yaml`, and th
    Check with `ssh alberth@tenabrae`, then run `sudo tailscale up` once.
 7. On the router: reserve tenabrae's address, and hand it out as the DNS server.
 
-If Wi-Fi never comes up, the serial console is on the GPIO UART (`ttyS1`, 115200 baud), and there is a console on
+If Wi-Fi never comes up, check `/Volumes/FIRMWARE` with the card back in magnus first. If
+`ssh_host_ed25519_key` is still there, the Pi never installed it. Without the host key, sops can't decrypt the
+Wi-Fi passphrase (or alberth's password), so the Pi can't connect and you can't log in at the console. If the
+key is gone, the problem is Wi-Fi itself. Read the Pi's journal from the card on a Linux machine:
+`mount -o ro /dev/disk/by-label/NIXOS_SD /mnt`, then `journalctl -D /mnt/var/log/journal -b -1`. A key copied
+onto the card always replaces the installed one at the next boot, so recopying it is safe.
+
+The serial console is on the GPIO UART (`ttyS1`, 115200 baud), and there is a console on
 mini-HDMI.
 
 ## Deploying a change
