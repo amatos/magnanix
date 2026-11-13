@@ -8,8 +8,10 @@
 `CustomUserPreferences` for keys nix-darwin has no option for). `darwin.nix` bundles them as
 `den.aspects.darwin.customizations`, which `base` includes, so they apply to every macOS host.
 
-- `den.aspects.alberth.macos.dock` (`modules/users/alberth/dock.nix`) is the exception: it follows alberth rather
-  than applying to every macOS host, so hosts without alberth keep the default Dock.
+- `den.aspects.alberth.macos.dock` (`modules/users/alberth/dock.nix`) is the exception: it belongs to alberth rather
+  than applying to every macOS host, so hosts without alberth keep the default Dock. It's bundled with alberth's
+  Mac apps in `den.aspects.alberth.macDesktop` (`modules/users/alberth/mac-desktop.nix`), which a host opts into
+  from `den.aspects.<host>.provides.alberth`, next to `den.batteries.primary-user`.
 - `dock` and `screencapture` build paths such as `/Users/<name>/Downloads` from `system.primaryUser`, which each
   host sets with `den.batteries.primary-user`.
 - `screencapture` creates its target directory (`~/Pictures/Screenshots/unsorted`) in a `postActivation` script,
@@ -58,8 +60,8 @@ to restore `/etc/zshrc` and `/etc/zprofile`, then open a new shell.
 ## Mouse buttons
 
 macOS ignores the extra side buttons (buttons 4 and 5) on most third-party mice, so they don't go back and forward
-in browsers or Finder. `den.aspects.macos.macMouseFix` (`modules/packages/mac-mouse-fix.nix`), included by alberth,
-installs the Mac Mouse Fix Homebrew cask to make them work.
+in browsers or Finder. `den.aspects.macos.macMouseFix` (`modules/packages/mac-mouse-fix.nix`), included by
+`alberth.macDesktop`, installs the Mac Mouse Fix Homebrew cask to make them work.
 
 After the first switch:
 
@@ -71,8 +73,8 @@ Mac Mouse Fix's settings live in the app, not in this repo. It's a paid app afte
 
 ## App inspection
 
-`den.aspects.macos.appInspection` (`modules/packages/app-inspection.nix`), included by alberth, installs three
-Homebrew casks for checking apps and installers before trusting them:
+`den.aspects.macos.appInspection` (`modules/packages/app-inspection.nix`), included by `alberth.macDesktop`,
+installs three Homebrew casks for checking apps and installers before trusting them:
 
 | App                | Cask                 | What it shows                                                         |
 | ------------------ | -------------------- | --------------------------------------------------------------------- |

@@ -1,9 +1,8 @@
 # User:      alberth (den.aspects.alberth)
 # Platforms: nixos, darwin, home-manager
-# Purpose:   alberth's account, metadata and personal tool set: the language
-#            toolchains, gpg, direnv, gh, the Dock, ~/.local/bin scripts,
-#            deploy-magnanix and SSH client config. Follows alberth to every
-#            host they're on.
+# Purpose:   alberth's account, metadata and the small tool set that follows
+#            them to every host: gpg, direnv, ~/.local/bin scripts,
+#            deploy-magnanix and SSH client config.
 #
 # Notes:
 # - `meta` (identity, SSH keys, GPG key) is read by shared aspects such as git
@@ -16,6 +15,9 @@
 #   because sshd's StrictModes rejects the group-writable store.
 # - NixOS password: `alberth_password` (yescrypt hash) in secrets/common.yaml.
 #   It always wins over `passwd`. macOS passwords are never managed here.
+# - Heavier sets are opt-in per host, from den.aspects.<host>.provides.alberth:
+#   alberth.dev (language toolchains, gh), alberth.macDesktop (Dock, Mac apps)
+#   and alberth.mail.
 { den, ... }:
 let
   # Defined here (rather than read back through `config`) so the same values can
@@ -52,33 +54,10 @@ in
       den.batteries.host-aspects
 
       den.aspects.alberth.deployMagnanix
-      den.aspects.alberth.macos.dock
       den.aspects.alberth.scripts
       den.aspects.alberth.ssh
-      den.aspects.c
       den.aspects.direnv
-      den.aspects.elixir
-      den.aspects.github
-      den.aspects.go
       den.aspects.gpg
-      den.aspects.javascript
-      den.aspects.kotlin
-      den.aspects.lua
-      den.aspects.macos.appInspection
-      den.aspects.macos.macMouseFix
-      den.aspects.macos.mas
-      den.aspects.macos.setapp
-      den.aspects.macos.skim
-      den.aspects.macos.spamsieve
-      den.aspects.macos.supaSideBar
-      den.aspects.ocaml
-      den.aspects.php
-      den.aspects.python
-      den.aspects.ruby
-      den.aspects.rust
-      den.aspects.shellscript
-      den.aspects.swift
-      den.aspects.zig
     ];
 
     # Home Manager configuration for alberth
@@ -87,8 +66,6 @@ in
       {
         # Set to the release alberth's Home Manager was first set up with
         home.stateVersion = "26.05";
-
-        home.packages = [ pkgs.htop ];
 
         # Licensed theme pack (see modules/den/dracula-pro.nix). Access comes from
         # alberth's GitHub account, so the URL alone gives nobody else anything.
