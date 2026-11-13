@@ -9,6 +9,8 @@
 # - Requests certificates for muninn.home.matos.cc and muninn.ts.matos.cc (the
 #   relay adds smtp.home / smtp.ts).
 # - Also pushes its own builds to the cache (attic.push).
+# - magnus's fallback x86_64-linux builder when fortuna is off. See
+#   documentation/remote-builders.md.
 { den, ... }:
 let
   hostName = "muninn";
@@ -43,6 +45,9 @@ in
 
       # SMTP smart relay to Fastmail for the LAN and the tailnet
       den.aspects.mail.relay
+
+      # magnus's fallback x86_64-linux builder, when fortuna is off
+      den.aspects.remote-build.server
     ];
 
     nixos = {

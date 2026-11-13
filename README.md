@@ -23,6 +23,7 @@ Documentation is best-effort, and believed to be correct -- however, I write doc
 | `nixostron-x86_64`  | `x86_64-linux`   | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under QEMU on muninn                 |
 | `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM                          |
 | `fortuna`           | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland with Noctalia, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
+| `tenabrae`          | `aarch64-linux`  | NixOS      | `alberth`   | [Raspberry Pi Zero 2 W](documentation/tenabrae.md): Pi-hole with Quad9 over DoT, Wi-Fi, Tailscale, SSH (keys only) |
 
 A host's name must match `scutil --get LocalHostName` (macOS) or `hostname` (NixOS), so that `darwin-rebuild` /
 `nixos-rebuild` can find it. `base` sets the OS hostname from `den.hosts.<system>.<host>.hostName`, which defaults
@@ -63,9 +64,11 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                                 |
 | [Secrets](documentation/secrets.md)                               | sops and age, YubiKeys, how secrets are wired, login passwords                            |
 | [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
+| [Remote builders](documentation/remote-builders.md)               | aarch64-linux on magnus (Native Linux Builder), x86_64-linux on fortuna and muninn       |
 | [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
 | [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons        |
 | [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |
+| [tenabrae](documentation/tenabrae.md)                             | the Pi-hole on a Raspberry Pi Zero 2 W: SD image install, deploying, secrets              |
 | [Test VMs](documentation/testing-vms.md)                          | darwintron and nixostron: testing a branch before it lands                                |
 | [Continuous Integration](documentation/ci.md)                     | the build workflow, runners, cache access                                                 |
 | [macOS](documentation/macos.md)                                   | System Settings, the Dock, mouse buttons, OrbStack's volume, App Store apps               |

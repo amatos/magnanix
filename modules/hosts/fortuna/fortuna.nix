@@ -7,6 +7,8 @@
 # - It has a second NVMe drive reserved for Windows 11. Never put NixOS data on
 #   it; install steps and the rules that keep Windows possible are below.
 # - Audio defaults to the GPU's HDMI output (WirePlumber priority rule).
+# - magnus's first-choice x86_64-linux remote builder; pushes its builds to
+#   Attic. See documentation/remote-builders.md.
 # - NetworkManager handles networking (Noctalia's Wi-Fi widget uses it).
 # - Requests certificates for fortuna.home.matos.cc and fortuna.ts.matos.cc
 #   (for Syncthing and the like later; Sunshine keeps its own self-signed one,
@@ -44,6 +46,8 @@ in
     includes = [
       den.aspects._1password
       den.aspects.amdgpu
+      # Push what it builds (its own and magnus's remote builds) to the cache
+      den.aspects.attic.push
       den.aspects.audio
       den.aspects.bluetooth
       den.aspects.browsers
@@ -56,6 +60,8 @@ in
       den.aspects.ghostty
       den.aspects.noctalia
       den.aspects.openssh
+      # magnus's first-choice x86_64-linux builder
+      den.aspects.remote-build.server
       den.aspects.steam
       den.aspects.tailscale
       den.aspects.zed

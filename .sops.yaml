@@ -17,6 +17,8 @@ keys:
   - &host_muninn age16vynhfk26c2z9tq6xh53skcwm4lqfwx5qr2cwjng3hlgj8hssp9qyncpnm
   # Generated off-host before install; the private half is in 1Password.
   - &host_fortuna age10s2kgymxl7fw2u5222qw5kzd6ztdq49z5ss4jwa3kfxjwn2gdqvqwyh7v5
+  # Generated off-host before install; the private half is in 1Password.
+  - &host_tenabrae age1kk0fr46ppt03a3uw45ejcmsexzrr0es4m04xg3uutfzevs9jv4rshxfwd9
   # Home Manager: per-machine user keys (`age-keygen -y ~/.config/sops-nix/key.txt`)
   - &alberth_magnus age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l
   - &alberth_muninn age1lkrmja7y0ru7yqfgckumgzzakgs06lsvmleysvrl9tm0xdp3sa6q7p84fn
@@ -87,6 +89,18 @@ creation_rules:
             *yubikeyb4d67c6f,
             *host_fortuna,
           ]
+  - path_regex: secrets/hosts/tenabrae\.yaml$
+    key_groups:
+      - age:
+          [
+            *yubikey0634d1c4,
+            *yubikey2ab5ff2f,
+            *yubikeybe7a2b66,
+            *yubikey49705840,
+            *yubikey7cb1cad0,
+            *yubikeyb4d67c6f,
+            *host_tenabrae,
+          ]
 
   # System secrets shared by every host. Holds alberth_password, so every NixOS host
   # alberth is on must be listed here (macOS hosts can decrypt it but never use it).
@@ -102,6 +116,7 @@ creation_rules:
           - *host_magnus
           - *host_muninn
           - *host_fortuna
+          - *host_tenabrae
           # - *host_nixostron
 
   # Home Manager secrets for alberth, on every machine
