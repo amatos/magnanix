@@ -4,9 +4,9 @@
 #            user by den.aspects.shell.starship; this only adds the settings.
 #
 # Notes (changes from Starship's defaults):
-# - A powerline-style head: OS icon (blue) → username, or user@host over
-#   SSH (red) → directory (green), followed by git branch/status and
-#   everything else via `$all`.
+# - A powerline-style head: OS icon (blue) → user@host (red) → directory
+#   (green), followed by git branch/status and everything else via `$all`.
+#   Locally the host is black like the user; over SSH it turns cyan.
 # - Emoji symbols for the OS, language and git modules; the powerline
 #   separators still need a Nerd Font in the terminal.
 # - The prompt character is λ (✗ after a failed command).
@@ -76,6 +76,7 @@
             "[](bg:blue fg:red)"
             "$username"
             "$hostname"
+            "\${custom.hostname_local}"
             "[ ](bg:red)"
             "[](bg:red fg:green)"
             "$directory"
@@ -185,11 +186,21 @@
             format = versionFormat;
           };
 
-          # Only over SSH, so the red section reads user@host there and just
-          # user locally. trim_at (default ".") drops the domain.
+          # The built-in module covers SSH only, in cyan (red's complement) so
+          # a remote host stands out. trim_at (default ".") drops the domain.
           hostname = {
             ssh_only = true;
-            format = "[@$hostname](bg:red fg:black)";
+            format = "[@$hostname](bg:red fg:cyan)";
+          };
+
+          # The built-in module has a single style, so the local host comes from
+          # this custom module instead, styled like the username. `sh` keeps the
+          # `when` test working whatever shell the prompt is drawn in.
+          custom.hostname_local = {
+            when = ''[ -z "$SSH_CONNECTION" ]'';
+            command = "hostname -s";
+            shell = [ "sh" ];
+            format = "[@$output](bg:red fg:black)";
           };
         };
       };
