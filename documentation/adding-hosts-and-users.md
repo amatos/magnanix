@@ -28,5 +28,7 @@
 3. Add the user to a host with `den.hosts.<system>.<host>.users.<username> = { };`.
 4. Include `den.batteries.host-aspects` if the user should get the `homeManager` parts of the host's apps.
 5. Optionally add a `meta` set (see [User metadata](architecture.md#user-metadata)) and include features from `modules/packages/`.
+   Every user gets Starship's default prompt; for a custom one, set `programs.starship.settings` in a user aspect (see
+   `modules/users/alberth/configs/starship.nix` and [Shells](shells.md)).
 6. For secrets, add the user's per-machine age key and a creation rule to `.sops.yaml`, then create
    `secrets/users/<username>.yaml`.
