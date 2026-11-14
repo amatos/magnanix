@@ -13,6 +13,7 @@
 #   script for this (see below); open a new terminal after the first switch.
 # - ~/.ssh/authorized_keys is a real file (mode 600), not a store symlink,
 #   because sshd's StrictModes rejects the group-writable store.
+# - PAGER and MANPAGER are bat (see documentation/shells.md).
 # - NixOS password: `alberth_password` (yescrypt hash) in secrets/common.yaml.
 #   It always wins over `passwd`. macOS passwords are never managed here.
 # - Heavier sets are opt-in per host, from den.aspects.<host>.provides.alberth:
@@ -66,6 +67,14 @@ in
       {
         # Set to the release alberth's Home Manager was first set up with
         home.stateVersion = "26.05";
+
+        # bat as the default pager. Full store path so it works even where
+        # bat isn't on PATH. bat itself skips PAGER=bat and falls back to less.
+        home.sessionVariables.PAGER = "${lib.getExe pkgs.bat} --color=always";
+
+        # man pages through bat: col strips the overstrike formatting so bat's
+        # man syntax can highlight them.
+        home.sessionVariables.MANPAGER = "sh -c 'col -bx | ${lib.getExe pkgs.bat} -l man -p'";
 
         # Licensed theme pack (see modules/den/dracula-pro.nix). Access comes from
         # alberth's GitHub account, so the URL alone gives nobody else anything.
