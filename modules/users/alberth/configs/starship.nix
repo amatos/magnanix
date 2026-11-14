@@ -4,8 +4,9 @@
 #            user by den.aspects.shell.starship; this only adds the settings.
 #
 # Notes (changes from Starship's defaults):
-# - A powerline-style head: OS icon (blue) → username (red) → directory
-#   (green), followed by git branch/status and everything else via `$all`.
+# - A powerline-style head: OS icon (blue) → username, or user@host over
+#   SSH (red) → directory (green), followed by git branch/status and
+#   everything else via `$all`.
 # - Emoji symbols for the OS, language and git modules; the powerline
 #   separators still need a Nerd Font in the terminal.
 # - The prompt character is λ (✗ after a failed command).
@@ -74,6 +75,8 @@
             "$os"
             "[](bg:blue fg:red)"
             "$username"
+            "$hostname"
+            "[ ](bg:red)"
             "[](bg:red fg:green)"
             "$directory"
             "[ ](fg:green)"
@@ -85,7 +88,7 @@
 
           username = {
             show_always = true;
-            format = "[$user ](bg:red fg:black)";
+            format = "[$user](bg:red fg:black)";
             disabled = false;
           };
 
@@ -182,9 +185,11 @@
             format = versionFormat;
           };
 
+          # Only over SSH, so the red section reads user@host there and just
+          # user locally. trim_at (default ".") drops the domain.
           hostname = {
-            ssh_symbol = " 🌐 ";
-            format = versionFormat;
+            ssh_only = true;
+            format = "[@$hostname](bg:red fg:black)";
           };
         };
       };
