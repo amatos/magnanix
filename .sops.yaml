@@ -119,8 +119,9 @@ creation_rules:
           - *host_tenabrae
           # - *host_nixostron
 
-  # Home Manager secrets for alberth, on every machine
-  - path_regex: secrets/users/alberth\.yaml$
+  # Home Manager secrets for alberth, on every machine: alberth.yaml and
+  # alberth-<feature>.yaml (such as alberth-espanso-street-address.yaml)
+  - path_regex: secrets/users/alberth(-[a-z0-9-]+)?\.yaml$
     key_groups:
       - age:
           - *yubikey0634d1c4

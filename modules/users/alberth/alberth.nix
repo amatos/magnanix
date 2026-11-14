@@ -64,7 +64,12 @@ in
 
     # Home Manager configuration for alberth
     homeManager =
-      { lib, pkgs, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       {
         # Set to the release alberth's Home Manager was first set up with
         home.stateVersion = "26.05";
@@ -76,6 +81,23 @@ in
         # man pages through bat: col strips the overstrike formatting so bat's
         # man syntax can highlight them.
         home.sessionVariables.MANPAGER = "sh -c 'col -bx | ${lib.getExe pkgs.bat} -l man -p'";
+
+        # Everyday Espanso matches (see modules/packages/espanso/espanso.nix).
+        # Private repo, so it is cloned with alberth's own credentials; only on
+        # hosts that run Espanso.
+        magnanix.espanso = {
+          repo = "git@github.com:amatos/espanso-expansions.git";
+          dir = "${config.home.homeDirectory}/Developer/espanso-expansions";
+        };
+
+        # alberth's public Espanso matches, built from meta (match/alberth.yml).
+        # Only used on hosts that include the espanso aspect.
+        services.espanso.matches.alberth.matches = [
+          {
+            trigger = ";;pgpkey";
+            replace = meta.gpgKey;
+          }
+        ];
 
         # Licensed theme pack (see modules/den/dracula-pro.nix). Access comes from
         # alberth's GitHub account, so the URL alone gives nobody else anything.

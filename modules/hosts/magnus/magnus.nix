@@ -45,6 +45,7 @@ in
       den.aspects.certbot
       den.aspects.claude
       den.aspects.elgato
+      den.aspects.espanso
       den.aspects.fonts
       den.aspects.game-streaming
       den.aspects.ghostty
@@ -128,6 +129,7 @@ in
     den.batteries.primary-user
     den.aspects.git.signing
     den.aspects.alberth.dev
+    den.aspects.espanso.secure
     den.aspects.alberth.macDesktop
     den.aspects.alberth.mail
   ];
