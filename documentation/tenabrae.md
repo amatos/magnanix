@@ -6,9 +6,8 @@
 - **DNS path:** client → pihole-FTL (:53) → Unbound (127.0.0.1:5335) → Quad9 over DNS-over-TLS (port 853).
 - **DHCP:** stays on the router. Give tenabrae a DHCP reservation there, then point the router's DHCP DNS option
   at that address.
-- **Network:** Wi-Fi only (`wlan0`). It prefers `voxdev`, a 2.4 GHz WPA2-only network, and falls back to `vox`;
-  see [Wi-Fi](#wi-fi). DNS and the dashboard (`http://tenabrae/admin`) are open on `wlan0` and `tailscale0`
-  only.
+- **Network:** Wi-Fi only (`wlan0`), on `voxdev`, a 2.4 GHz WPA2-only network; see [Wi-Fi](#wi-fi). DNS and
+  the dashboard (`http://tenabrae/admin`) are open on `wlan0` and `tailscale0` only.
 
 ## Why it isn't installed like the other hosts
 
@@ -29,10 +28,10 @@ host list.
 
 `secrets/hosts/tenabrae.yaml` (edit with `sops secrets/hosts/tenabrae.yaml` from the dev shell):
 
-| Key            | Value                                                                    |
-| -------------- | ------------------------------------------------------------------------ |
-| `wireless_env` | `psk_voxdev=<passphrase>` and `psk_vox=<passphrase>`, one per line, bare |
-| `pihole_env`   | `FTLCONF_webserver_api_password=<dashboard password>`                    |
+| Key            | Value                                                          |
+| -------------- | -------------------------------------------------------------- |
+| `wireless_env` | `psk_voxdev=<passphrase>`, bare (no quotes or trailing spaces) |
+| `pihole_env`   | `FTLCONF_webserver_api_password=<dashboard password>`          |
 
 The host decrypts these, and `alberth_password` from `secrets/common.yaml`, with its SSH host key. That key was
 generated off-host. Its age recipient is `host_tenabrae` in `.sops.yaml`, and the private half is kept in
@@ -108,8 +107,11 @@ WPA2/WPA3 routers badly. What the configuration does about it:
 - **`brcmfmac feature_disable=0x82000`** turns off the firmware's own WPA handshake (FWSUP) and SAE, so
   wpa_supplicant does the handshake. With them on, every association fails with `status_code=16`, which
   brcmfmac reports for any failed connection.
-- **`voxdev`**: a separate 2.4 GHz, WPA2-only (AES) SSID on the router, preferred over `vox`. `vox`
-  (WPA2/WPA3) associates but fails the 4-way handshake.
+- **`voxdev`**: a separate 2.4 GHz, WPA2-only (AES) SSID on the router, the only network configured. The chip
+  can't use 5 GHz, and on `vox` (WPA2/WPA3) it associated but failed the 4-way handshake.
+- **Firmware:** only what the chip loads (the Raspberry Pi package's 43436s firmware and nvram, linux-firmware's
+  `brcmfmac43430-sdio.clm_blob`, and the regulatory database), instead of the ~825 MiB of firmware sd-image's
+  all-hardware brings in.
 - **`wireless_env` is owned by `wpa_supplicant`**, the user the service runs as; it reads the file itself.
 
 On the Pi, `iw` isn't installed and wpa_supplicant has no control socket, so `wpa_cli` doesn't work. Use
@@ -134,6 +136,6 @@ give the builder's `attic watch-store` a moment to finish pushing before you run
 ## Clock and DoT
 
 The Pi has no real-time clock. Unbound can't validate Quad9's certificate until the clock is right, and the
-Pi's own name lookups may go through Pi-hole. So the NTP servers are listed by IP address first
-(time.cloudflare.com, `162.159.200.1` and `162.159.200.123`), and timesyncd restores the last saved time at
+Pi's own name lookups may go through Pi-hole. So the first NTP server is the LAN's own, by IP address
+(`10.0.4.1`), with the NixOS pool names only as a fallback. timesyncd also restores the last saved time at
 boot.
