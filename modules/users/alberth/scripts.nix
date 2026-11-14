@@ -6,6 +6,9 @@
 #            Documented in documentation/scripts.md.
 #
 # Scripts:
+#   build-tenabrae    builds tenabrae's system (or --sd-image) from a flake
+#                     and prints the store path; on a Mac the remote
+#                     builders do the work
 #   control-dock.sh   -h / -s: turn Dock autohide on / off (macOS)
 #   dollar.sh         runs its arguments; also installed as `$`, so a pasted
 #                     `$ cmd` works in bash and zsh (a file on PATH rather
@@ -29,6 +32,10 @@
       home.sessionPath = [ "$HOME/.local/bin" ];
 
       home.file = {
+        ".local/bin/build-tenabrae" = {
+          source = ./scripts/build-tenabrae;
+          executable = true;
+        };
         ".local/bin/control-dock.sh" = {
           source = ./scripts/control-dock.sh;
           executable = true;

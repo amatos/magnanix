@@ -120,12 +120,12 @@ On the Pi, `iw` isn't installed and wpa_supplicant has no control socket, so `wp
 ## Deploying a change
 
 `update-all-magnanix` (or `update-all-magnanix tenabrae`) does the steps below for you, building `main` from
-GitHub. To deploy by hand, from magnus, build the change (on the remote builders, or fetch CI's build with `--max-jobs 0`), then have the
-Pi switch to it:
+GitHub. To deploy by hand, from the checkout on magnus, build the change with
+[`build-tenabrae`](scripts.md#build-tenabrae) (on the remote builders, or `build-tenabrae -- --max-jobs 0` to fetch
+CI's build), then have the Pi switch to it:
 
 ```sh
-path=$(nix build --no-link --print-out-paths \
-  .#nixosConfigurations.tenabrae.config.system.build.toplevel)
+path=$(build-tenabrae)
 ssh -t alberth@tenabrae "sudo nix-store --realise $path \
   && sudo nix-env --profile /nix/var/nix/profiles/system --set $path \
   && sudo $path/bin/switch-to-configuration switch"

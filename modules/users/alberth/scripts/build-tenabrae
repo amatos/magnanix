@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# build-tenabrae: build tenabrae's NixOS system (or its SD image) and print the
+# store path. tenabrae is too small to evaluate the flake, so it's built
+# elsewhere: on a Mac, Nix sends the build to the remote builders (fortuna,
+# then muninn, under QEMU), whose `attic watch-store` pushes it to Attic.
+#
+# Usage: build-tenabrae [--sd-image] [flake] [-- nix-build-options...]
+#
+#   --sd-image   build the flashable SD image instead of the system
+#   flake        the flake to build from. Default: the current directory if it
+#                has a flake.nix, else ~/Developer/magnanix (magnanix.repoDir's
+#                default). `github:amatos/magnanix` builds `main` as pushed.
+#   -- ...       passed to `nix build`, e.g. `-- --max-jobs 0` to only fetch
+#                CI's build from the cache.
+#
+# Prints only the store path on stdout, so it can be captured:
+#   path=$(build-tenabrae)
+# then switched to on tenabrae (documentation/tenabrae.md#deploying-a-change).
+
+set -euo pipefail
+
+usage() {
+  sed -n 's/^# \{0,1\}//; 8,17p' "$0" >&2
+  exit "${1:-1}"
+}
+
+attr=toplevel
+flake=
+extra=()
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    --sd-image) attr=sdImage ;;
+    -h | --help) usage 0 ;;
+    --)
+      shift
+      extra=("$@")
+      break
+      ;;
+    -*)
+      echo "build-tenabrae: unknown option $1" >&2
+      usage
+      ;;
+    *)
+      if [ -n "$flake" ]; then
+        echo "build-tenabrae: more than one flake given" >&2
+        usage
+      fi
+      flake=$1
+      ;;
+  esac
+  shift
+done
+
+if [ -z "$flake" ]; then
+  if [ -f flake.nix ]; then
+    flake=.
+  else
+    flake="$HOME/Developer/magnanix"
+  fi
+fi
+
+installable="$flake#nixosConfigurations.tenabrae.config.system.build.$attr"
+echo "build-tenabrae: building $installable" >&2
+exec nix build --no-link --print-out-paths ${extra[@]+"${extra[@]}"} "$installable"

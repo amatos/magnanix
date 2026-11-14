@@ -9,7 +9,8 @@ If neither builder answers, Determinate's Native Linux Builder on magnus is the 
 NixOS systems (see below).
 
 With this in place, `nix build .#nixosConfigurations.<host>.config.system.build.toplevel` works on magnus for any
-NixOS host, including `tenabrae`, which never builds anything itself.
+NixOS host, including `tenabrae`, which never builds anything itself. For tenabrae,
+[`build-tenabrae`](scripts.md#build-tenabrae) runs that build and prints the store path.
 
 The configuration is in `modules/packages/remote-build.nix`:
 
