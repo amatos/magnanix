@@ -7,7 +7,8 @@ Secrets are encrypted with [sops](https://github.com/getsops/sops) using age. `.
 - a per-machine age key for Home Manager (`age-keygen -y ~/.config/sops-nix/key.txt`).
 
 `secrets/common.yaml` is for secrets shared between hosts (`.sops.yaml` lists which hosts can decrypt it),
-`secrets/hosts/<host>.yaml` is per host, `secrets/users/<user>.yaml` is per user, and
+`secrets/hosts/<host>.yaml` is per host, `secrets/users/<user>.yaml` is per user (`secrets/users/<user>-<feature>.yaml`, such as
+[`alberth-espanso-street-address.yaml`](espanso.md), for a feature's whole-file secrets), and
 `secrets/bootstrap/darwintron.yaml` and `secrets/bootstrap/nixostron.yaml` hold the test VMs' private keys. After changing the recipients, re-encrypt the existing files with
 `sops updatekeys <file>`. The dev shell provides `sops`, `age`, `age-plugin-yubikey` and `ssh-to-age`.
 

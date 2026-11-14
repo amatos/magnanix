@@ -55,6 +55,7 @@ in
       den.aspects.certbot
       den.aspects.disko
       den.aspects.elgato
+      den.aspects.espanso
       den.aspects.fonts
       den.aspects.game-streaming
       den.aspects.ghostty

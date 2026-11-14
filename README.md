@@ -77,6 +77,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Fonts](documentation/fonts.md)                                   | where fonts come from                                                                     |
 | [Shells](documentation/shells.md)                                 | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell, pager             |
 | [Ghostty](documentation/ghostty.md)                               | the terminal: theme, copy on select, middle-click paste, terminfo                         |
+| [Espanso](documentation/espanso.md)                               | the text expander: public, personal-repo and sops-encrypted matches                       |
 | [Neovim](documentation/neovim.md)                                 | LazyVim from Nix, EDITOR/VISUAL, theme                                                    |
 | [Git](documentation/git.md)                                       | git defaults and tools, commit signing, Tower                                             |
 | [Claude Code](documentation/claude-code.md)                       | Claude Code config and the settings.json merge                                            |
