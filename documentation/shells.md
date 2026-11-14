@@ -18,12 +18,16 @@ den.aspects.base.includes = [
 | `shell.fish`           | `fish.nix`                  | Home Manager `programs.fish`, plus system-level fish on NixOS and macOS                     |
 | `shell.bash`           | `bash.nix`                  | Home Manager `programs.bash`                                                                |
 | `shell.nushell`        | `nushell.nix`               | Home Manager `programs.nushell`, without the shared aliases or functions                    |
-| `shell.starship`       | `starship.nix`              | Home Manager `programs.starship` with a default `starship.toml`; the prompt for every shell |
+| `shell.starship`       | `starship.nix`              | Home Manager `programs.starship` with Starship's defaults; the prompt for every shell       |
 | `shell.shellAliases`   | `shell-aliases.nix`         | aliases shared by the shells, and per-OS `environment.shellAliases`                         |
 | `shell.posixFunctions` | `shell-functions-posix.nix` | shared functions for zsh and bash                                                           |
 | `shell.fishFunctions`  | `shell-functions-fish.nix`  | the same functions, written for fish                                                        |
 
 Each POSIX and fish shell aspect includes the aliases, functions and `shell.starship` aspects it needs.
+
+Users who want their own prompt add the settings in a user aspect. `alberth`'s are in
+`modules/users/alberth/configs/starship.nix` (`alberth.starship`, included from `alberth.nix`); every other user
+gets Starship's default prompt.
 
 **Login shell.** `alberth`'s login shell is Nix's zsh on every host, set in `modules/users/alberth/alberth.nix`
 (`shell.zsh` also enables `programs.zsh` at system level, which the setting requires). `ephemeral` does the same in
