@@ -11,6 +11,7 @@ script, put it in the directory, add a `home.file` entry for it in `scripts.nix`
 
 | Script                | What it does                                                                     |
 | --------------------- | -------------------------------------------------------------------------------- |
+| `build-tenabrae`      | builds tenabrae's system or SD image and prints the store path                   |
 | `control-dock.sh`     | turns Dock autohide on or off (macOS)                                            |
 | `dollar.sh`, `$`      | runs its arguments, so a pasted `$ cmd` works                                    |
 | `extract.sh`          | extracts an archive, or mounts a disk image, based on its extension              |
@@ -19,6 +20,20 @@ script, put it in the directory, add a `home.file` entry for it in `scripts.nix`
 | `velja-open.sh`       | `open "$@"`, for the Velja browser picker (macOS)                                |
 | `yubi-disable`        | turns off the OpenPGP USB interface of YubiKey 32146072, which lives in magnus   |
 | `yubi-enable`         | turns that interface back on and has gpg relearn the card                        |
+
+## build-tenabrae
+
+`build-tenabrae [--sd-image] [flake] [-- nix-build-options...]` builds tenabrae's system, which tenabrae is too small
+to evaluate itself, and prints its store path on stdout (progress goes to stderr). On magnus the build goes to the
+[remote builders](remote-builders.md), which push it to Attic for tenabrae to download.
+
+- **Flake:** the current directory if it has a `flake.nix`, else `~/Developer/magnanix`. `github:amatos/magnanix`
+  builds `main` as pushed.
+- **`--sd-image`:** builds the flashable SD image instead of the system.
+- **After `--`:** options for `nix build`, such as `-- --max-jobs 0` to only fetch CI's build from the cache.
+
+`path=$(build-tenabrae)` captures the path to switch tenabrae to; see
+[tenabrae](tenabrae.md#deploying-a-change).
 
 ## control-dock.sh
 
