@@ -21,7 +21,7 @@ Documentation is best-effort, and believed to be correct -- however, I write doc
 | `darwintron`        | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](documentation/testing-vms.md#testing-changes-on-darwintron)                                |
 | `nixostron-aarch64` | `aarch64-linux`  | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under Tart on magnus                 |
 | `nixostron-x86_64`  | `x86_64-linux`   | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under QEMU on muninn                 |
-| `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM                          |
+| `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay, NTP server; runs the nixostron VM              |
 | `fortuna`           | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland with Noctalia, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
 | `tenabrae`          | `aarch64-linux`  | NixOS      | `alberth`   | [Raspberry Pi Zero 2 W](documentation/tenabrae.md): Pi-hole with Quad9 over DoT, Wi-Fi, Tailscale, SSH (keys only) |
 

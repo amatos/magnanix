@@ -95,6 +95,6 @@ give the builder's `attic watch-store` a moment to finish pushing before you run
 ## Clock and DoT
 
 The Pi has no real-time clock. Unbound can't validate Quad9's certificate until the clock is right, and the
-Pi's own name lookups may go through Pi-hole. So the NTP servers are listed by IP address first
-(time.cloudflare.com, `162.159.200.1` and `162.159.200.123`), and timesyncd restores the last saved time at
-boot.
+Pi's own name lookups may go through Pi-hole. So the NTP servers are listed by IP address: muninn's LAN NTP
+server (`10.0.4.129`, reserved on the router) first, then time.cloudflare.com (`162.159.200.1` and
+`162.159.200.123`), with the pool names last. timesyncd restores the last saved time at boot.

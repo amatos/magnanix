@@ -1,11 +1,12 @@
 # Host:      muninn (den.aspects.muninn)
 # Platform:  x86_64-linux (NixOS)
 # Purpose:   Headless home server: the Attic binary cache server, the SMTP smart
-#            relay to Fastmail for the LAN and tailnet, certbot, Tailscale, and
-#            SSH (keys only) as the only way in.
+#            relay to Fastmail for the LAN and tailnet, the NTP server for both,
+#            certbot, Tailscale, and SSH (keys only) as the only way in.
 #
 # Notes:
-# - The relay's ports (25, 465) are opened only on the LAN NIC and tailscale0.
+# - The relay's ports (25, 465) and NTP (UDP 123) are opened only on the LAN
+#   NIC and tailscale0.
 # - Requests certificates for muninn.home.matos.cc and muninn.ts.matos.cc (the
 #   relay adds smtp.home / smtp.ts).
 # - Also pushes its own builds to the cache (attic.push).
@@ -46,6 +47,9 @@ in
       # SMTP smart relay to Fastmail for the LAN and the tailnet
       den.aspects.mail.relay
 
+      # NTP server for the LAN and the tailnet; every other host syncs from it
+      den.aspects.ntp.server
+
       # magnus's fallback Linux builder, when fortuna is off
       den.aspects.remote-build.server
     ];
@@ -59,6 +63,12 @@ in
 
       # The LAN NIC and Tailscale: where the SMTP relay's port 25 is open.
       local.mail.relay.interfaces = [
+        "enp0s31f6"
+        "tailscale0"
+      ];
+
+      # The LAN NIC and Tailscale: where NTP's UDP port 123 is open.
+      local.ntp.server.interfaces = [
         "enp0s31f6"
         "tailscale0"
       ];

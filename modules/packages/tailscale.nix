@@ -8,17 +8,21 @@
 #   bar app on macOS.
 # - The App Store app doesn't put a CLI on PATH, but its binary acts as one when
 #   run from a terminal, so a `tailscale` wrapper execs it.
-# - Hosts with this aspect reach the mail relay and the Attic cache by their
-#   Tailscale names (smtp.ts / muninn.ts) instead of the LAN ones, so both keep
-#   working away from home.
+# - Hosts with this aspect reach the mail relay, the Attic cache and the NTP
+#   server by their Tailscale names (smtp.ts / muninn.ts) instead of the LAN
+#   ones, so they keep working away from home. NTP's is only a default: a host
+#   that needs an address (tenabrae) overrides it.
+{ lib, ... }:
 let
   relayHost = "smtp.ts.matos.cc";
   atticHost = "muninn.ts.matos.cc";
+  ntpHost = "muninn.ts.matos.cc";
 in
 {
   den.aspects.tailscale = {
     os.local.mail.relayHost = relayHost;
     os.local.attic.serverHost = atticHost;
+    os.local.ntp.serverHost = lib.mkDefault ntpHost;
 
     nixos.services.tailscale.enable = true;
 

@@ -173,9 +173,11 @@ in
 
         # No RTC: the clock starts wherever timesyncd last saved it, and Unbound's
         # DoT can't validate certificates until it's right. Name lookups may go
-        # through Pi-hole -> Unbound, so list NTP servers by address (Cloudflare's
+        # through Pi-hole -> Unbound, so reach muninn's NTP server by its (router-
+        # reserved) address, and list the public fallbacks by address (Cloudflare's
         # time.cloudflare.com) ahead of the names.
-        networking.timeServers = [
+        local.ntp.serverHost = "10.0.4.129";
+        local.ntp.upstreamServers = [
           "162.159.200.1"
           "162.159.200.123"
           "0.nixos.pool.ntp.org"
