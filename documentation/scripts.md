@@ -16,7 +16,7 @@ script, put it in the directory, add a `home.file` entry for it in `scripts.nix`
 | `dollar.sh`, `$`      | runs its arguments, so a pasted `$ cmd` works                                    |
 | `extract.sh`          | extracts an archive, or mounts a disk image, based on its extension              |
 | `switch-yubikey`      | points gpg's key stubs at the YubiKey that is plugged in now                     |
-| `update-all-magnanix` | runs `deploy-magnanix` on every host in parallel                                 |
+| `update-all-magnanix` | runs `deploy-magnanix` on every host: muninn first, then the rest in parallel     |
 | `velja-open.sh`       | `open "$@"`, for the Velja browser picker (macOS)                                |
 | `yubi-disable`        | turns off the OpenPGP USB interface of YubiKey 32146072, which lives in magnus   |
 | `yubi-enable`         | turns that interface back on and has gpg relearn the card                        |
@@ -79,7 +79,8 @@ comment at the top of the script describes how the keys were copied to both Yubi
 
 ## update-all-magnanix
 
-Deploys the whole fleet in parallel: it runs `deploy-magnanix` on fortuna, magnus and muninn, and builds tenabrae
+Deploys the whole fleet, muninn first and then the rest in parallel: it runs `deploy-magnanix` on fortuna, magnus and
+muninn, and builds tenabrae
 (which can't evaluate the flake itself) on the machine it runs on, pushes it to Attic, and switches it over SSH. Every real host
 belongs in its `default_hosts`, which is every host in `modules/hosts` except the test VMs (darwintron, nixostron)
 and CI's ephemeral machines; its tests check this. See [Applying and updating](applying.md) for how it reaches each

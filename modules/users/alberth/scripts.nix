@@ -16,11 +16,11 @@
 #                     a command named `$` at all)
 #   extract.sh        extracts an archive (or mounts a .dmg) by its extension
 #   switch-yubikey    points gpg's key stubs at the YubiKey now inserted
-#   update-all-magnanix   deploys every real (non-VM) host in parallel:
-#                     deploy-magnanix over SSH or directly on this host,
-#                     tenabrae built here, pushed to Attic and switched
-#                     over SSH; reports
-#                     the hosts that failed
+#   update-all-magnanix   deploys every real (non-VM) host, muninn first
+#                     and then the rest in parallel: deploy-magnanix over
+#                     SSH or directly on this host, tenabrae built here,
+#                     pushed to Attic and switched over SSH; reports the
+#                     hosts that failed
 #   velja-open.sh     `open "$@"`; used with the Velja browser picker
 #   yubi-enable / yubi-disable   turn the OpenPGP USB interface on/off of
 #                     YubiKey 32146072, which lives permanently in magnus

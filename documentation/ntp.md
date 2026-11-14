@@ -12,7 +12,9 @@ requests, so nothing uses it.
   to public servers.
 - **NixOS** uses systemd-timesyncd. `networking.timeServers` lists `local.ntp.serverHost` first, then
   `local.ntp.upstreamServers` (the NixOS pool by default). timesyncd uses one server at a time and moves down the
-  list when one stops answering.
+  list when one stops answering. It doesn't move back up, so a client that restarts timesyncd while muninn is
+  switching stays on the pool until timesyncd restarts again; `update-all-magnanix` switches muninn before the
+  other hosts for this reason.
 - **macOS:** nix-darwin has no time server option, so each switch writes `/etc/ntp.conf` (the file System Settings >
   General > Date & Time edits) with muninn first and `time.apple.com` second, and restarts `timed` when the file
   changes.
