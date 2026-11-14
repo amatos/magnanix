@@ -2,17 +2,21 @@
 
 The `git` feature (`modules/packages/git.nix`, included by `base`) configures git through Home Manager for every
 user, taking `user.name` and `user.email` from the user's [metadata](architecture.md#user-metadata). Besides git itself it
-installs:
+installs the tools below. lazygit and the ones after it come from `den.aspects.git.tools`, which `git` includes; they
+don't change git's own configuration.
 
-| Tool                                                  | Use                                                                                                   |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [git-lfs](https://git-lfs.com)                        | large files stored as pointers                                                                        |
-| [delta](https://github.com/dandavison/delta)          | pager for `diff`, `log`, `show`, `blame` and `add -p`, with line numbers (`n`/`N` jump between files) |
-| [difftastic](https://difftastic.wilfred.me.uk)        | syntax-aware diffs on demand: `git difftool`                                                          |
-| [mergiraf](https://mergiraf.org)                      | syntax-aware merge driver; falls back to line-based merging when unsure                               |
-| [lazygit](https://github.com/jesseduffield/lazygit)   | terminal UI for staging, rebasing and history, using delta for diffs                                  |
-| [git-absorb](https://github.com/tummychow/git-absorb) | `git absorb` turns staged changes into `fixup!` commits for the right earlier commits                 |
-| [git-extras](https://github.com/tj/git-extras)        | extra subcommands (`git summary`, `git undo`, ...); the zsh plugin adds completions                   |
+| Tool                                                         | Use                                                                                                   |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| [git-lfs](https://git-lfs.com)                               | large files stored as pointers                                                                        |
+| [delta](https://github.com/dandavison/delta)                 | pager for `diff`, `log`, `show`, `blame` and `add -p`, with line numbers (`n`/`N` jump between files) |
+| [difftastic](https://difftastic.wilfred.me.uk)               | syntax-aware diffs on demand: `git difftool`                                                          |
+| [mergiraf](https://mergiraf.org)                             | syntax-aware merge driver; falls back to line-based merging when unsure                               |
+| [lazygit](https://github.com/jesseduffield/lazygit)          | terminal UI for staging, rebasing and history, using delta for diffs                                  |
+| [git-absorb](https://github.com/tummychow/git-absorb)        | `git absorb` turns staged changes into `fixup!` commits for the right earlier commits                 |
+| [git-extras](https://github.com/tj/git-extras)               | extra subcommands (`git summary`, `git undo`, ...); the zsh plugin adds completions                   |
+| [git-filter-repo](https://github.com/newren/git-filter-repo) | rewrites history (drop files, rename paths); the recommended replacement for `git filter-branch`      |
+| [gitleaks](https://github.com/gitleaks/gitleaks)             | scans a repository or staged changes for committed secrets                                            |
+| [pre-commit](https://pre-commit.com)                         | runs a repository's `.pre-commit-config.yaml` hooks; `pre-commit install` enables them                |
 
 Defaults worth knowing: new repositories start on `main`; `git push` sets the upstream on first push; `fetch`
 prunes deleted branches and tags; `rebase` auto-stashes, applies `fixup!` commits and moves stacked branches
