@@ -33,8 +33,11 @@ tenabrae (the Raspberry Pi Zero 2 W) is too small to evaluate the flake, so `dep
 [tenabrae](tenabrae.md#deploying-a-change).
 
 To deploy the whole fleet at once, run `update-all-magnanix` (`modules/users/alberth/scripts/update-all-magnanix`).
-It deploys every real host in parallel: fortuna, magnus, muninn and tenabrae (the test VMs are left out; pass host
-names to deploy only those). It runs `deploy-magnanix` over SSH on the other hosts and directly on the machine it runs
+It deploys every real host: fortuna, magnus, muninn and tenabrae (the test VMs are left out; pass host names to deploy
+only those). muninn goes first, on its own, and the rest follow in parallel once it's done: they get their time
+(NTP), their binary cache (Attic) and some of their builds from muninn, and a client whose timesyncd finds muninn
+restarting falls back to a public server and stays there (see [NTP](ntp.md)). A failed muninn doesn't stop the rest;
+Ctrl-C while muninn runs does, and the summary lists those hosts as not deployed. It runs `deploy-magnanix` over SSH on the other hosts and directly on the machine it runs
 on, since macOS sudo can't prompt over a non-interactive SSH session. tenabrae can't run `deploy-magnanix`, so the
 script builds tenabrae's system from `main` on GitHub on the machine it runs on (or its remote builders), pushes it
 to the Attic cache with `sudo attic push` (asking for sudo up front), then has tenabrae download it from the cache and

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# update-all-magnanix: run deploy-magnanix on every host in the fleet, in
-# parallel, and report which hosts failed.
+# update-all-magnanix: run deploy-magnanix on every host in the fleet, muninn
+# first and then the rest in parallel, and report which hosts failed.
 #
 # Usage: update-all-magnanix [host ...]
 #
@@ -15,6 +15,12 @@
 # Attic cache, and they switch over SSH, downloading it from there
 # (documentation/tenabrae.md).
 #
+# muninn is switched first, on its own, and the rest in parallel once it's
+# done: the other hosts get their time (NTP), their cache (Attic) and some of
+# their builds from it, and a client that finds it restarting falls back to
+# public servers and stays there (documentation/ntp.md). A failed muninn
+# doesn't stop the rest.
+#
 # Each host's output is shown prefixed with its name and saved to a log file.
 # Exits 0 only if every host deployed; on failure it prints the end of each
 # failed host's log and keeps the logs.
@@ -26,6 +32,9 @@ set -uo pipefail
 # added to the flake; update-all-magnanix.bats checks the list against
 # modules/hosts.
 default_hosts=(fortuna magnus muninn tenabrae)
+
+# Hosts switched before the rest, which wait for them to finish.
+first_hosts=(muninn)
 
 # Hosts that can't evaluate the flake: built here, pushed to the cache, then
 # switched over SSH.
@@ -48,11 +57,21 @@ fi
 
 local_host=$(hostname -s | tr '[:upper:]' '[:lower:]')
 logdir=$(mktemp -d "${TMPDIR:-/tmp}/update-all-magnanix.XXXXXX")
+# The hosts started so far, and their jobs' pids, in the same order.
+started=()
 pids=()
 
 say() { printf 'update-all-magnanix: %s\n' "$*" >&2; }
 
 is_local() { [ "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" = "$local_host" ]; }
+
+is_first() {
+  local h
+  for h in "${first_hosts[@]}"; do
+    [ "$h" = "$1" ] && return 0
+  done
+  return 1
+}
 
 builds_here() {
   local h
@@ -158,33 +177,71 @@ for host in "${hosts[@]}"; do
   fi
 done
 
+# start HOST...: deploy each host in a background job.
+start() {
+  local host
+  for host in "$@"; do
+    (
+      deploy "$host" 2>&1 \
+        | tee "$logdir/$host.log" \
+        | awk -v p="[$host] " '{ print p $0; fflush() }'
+      exit "${PIPESTATUS[0]}"
+    ) &
+    started+=("$host")
+    pids+=("$!")
+  done
+}
+
+# reap FROM: wait for the jobs started from index FROM on, and record each
+# one's exit status.
+failed=()
+reap() {
+  local i status
+  for ((i = $1; i < ${#pids[@]}; i++)); do
+    # `wait` returns early when a trapped signal arrives; wait again until the
+    # job has really exited.
+    while :; do
+      wait "${pids[$i]}"
+      status=$?
+      kill -0 "${pids[$i]}" 2>/dev/null || break
+    done
+    printf '%s\t%s\n' "${started[$i]}" "$status" >>"$logdir/status"
+    if [ "$status" -ne 0 ]; then
+      failed+=("${started[$i]}")
+    fi
+  done
+}
+
+first=()
+rest=()
 for host in "${hosts[@]}"; do
-  (
-    deploy "$host" 2>&1 \
-      | tee "$logdir/$host.log" \
-      | awk -v p="[$host] " '{ print p $0; fflush() }'
-    exit "${PIPESTATUS[0]}"
-  ) &
-  pids+=("$!")
+  if is_first "$host"; then
+    first+=("$host")
+  else
+    rest+=("$host")
+  fi
 done
 
 say "deploying ${hosts[*]} (logs in $logdir)"
 
-failed=()
-for i in "${!hosts[@]}"; do
-  host=${hosts[$i]}
-  # `wait` returns early when a trapped signal arrives; wait again until the
-  # job has really exited.
-  while :; do
-    wait "${pids[$i]}"
-    status=$?
-    kill -0 "${pids[$i]}" 2>/dev/null || break
-  done
-  printf '%s\t%s\n' "$host" "$status" >>"$logdir/status"
-  if [ "$status" -ne 0 ]; then
+if [ ${#first[@]} -gt 0 ] && [ ${#rest[@]} -gt 0 ]; then
+  say "switching ${first[*]} first; the rest follow once it's done"
+fi
+# ${a[@]+...}: an empty array is "unbound" to bash 3.2 under set -u.
+start ${first[@]+"${first[@]}"}
+reap 0
+
+# Interrupted while the first hosts ran: don't start the rest.
+if [ "$interrupted" -eq 1 ]; then
+  for host in ${rest[@]+"${rest[@]}"}; do
+    printf '%s\t%s\n' "$host" skipped >>"$logdir/status"
     failed+=("$host")
-  fi
-done
+  done
+else
+  n=${#pids[@]}
+  start ${rest[@]+"${rest[@]}"}
+  reap "$n"
+fi
 
 echo >&2
 say "summary"
@@ -194,6 +251,7 @@ while IFS=$'\t' read -r host status; do
     255) reason="failed: ssh error (unreachable, or authentication failed)" ;;
     127) reason="failed: deploy-magnanix not found" ;;
     130 | 143) reason="failed: interrupted" ;;
+    skipped) reason="not deployed: interrupted before it started" ;;
     *) reason="failed: exit status $status" ;;
   esac
   printf '  %-10s %s\n' "$host" "$reason" >&2
@@ -205,6 +263,8 @@ if [ ${#failed[@]} -eq 0 ] && [ "$interrupted" -eq 0 ]; then
 fi
 
 for host in "${failed[@]}"; do
+  # A host skipped after an interrupt has no log.
+  [ -f "$logdir/$host.log" ] || continue
   echo >&2
   say "last lines from $host ($logdir/$host.log):"
   tail -n 20 "$logdir/$host.log" | sed 's/^/    /' >&2

@@ -19,6 +19,11 @@ setup() {
   export ATTIC_PUSH_CONFIG="$TEST_TMP/attic-push"
   touch "$CALLS"
 
+  # The real env, for the env stub to run: the Nix build sandbox has no
+  # /usr/bin/env.
+  export REAL_ENV
+  REAL_ENV=$(command -v env)
+
   stubs="$TEST_TMP/bin"
   mkdir -p "$stubs"
   PATH="$stubs:$PATH"
@@ -38,6 +43,10 @@ setup() {
         done
         echo "$1 ran alone" >&2
         exit 1 ;;
+      muninn)
+        # MUNINN_BEHAVE: behave like a host of that name instead.
+        if [ -n "${MUNINN_BEHAVE:-}" ]; then exec behave "$MUNINN_BEHAVE"; fi
+        echo "building muninn"; echo "switched muninn" ;;
       slow*)
         echo "$$" >"$TEST_TMP/slow.pid"
         echo started
@@ -48,8 +57,10 @@ setup() {
       *) echo "building $1"; echo "switched $1" ;;
     esac'
   # ssh [options] host command: the host is the next-to-last argument.
-  stub ssh 'echo "ssh $*" | tr "\n" " " | sed "s/ *\$//" >>"$CALLS"; echo >>"$CALLS"
-    echo "${@: -2:1}" >>"$SSH_HOSTS"; behave "${@: -2:1}"'
+  # One write per call, so parallel hosts' lines don't interleave.
+  stub ssh 'printf "%s\n" "$(echo "ssh $*" | tr "\n" " " | sed "s/ *\$//")" >>"$CALLS"
+    echo "${@: -2:1}" >>"$SSH_HOSTS"; behave "${@: -2:1}"; s=$?
+    echo "done ${@: -2:1}" >>"$CALLS"; exit $s'
   # nix build ... <flake>#nixosConfigurations.<host>.config...: prints the
   # host's made-up system path, or fails if NIX_STATUS is set.
   stub nix 'echo "nix $*" >>"$CALLS"
@@ -60,7 +71,7 @@ setup() {
   stub sudo 'echo "sudo $*" >>"$CALLS"
     [ "${SUDO_STATUS:-0}" -ne 0 ] && exit "$SUDO_STATUS"
     [ "$1" = -v ] || exec "$@"'
-  stub env 'echo "env $*" >>"$CALLS"; exec /usr/bin/env "$@"'
+  stub env 'echo "env $*" >>"$CALLS"; exec "$REAL_ENV" "$@"'
   stub attic 'echo "attic $* (XDG_CONFIG_HOME=$XDG_CONFIG_HOME)" >>"$CALLS"; exit "${ATTIC_STATUS:-0}"'
   stub hostname 'echo TestLocal'
 }
@@ -237,4 +248,48 @@ logdirs() { find "$TMPDIR" -maxdepth 1 -name 'update-all-magnanix.*'; }
   [[ $output == *"[tenabrae] no push config in $ATTIC_PUSH_CONFIG; waiting for the builders to push it"* ]]
   ! grep -q -e "^sudo" -e "^attic" "$CALLS"
   grep -q "^ssh " "$CALLS"
+}
+
+@test "switches muninn before starting the other hosts" {
+  run bash "$SCRIPT" ok-a muninn ok-b
+  [ "$status" -eq 0 ]
+  [[ $output == *"switching muninn first"* ]]
+  [ "$(line_of "^done muninn$")" -lt "$(line_of " ok-a deploy-magnanix$")" ]
+  [ "$(line_of "^done muninn$")" -lt "$(line_of " ok-b deploy-magnanix$")" ]
+  # muninn is listed first in the summary.
+  [[ $output =~ summary.*muninn.*ok-a.*ok-b ]]
+}
+
+@test "still deploys the other hosts when muninn fails" {
+  MUNINN_BEHAVE=fail-muninn run bash "$SCRIPT" ok-a muninn
+  [ "$status" -eq 1 ]
+  [[ $output =~ muninn\ +failed:\ exit\ status\ 1 ]]
+  [[ $output =~ ok-a\ +ok ]]
+}
+
+@test "deploys muninn alone without waiting for anything" {
+  run bash "$SCRIPT" muninn
+  [ "$status" -eq 0 ]
+  [[ $output != *"first"* ]]
+  [[ $output =~ muninn\ +ok ]]
+}
+
+@test "interrupted during muninn, doesn't start the other hosts" {
+  MUNINN_BEHAVE=slow-muninn bash "$SCRIPT" muninn ok-b >"$TEST_TMP/out" 2>&1 &
+  pid=$!
+  for _ in $(seq 50); do
+    [ -s "$TEST_TMP/sleep.pid" ] && break
+    sleep 0.1
+  done
+  [ -s "$TEST_TMP/sleep.pid" ]
+
+  kill -TERM "$pid"
+  status=0
+  wait "$pid" || status=$?
+  output=$(cat "$TEST_TMP/out")
+
+  [ "$status" -eq 130 ]
+  [[ $output =~ muninn\ +failed:\ interrupted ]]
+  [[ $output =~ ok-b\ +not\ deployed:\ interrupted\ before\ it\ started ]]
+  ! grep -q " ok-b " "$CALLS"
 }
