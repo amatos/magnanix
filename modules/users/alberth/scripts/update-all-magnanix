@@ -11,8 +11,9 @@
 # password and can't prompt over a non-interactive SSH session.
 #
 # Hosts too small to evaluate the flake (tenabrae) can't run deploy-magnanix.
-# This host builds them from `main` on GitHub instead, and they switch over SSH,
-# downloading the build from the Attic cache (documentation/tenabrae.md).
+# This host builds them from `main` on GitHub instead, pushes the build to the
+# Attic cache, and they switch over SSH, downloading it from there
+# (documentation/tenabrae.md).
 #
 # Each host's output is shown prefixed with its name and saved to a log file.
 # Exits 0 only if every host deployed; on failure it prints the end of each
@@ -26,13 +27,18 @@ set -uo pipefail
 # modules/hosts.
 default_hosts=(fortuna magnus muninn tenabrae)
 
-# Hosts that can't evaluate the flake: built here, then switched over SSH.
+# Hosts that can't evaluate the flake: built here, pushed to the cache, then
+# switched over SSH.
 build_here_hosts=(tenabrae)
 flake=github:amatos/magnanix
-# How long such a host waits for the build to reach the Attic cache (the
-# builder's `attic watch-store` pushes it): attempts, and seconds between them.
+# How long such a host waits for the build to reach the Attic cache: attempts,
+# and seconds between them.
 cache_attempts=40
 cache_wait=15
+# The push client config the attic.push aspect links here (an XDG_CONFIG_HOME),
+# and the cache to push to. The token it reads is root-only, so it takes sudo.
+attic_push_config=${ATTIC_PUSH_CONFIG:-/etc/attic-push}
+attic_cache=muninn:magnanix
 
 if [ $# -gt 0 ]; then
   hosts=("$@")
@@ -60,18 +66,43 @@ builds_here() {
 # hang a background job. -n: don't read this terminal's stdin.
 remote() { ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$@"; }
 
-# Build the host's system from `main` here (or on the remote builders), then
-# have the host fetch it from the cache and switch to it. --refresh: don't use
-# a copy of `main` fetched earlier. The path is a store path, so it needs no
-# quoting.
+# Whether this host can push to the cache (it has the attic.push aspect and a
+# token). Without it, pushing is left to the builders' `attic watch-store`.
+can_push() { [ -f "$attic_push_config/attic/config.toml" ]; }
+
+# Push a store path and its closure to the cache, as root with the push
+# config. attic by its full path: sudo's PATH may not have ~/.nix-profile.
+push() {
+  local attic
+  attic=$(command -v attic) || { echo "attic not found; can't push $1"; return 1; }
+  sudo env XDG_CONFIG_HOME="$attic_push_config" "$attic" push "$attic_cache" "$1"
+}
+
+# Build the host's system from `main` here (or on the remote builders), push
+# it to the cache, then have the host fetch it from there and switch to it.
+# --refresh: don't use a copy of `main` fetched earlier. The path is a store
+# path, so it needs no quoting.
+#
+# Pushing here rather than relying on the builder's `attic watch-store` means a
+# watcher that's stalled, or a builder without a token, doesn't leave the host
+# waiting for a path that never arrives.
+#
+# narinfo-cache-negative-ttl 0: Nix remembers a path missing from a cache for
+# an hour by default, so without it every retry after the first miss would
+# skip the cache without asking it again.
 deploy_built_here() {
   local path
   path=$(nix build --refresh --no-link --print-out-paths \
     "$flake#nixosConfigurations.$1.config.system.build.toplevel") || return 1
   echo "built $path"
+  if can_push; then
+    push "$path" || return 1
+  else
+    echo "no push config in $attic_push_config; waiting for the builders to push it"
+  fi
   remote "$1" "
     i=1
-    until sudo nix-store --realise $path >/dev/null; do
+    until sudo nix-store --realise --option narinfo-cache-negative-ttl 0 $path >/dev/null; do
       [ \$i -ge $cache_attempts ] && exit 1
       echo 'waiting for the build to reach the cache'
       sleep $cache_wait
@@ -114,10 +145,11 @@ on_signal() {
 }
 trap on_signal INT TERM
 
-# The local deploy switches with sudo. Ask for it now, while nothing else is
-# writing to the terminal; the background job reuses the cached credential.
+# The local deploy switches with sudo, and pushing a host built here takes it
+# too. Ask for it now, while nothing else is writing to the terminal; the
+# background jobs reuse the cached credential.
 for host in "${hosts[@]}"; do
-  if is_local "$host" && ! builds_here "$host"; then
+  if { is_local "$host" && ! builds_here "$host"; } || { builds_here "$host" && can_push; }; then
     if ! sudo -v; then
       say "sudo failed; can't deploy $host"
       exit 1

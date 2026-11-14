@@ -18,7 +18,8 @@ its own closures. So:
 - **Updates:** build elsewhere, then have the Pi fetch the result from Attic and switch to it. There are two
   places to build:
   - **From magnus:** a plain `nix build` goes to the [remote builders](remote-builders.md) (fortuna, then
-    muninn, under QEMU), whose `attic watch-store` pushes the result to Attic.
+    muninn, under QEMU), whose `attic watch-store` pushes the result to Attic. `update-all-magnanix` also
+    pushes it from magnus, so the Pi doesn't depend on the watcher.
   - **CI:** the `ubuntu-24.04-arm` runner builds tenabrae on every push to `main` and pushes it to Attic.
 
 `deploy-magnanix` won't work on tenabrae. `update-all-magnanix` deploys it anyway, from the machine it runs on;
@@ -120,19 +121,22 @@ On the Pi, `iw` isn't installed and wpa_supplicant has no control socket, so `wp
 ## Deploying a change
 
 `update-all-magnanix` (or `update-all-magnanix tenabrae`) does the steps below for you, building `main` from
-GitHub. To deploy by hand, from the checkout on magnus, build the change with
+GitHub and pushing the build to Attic itself. To deploy by hand, from the checkout on magnus, build the change with
 [`build-tenabrae`](scripts.md#build-tenabrae) (on the remote builders, or `build-tenabrae -- --max-jobs 0` to fetch
 CI's build), then have the Pi switch to it:
 
 ```sh
 path=$(build-tenabrae)
-ssh -t alberth@tenabrae "sudo nix-store --realise $path \
+sudo env XDG_CONFIG_HOME=/etc/attic-push "$(command -v attic)" push muninn:magnanix $path
+ssh -t alberth@tenabrae "sudo nix-store --realise --option narinfo-cache-negative-ttl 0 $path \
   && sudo nix-env --profile /nix/var/nix/profiles/system --set $path \
   && sudo $path/bin/switch-to-configuration switch"
 ```
 
-The Pi downloads the closure from Attic itself; nothing is copied through magnus. If you built it just now,
-give the builder's `attic watch-store` a moment to finish pushing before you run the `ssh` line.
+The Pi downloads the closure from Attic itself; nothing is copied through magnus. The builders' `attic watch-store`
+pushes the build too, but pushing it by hand means the Pi doesn't depend on that watcher keeping up (or running at
+all). `narinfo-cache-negative-ttl 0` makes the Pi ask the cache again even if it looked for the path in the last hour
+and missed; otherwise Nix answers from its own record of the miss.
 
 ## Clock and DoT
 

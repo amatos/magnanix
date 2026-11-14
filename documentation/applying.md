@@ -36,9 +36,12 @@ To deploy the whole fleet at once, run `update-all-magnanix` (`modules/users/alb
 It deploys every real host in parallel: fortuna, magnus, muninn and tenabrae (the test VMs are left out; pass host
 names to deploy only those). It runs `deploy-magnanix` over SSH on the other hosts and directly on the machine it runs
 on, since macOS sudo can't prompt over a non-interactive SSH session. tenabrae can't run `deploy-magnanix`, so the
-script builds tenabrae's system from `main` on GitHub on the machine it runs on (or its remote builders), then has
-tenabrae download it from the Attic cache and switch to it over SSH, waiting up to 10 minutes for the build to reach
-the cache. Output is prefixed with each host's name. At the end it prints a
+script builds tenabrae's system from `main` on GitHub on the machine it runs on (or its remote builders), pushes it
+to the Attic cache with `sudo attic push` (asking for sudo up front), then has tenabrae download it from the cache and
+switch to it over SSH. The push uses the client config the `attic.push` aspect links to `/etc/attic-push`, so it only
+happens on a machine with that aspect and a push token; elsewhere the script leaves pushing to the builders'
+`attic watch-store` and tenabrae waits up to 10 minutes for the build to reach the cache. tenabrae checks the cache
+again on every attempt (`narinfo-cache-negative-ttl 0`); by default Nix remembers a miss for an hour. Output is prefixed with each host's name. At the end it prints a
 summary, and for each failed host the end of its log; it exits non-zero if any host failed. Remote hosts must
 accept your SSH key without a prompt (it uses `BatchMode`).
 

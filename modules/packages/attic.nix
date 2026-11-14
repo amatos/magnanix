@@ -9,7 +9,9 @@
 #            - client: adds the cache as a substituter and installs `attic`.
 #            - server: runs atticd on port 8080.
 #            - push:   runs `attic watch-store` as root, pushing every new store
-#                      path the host builds or downloads to the cache.
+#                      path the host builds or downloads to the cache, and
+#                      links its client config to /etc/attic-push for
+#                      `sudo attic push` by hand.
 #
 # Notes:
 # - Cache priority is 41, after cache.nixos.org (40), so the cache only serves
@@ -46,6 +48,11 @@ let
   serverName = "muninn";
   tokenSecret = "attic_push_token";
 
+  # Where a pushing host also links the watcher's client config, as an
+  # XDG_CONFIG_HOME at a fixed path, so `sudo attic push` can use it by hand
+  # (update-all-magnanix pushes the builds it makes for tenabrae this way).
+  pushConfigHome = "attic-push";
+
   # What the push watcher on a host needs, for both its systemd and launchd forms.
   pushWatcher =
     {
@@ -79,6 +86,9 @@ let
       };
 
       command = "${lib.getExe' pkgs.attic-client "attic"} watch-store ${serverName}:${cacheName}";
+
+      # /etc/${pushConfigHome}/attic/config.toml, for pushing by hand as root.
+      etc."${pushConfigHome}/attic/config.toml".source = "${configHome}/attic/config.toml";
     };
 in
 {
@@ -190,6 +200,7 @@ in
 
           (lib.mkIf watcher.hasToken {
             sops.secrets.${tokenSecret}.restartUnits = [ "attic-watch-store.service" ];
+            environment.etc = watcher.etc;
 
             systemd.services.attic-watch-store = {
               description = "Push new Nix store paths to the Attic cache";
@@ -247,10 +258,12 @@ in
             };
 
             # The log gets a line per pushed path; keep five 1 MB files, compressed.
-            environment.etc."newsyslog.d/attic-watch-store.conf".text = ''
-              # logfilename                    mode count size(KB) when flags
-              /var/log/attic-watch-store.log   644  5     1024     *    J
-            '';
+            environment.etc = watcher.etc // {
+              "newsyslog.d/attic-watch-store.conf".text = ''
+                # logfilename                    mode count size(KB) when flags
+                /var/log/attic-watch-store.log   644  5     1024     *    J
+              '';
+            };
           })
         ];
       };
