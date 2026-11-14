@@ -1,10 +1,12 @@
 # Aspects:   den.aspects.git          (included by base)
+#            den.aspects.git.tools    (included by git)
 #            den.aspects.git.signing  (opt-in, per user per host)
 # Platforms: home-manager
 # Purpose:   Git with modern defaults and tooling: git-lfs, delta (pager),
-#            difftastic (`git difftool`), mergiraf (merge driver), lazygit,
-#            git-absorb and git-extras. user.name and user.email come from the
-#            user's meta (fullName, email).
+#            difftastic (`git difftool`) and mergiraf (merge driver), plus the
+#            standalone tools in git.tools: lazygit, git-absorb, git-extras,
+#            pre-commit, git-filter-repo and gitleaks. user.name and user.email
+#            come from the user's meta (fullName, email).
 #
 # Notes (changes from git's defaults; details beside each setting):
 # - New repos start on `main`; push sets the upstream on first push; fetch
@@ -20,8 +22,10 @@
 { den, ... }:
 {
   den.aspects.git = {
+    includes = [ den.aspects.git.tools ];
+
     homeManager =
-      { config, pkgs, ... }:
+      { config, ... }:
       let
         # Identity comes from the user aspect's meta (see modules/users/*), when set.
         meta = (den.aspects.${config.home.username} or { }).meta or { };
@@ -105,17 +109,25 @@
             enable = true;
             enableGitIntegration = true;
           };
+        };
+      };
 
-          # Terminal UI for staging hunks, rebasing and browsing history.
-          lazygit = {
-            enable = true;
-            settings.git.pagers = [ { pager = "delta --paging=never"; } ];
-          };
+    # Standalone git tools that don't change git's own configuration.
+    tools.homeManager =
+      { pkgs, ... }:
+      {
+        # Terminal UI for staging hunks, rebasing and browsing history.
+        programs.lazygit = {
+          enable = true;
+          settings.git.pagers = [ { pager = "delta --paging=never"; } ];
         };
 
         home.packages = with pkgs; [
           git-absorb # `git absorb`: turn staged changes into fixup! commits
           git-extras # git-summary, git-ignore, git-undo and friends (zsh plugin has completions)
+          git-filter-repo # rewrite history (remove files, rename paths); replaces filter-branch
+          gitleaks # scan repos and staged changes for committed secrets
+          pre-commit # per-repo hooks from .pre-commit-config.yaml (`pre-commit install`)
         ];
       };
 
