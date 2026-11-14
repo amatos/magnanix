@@ -49,8 +49,15 @@ push. If muninn goes away mid-build, as it does while `muninn` itself is being s
 `nix build` runs with `--fallback`, so Nix builds the paths it can no longer download instead of failing. Either way
 the job is slower but still passes.
 
-Changes that only touch Markdown, `documentation/` or `LICENSE` don't run the workflow. PRs from forks get no
-secrets, so only the evaluate tier works for them.
+Pushes to `main` that only touch Markdown, `documentation/` or `LICENSE` don't run the workflow. PRs always run
+it, because the ruleset on `main` requires the evaluate and build checks before merging. On a PR that only touches
+those files, a quick `changes` job skips every other job, and GitHub counts a skipped required check as passing,
+so the PR can merge (or auto-merge) without waiting on any runners.
+
+Every run evaluates, including one started by adding a label. GitHub uses the latest run's results for the
+required checks, so a run that skipped evaluation would turn a failed check into a passing one.
+
+PRs from forks get no secrets, so only the evaluate tier works for them.
 
 ## Runners
 
