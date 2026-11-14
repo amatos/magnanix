@@ -1,8 +1,8 @@
 # Host:      tenabrae (den.aspects.tenabrae)
 # Platform:  aarch64-linux (NixOS), Raspberry Pi Zero 2 W (512 MB RAM)
 # Purpose:   Pi-hole for the LAN and the tailnet, with Quad9 over DNS-over-TLS
-#            upstream. On Wi-Fi (SSID vox) with a DHCP reservation on the router;
-#            SSH (keys only) and Tailscale.
+#            upstream. On Wi-Fi (SSID voxdev) with a DHCP reservation
+#            on the router; SSH (keys only) and Tailscale.
 #
 # Notes:
 # - Boots from an SD image built from this config (sdImage below): Pi firmware
@@ -13,19 +13,17 @@
 #   deploy steps are in documentation/tenabrae.md. It is deliberately not in
 #   update-all-magnanix's default hosts.
 # - Host key: generated off-host (`host_tenabrae` in .sops.yaml; the private
-#   half is in 1Password). Before first boot, copy it onto the card's FAT
-#   partition as ssh_host_ed25519_key; the `tenabrae-host-key` activation script
-#   moves it to /etc/ssh and deletes it from the card before sops-nix runs.
-#   A key copied there later replaces the installed one at the next boot.
-# - Secrets (secrets/hosts/tenabrae.yaml): `wireless_env` (psk_vox=<passphrase>)
+#   half is in 1Password). Before first boot, install it into the card's root
+#   file system (NIXOS_SD) at /etc/ssh/ssh_host_ed25519_key from a Linux
+#   machine; see documentation/tenabrae.md. sops-nix decrypts with it during
+#   activation, so without it there's no Wi-Fi and no password.
+# - Secrets (secrets/hosts/tenabrae.yaml): `wireless_env` (psk_voxdev=...)
 #   and `pihole_env` (see modules/packages/pihole.nix).
 # - Interface names are the kernel's (wlan0), not predictable names, so the
 #   firewall rules can name the Wi-Fi interface.
 { den, lib, ... }:
 let
   hostName = "tenabrae";
-  firmwareMount = "/boot/firmware";
-  hostKey = "/etc/ssh/ssh_host_ed25519_key";
 in
 {
   # Den sets nixpkgs.hostPlatform from this key.
@@ -108,43 +106,6 @@ in
           '';
         };
 
-        # Mount the firmware partition in the initrd, so the host key copied onto
-        # it is readable during activation, which runs there (chrooted into
-        # /sysroot, before switch-root). sd-image declares it `nofail noauto`,
-        # so the list is replaced with mkForce, which also drops the
-        # `x-initrd.mount` NixOS adds for neededForBoot; it's restored by hand.
-        # Not `nofail`: systemd wouldn't order the mount before initrd-fs.target,
-        # so activation could still run first. The partition is on the boot
-        # card, so it's always there. (tenabrae's first boot mounted it only
-        # after switch-root, and activation never saw the key.)
-        fileSystems.${firmwareMount} = {
-          options = lib.mkForce [
-            "x-initrd.mount"
-            "umask=0077"
-          ];
-          neededForBoot = true;
-        };
-
-        # Install the host key from the card before sops-nix needs it. A key on
-        # the card always wins, replacing whatever /etc/ssh holds (e.g. one sshd
-        # generated on a boot that missed it), so copying a key there is also how
-        # to replace it. Removes it from the card afterwards, along with the
-        # AppleDouble (`._*`) files macOS leaves next to it.
-        system.activationScripts.tenabrae-host-key = lib.stringAfter [ "specialfs" ] ''
-          src=${firmwareMount}/ssh_host_ed25519_key
-          if [ -f "$src" ]; then
-            echo "tenabrae-host-key: installing the host key from ${firmwareMount}" >&2
-            ${pkgs.coreutils}/bin/install -D -m 600 -o root -g root "$src" ${hostKey}
-            ${pkgs.openssh}/bin/ssh-keygen -y -f ${hostKey} > ${hostKey}.pub
-            ${pkgs.coreutils}/bin/chmod 644 ${hostKey}.pub
-            ${pkgs.coreutils}/bin/rm -f "$src" "$src.pub" ${firmwareMount}/._ssh_host_ed25519_key*
-          elif [ ! -d ${firmwareMount} ] || ! ${pkgs.util-linux}/bin/mountpoint -q ${firmwareMount}; then
-            echo "tenabrae-host-key: ${firmwareMount} is not mounted; can't check for a host key" >&2
-          fi
-        '';
-        system.activationScripts.setupSecretsForUsers.deps = [ "tenabrae-host-key" ];
-        system.activationScripts.setupSecrets.deps = [ "tenabrae-host-key" ];
-
         # --- Memory -------------------------------------------------------------
 
         # 512 MB: compressed swap in RAM first, then a file on the card for the
@@ -162,24 +123,49 @@ in
         # Keeps the Wi-Fi interface at wlan0.
         networking.usePredictableInterfaceNames = false;
 
-        # Wi-Fi (Broadcom 43436s; its firmware comes from sd-image's all-hardware).
-        # The router reserves this host's address.
-        sops.secrets.wireless_env = { };
+        # Only the Wi-Fi chip needs firmware, so replace the firmware sd-image's
+        # all-hardware pulls in (linux-firmware alone is ~825 MiB) with the
+        # files it loads: the Raspberry Pi package's 43436s firmware and nvram,
+        # linux-firmware's brcmfmac43430-sdio.clm_blob (its channel and power
+        # tables), and the regulatory database.
+        hardware.firmware = lib.mkForce [
+          pkgs.raspberrypiWirelessFirmware
+          (pkgs.runCommand "brcmfmac43430-sdio-clm-blob" { } ''
+            install -D -m 444 ${pkgs.linux-firmware}/lib/firmware/brcm/brcmfmac43430-sdio.clm_blob \
+              $out/lib/firmware/brcm/brcmfmac43430-sdio.clm_blob
+          '')
+          pkgs.wireless-regdb
+        ];
+
+        # Wi-Fi (Broadcom 43436s). Turn off the firmware's own WPA handshake
+        # (FWSUP, 0x2000) and SAE (0x80000), so wpa_supplicant does the
+        # handshake itself. With them on, the firmware fails every association
+        # with a WPA2/WPA3 router (status 16, "authentication timed out").
+        boot.extraModprobeConfig = ''
+          options brcmfmac feature_disable=0x82000
+        '';
+        # wpa_supplicant runs as its own user and reads the file itself.
+        sops.secrets.wireless_env.owner = config.systemd.services.wpa_supplicant.serviceConfig.User;
+        # voxdev: a 2.4 GHz, WPA2-only network for this host; the chip is
+        # 2.4 GHz only. The router reserves this host's address. WPA2 only: the
+        # default list also offers SAE (WPA3) and fast transition, which this
+        # chip's firmware can't do.
         networking.wireless = {
           enable = true;
           secretsFile = config.sops.secrets.wireless_env.path;
-          networks.vox.pskRaw = "ext:psk_vox";
+          networks.voxdev = {
+            pskRaw = "ext:psk_voxdev";
+            authProtocols = [ "WPA-PSK" ];
+          };
         };
 
         # No RTC: the clock starts wherever timesyncd last saved it, and Unbound's
         # DoT can't validate certificates until it's right. Name lookups may go
-        # through Pi-hole -> Unbound, so reach muninn's NTP server by its (router-
-        # reserved) address, and list the public fallbacks by address (Cloudflare's
-        # time.cloudflare.com) ahead of the names.
+        # through Pi-hole -> Unbound, so the LAN's NTP server (muninn) comes first,
+        # by its router-reserved address; the pool names are only a fallback. (The
+        # router, 10.0.4.1, doesn't answer NTP requests.)
         local.ntp.serverHost = "10.0.4.129";
         local.ntp.upstreamServers = [
-          "162.159.200.1"
-          "162.159.200.123"
           "0.nixos.pool.ntp.org"
           "1.nixos.pool.ntp.org"
         ];
