@@ -59,6 +59,25 @@ required checks, so a run that skipped evaluation would turn a failed check into
 
 PRs from forks get no secrets, so only the evaluate tier works for them.
 
+## Auto-merge
+
+[`.github/workflows/auto-merge.yml`](../.github/workflows/auto-merge.yml) turns on auto-merge (merge commit) when
+amatos opens a PR from a branch in this repo, or marks a draft ready for review. The PR then merges on its own once
+the checks that the ruleset on `main` requires have passed.
+
+It skips:
+
+- drafts
+- the weekly `update-flake-lock` PR, which needs `darwintron-vm test update-flake-lock` on magnus first
+- PRs labelled `no-automerge`. Adding the label turns auto-merge off, and removing it turns it back on (or merges
+  straight away if the checks have already passed).
+
+It uses the `GH_TOKEN_FOR_UPDATES` secret rather than `GITHUB_TOKEN`. A merge made through `GITHUB_TOKEN` doesn't
+trigger other workflows, so the push-to-`main` build would never run and the cache wouldn't be warmed.
+
+Because the ruleset requires branches to be up to date, a PR whose base has moved won't merge until it's updated
+(**Update branch** on the PR, or `gh pr update-branch`). Its checks then run again.
+
 ## Runners
 
 All runners are GitHub-hosted (no self-hosted infrastructure):
