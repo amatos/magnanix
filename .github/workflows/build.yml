@@ -18,7 +18,10 @@
 #   the flashable image on ubuntu-24.04-arm and pushes it to Attic, so magnus
 #   can fetch it without an aarch64-linux builder. See documentation/tenabrae.md.
 #
-# Changes that only touch documentation skip the workflow entirely.
+# Pushes to main that only touch documentation skip the workflow entirely. PRs
+# always run it, because the ruleset on main requires these checks: on a
+# docs-only PR the `changes` job skips every other job, and GitHub counts a
+# skipped required check as passing.
 #
 name: CI/CD Build
 
@@ -33,10 +36,6 @@ on:
   pull_request:
     # `labeled` lets adding `ci:build` start a full build of the PR
     types: [opened, synchronize, reopened, labeled]
-    paths-ignore:
-      - "**.md"
-      - "documentation/**"
-      - "LICENSE"
   workflow_dispatch:
     inputs:
       tenabrae-sd-image:
@@ -44,10 +43,12 @@ on:
         type: boolean
         default: false
 
-# Adding a label other than ci:build gets its own group, so it doesn't cancel a
-# run in progress (its own run skips every job).
+# Every run evaluates, including one started by adding a label: the latest run's
+# result is what the required checks see, so a run that skipped evaluation would
+# turn a failed check into a passing (skipped) one. A newer run therefore
+# replaces any run in progress for the same ref.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'labeled' && github.event.label.name || 'run' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -58,12 +59,48 @@ jobs:
   # Evaluate
   # ---------------------------------------------------------------------------
 
+  # Whether a PR touches anything besides Markdown, documentation/ and LICENSE.
+  # Pushes and manual runs always count as code changes.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          code=true
+          if [ "$EVENT" = pull_request ]; then
+            # Assigned on its own line so a failing API call stops `bash -e`.
+            files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')
+            code=false
+            while IFS= read -r file; do
+              case "$file" in
+                *.md | documentation/* | LICENSE) ;;
+                *)
+                  code=true
+                  break
+                  ;;
+              esac
+            done <<<"$files"
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Code changes: $code"
+
   # NixOS hosts are evaluated on Linux; fortuna imports from a derivation
   # (zen-browser's presets), which needs a runner of the host's own system.
   # nixostron-aarch64 doesn't, so it evaluates fine on x86_64.
   eval-linux:
     name: Evaluate NixOS hosts, formatting and flake.nix
-    if: github.event.action != 'labeled' || github.event.label.name == 'ci:build'
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +141,8 @@ jobs:
   # aarch64-darwin, so the darwin hosts can't be evaluated on Linux.
   eval-darwin:
     name: Evaluate nix-darwin hosts
-    if: github.event.action != 'labeled' || github.event.label.name == 'ci:build'
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
