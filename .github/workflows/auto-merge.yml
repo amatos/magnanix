@@ -1,0 +1,65 @@
+# Auto-merge
+#
+# Turns on auto-merge (merge commit) for PRs opened by amatos from a branch in
+# this repo, so they merge on their own once main's required checks pass.
+#
+# Skipped:
+# - drafts (auto-merge is turned on when the PR is marked ready for review)
+# - the weekly update-flake-lock PR, which needs a manual VM test first
+# - PRs labelled `no-automerge`; adding the label turns auto-merge back off
+#
+# Uses GH_TOKEN_FOR_UPDATES (fine-grained token, Contents and Pull requests
+# read/write), not GITHUB_TOKEN: a merge made through GITHUB_TOKEN doesn't
+# trigger other workflows, so the push-to-main build wouldn't run.
+#
+name: Auto-merge
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, labeled, unlabeled]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  auto-merge:
+    name: Set auto-merge
+    if: >-
+      github.event.pull_request.user.login == 'amatos'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.head.ref != 'update-flake-lock'
+      && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          OPT_OUT: ${{ contains(github.event.pull_request.labels.*.name, 'no-automerge') }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::GH_TOKEN_FOR_UPDATES is not set"
+            exit 1
+          fi
+          state=$(gh pr view "$PR" --repo "$REPO" \
+            --json mergeStateStatus,autoMergeRequest \
+            --jq '"\(.mergeStateStatus) \(.autoMergeRequest != null)"')
+          read -r status auto_on <<<"$state"
+
+          if [ "$OPT_OUT" = true ]; then
+            if [ "$auto_on" = true ]; then
+              gh pr merge "$PR" --repo "$REPO" --disable-auto
+            fi
+            echo "Auto-merge off: PR is labelled no-automerge."
+          elif [ "$status" = CLEAN ]; then
+            # Checks already passed (e.g. no-automerge was just removed);
+            # GitHub won't enable auto-merge on a clean PR, so merge now.
+            gh pr merge "$PR" --repo "$REPO" --merge
+            echo "Merged: required checks had already passed."
+          else
+            gh pr merge "$PR" --repo "$REPO" --auto --merge
+            echo "Auto-merge on: merges once the required checks pass."
+          fi
