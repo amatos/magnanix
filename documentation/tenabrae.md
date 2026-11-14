@@ -21,8 +21,8 @@ its own closures. So:
     muninn, under QEMU), whose `attic watch-store` pushes the result to Attic.
   - **CI:** the `ubuntu-24.04-arm` runner builds tenabrae on every push to `main` and pushes it to Attic.
 
-`deploy-magnanix` and `update-all-magnanix` won't work on tenabrae. It's left out of the latter's default
-host list.
+`deploy-magnanix` won't work on tenabrae. `update-all-magnanix` deploys it anyway, from the machine it runs on;
+see [Deploying a change](#deploying-a-change).
 
 ## Secrets
 
@@ -119,7 +119,8 @@ On the Pi, `iw` isn't installed and wpa_supplicant has no control socket, so `wp
 
 ## Deploying a change
 
-From magnus, build the change (on the remote builders, or fetch CI's build with `--max-jobs 0`), then have the
+`update-all-magnanix` (or `update-all-magnanix tenabrae`) does the steps below for you, building `main` from
+GitHub. To deploy by hand, from magnus, build the change (on the remote builders, or fetch CI's build with `--max-jobs 0`), then have the
 Pi switch to it:
 
 ```sh
