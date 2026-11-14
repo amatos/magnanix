@@ -64,9 +64,11 @@ comment at the top of the script describes how the keys were copied to both Yubi
 
 ## update-all-magnanix
 
-Deploys the whole fleet: it runs `deploy-magnanix` on fortuna, magnus and muninn in parallel. tenabrae is left
-out because it can't evaluate the flake itself; see [tenabrae](tenabrae.md#deploying-a-change). See
-[Applying and updating](applying.md) for how it reaches each host and how it reports failures.
+Deploys the whole fleet in parallel: it runs `deploy-magnanix` on fortuna, magnus and muninn, and builds tenabrae
+(which can't evaluate the flake itself) on the machine it runs on before switching it over SSH. Every real host
+belongs in its `default_hosts`, which is every host in `modules/hosts` except the test VMs (darwintron, nixostron)
+and CI's ephemeral machines; its tests check this. See [Applying and updating](applying.md) for how it reaches each
+host and how it reports failures.
 
 ## velja-open.sh
 

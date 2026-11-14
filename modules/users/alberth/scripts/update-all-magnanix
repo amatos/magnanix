@@ -5,10 +5,14 @@
 #
 # Usage: update-all-magnanix [host ...]
 #
-# With no arguments it deploys the physical hosts (the test VMs in
-# modules/hosts/virtual and tenabrae are left out). Remote hosts run it over SSH; the host
+# With no arguments it deploys every real host (the test VMs in
+# modules/hosts/virtual are left out). Remote hosts run it over SSH; the host
 # this runs on runs it directly, since sudo on macOS needs Touch ID or a
 # password and can't prompt over a non-interactive SSH session.
+#
+# Hosts too small to evaluate the flake (tenabrae) can't run deploy-magnanix.
+# This host builds them from `main` on GitHub instead, and they switch over SSH,
+# downloading the build from the Attic cache (documentation/tenabrae.md).
 #
 # Each host's output is shown prefixed with its name and saved to a log file.
 # Exits 0 only if every host deployed; on failure it prints the end of each
@@ -16,9 +20,19 @@
 
 set -uo pipefail
 
-# Not tenabrae: it can't evaluate the flake, so it's deployed from magnus
-# (documentation/tenabrae.md).
-default_hosts=(fortuna magnus muninn)
+# Every real host belongs here: every host in modules/hosts except the test VMs
+# (darwintron, nixostron) and CI's ephemeral machines. Add a new host when it's
+# added to the flake; update-all-magnanix.bats checks the list against
+# modules/hosts.
+default_hosts=(fortuna magnus muninn tenabrae)
+
+# Hosts that can't evaluate the flake: built here, then switched over SSH.
+build_here_hosts=(tenabrae)
+flake=github:amatos/magnanix
+# How long such a host waits for the build to reach the Attic cache (the
+# builder's `attic watch-store` pushes it): attempts, and seconds between them.
+cache_attempts=40
+cache_wait=15
 
 if [ $# -gt 0 ]; then
   hosts=("$@")
@@ -34,13 +48,46 @@ say() { printf 'update-all-magnanix: %s\n' "$*" >&2; }
 
 is_local() { [ "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" = "$local_host" ]; }
 
+builds_here() {
+  local h
+  for h in "${build_here_hosts[@]}"; do
+    [ "$h" = "$1" ] && return 0
+  done
+  return 1
+}
+
+# BatchMode: fail instead of prompting for a password or host key, which would
+# hang a background job. -n: don't read this terminal's stdin.
+remote() { ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$@"; }
+
+# Build the host's system from `main` here (or on the remote builders), then
+# have the host fetch it from the cache and switch to it. --refresh: don't use
+# a copy of `main` fetched earlier. The path is a store path, so it needs no
+# quoting.
+deploy_built_here() {
+  local path
+  path=$(nix build --refresh --no-link --print-out-paths \
+    "$flake#nixosConfigurations.$1.config.system.build.toplevel") || return 1
+  echo "built $path"
+  remote "$1" "
+    i=1
+    until sudo nix-store --realise $path >/dev/null; do
+      [ \$i -ge $cache_attempts ] && exit 1
+      echo 'waiting for the build to reach the cache'
+      sleep $cache_wait
+      i=\$((i + 1))
+    done
+    sudo nix-env --profile /nix/var/nix/profiles/system --set $path \
+      && sudo $path/bin/switch-to-configuration switch"
+}
+
 deploy() {
-  if is_local "$1"; then
+  if builds_here "$1"; then
+    deploy_built_here "$1"
+  elif is_local "$1"; then
     deploy-magnanix
   else
-    # BatchMode: fail instead of prompting for a password or host key, which
-    # would hang a background job. -n: don't read this terminal's stdin.
-    ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$1" deploy-magnanix
+    remote "$1" deploy-magnanix
   fi
 }
 
@@ -70,7 +117,7 @@ trap on_signal INT TERM
 # The local deploy switches with sudo. Ask for it now, while nothing else is
 # writing to the terminal; the background job reuses the cached credential.
 for host in "${hosts[@]}"; do
-  if is_local "$host"; then
+  if is_local "$host" && ! builds_here "$host"; then
     if ! sudo -v; then
       say "sudo failed; can't deploy $host"
       exit 1

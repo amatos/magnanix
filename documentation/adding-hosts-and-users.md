@@ -15,7 +15,11 @@
    it as a flake module. Import it from the host's `nixos` block (see `muninn/muninn.nix`). The boot loader comes from `base`
    (`systemdBoot`). A board without UEFI, such as a Raspberry Pi, overrides it instead; `tenabrae/tenabrae.nix`
    boots an SD image through U-Boot and extlinux, and needs no hardware configuration.
-6. New files must be tracked by git for flakes to see them (`git add` them).
+6. Add the host to `default_hosts` in `modules/users/alberth/scripts/update-all-magnanix`. Every real host
+   belongs there; only the test VMs (darwintron, nixostron) and CI's ephemeral machines are left out. The script's
+   tests check the list against `modules/hosts`. A host too small to evaluate the flake also goes in
+   `build_here_hosts`, so the script builds it elsewhere instead of running `deploy-magnanix` on it.
+7. New files must be tracked by git for flakes to see them (`git add` them).
 
 ## Adding a user
 

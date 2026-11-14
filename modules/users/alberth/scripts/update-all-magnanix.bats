@@ -2,14 +2,16 @@
 # Tests for update-all-magnanix. Run with `test-scripts` (all script tests) or
 # `bats modules/users/alberth/scripts/update-all-magnanix.bats`.
 #
-# ssh, deploy-magnanix, sudo and hostname are stubs on PATH. The local host is
-# "testlocal", and what a deploy does is picked by the host's name (see
-# `behave` below). Every stub call is appended to $CALLS.
+# ssh, deploy-magnanix, nix, sudo and hostname are stubs on PATH. The local
+# host is "testlocal", and what a deploy does is picked by the host's name (see
+# `behave` below). Every stub call is appended to $CALLS (newlines in arguments
+# become spaces), and every host ssh reaches to $SSH_HOSTS.
 
 setup() {
   SCRIPT="$BATS_TEST_DIRNAME/update-all-magnanix"
   export TEST_TMP="$BATS_TEST_TMPDIR"
   export CALLS="$TEST_TMP/calls"
+  export SSH_HOSTS="$TEST_TMP/ssh-hosts"
   # The script's log directory goes here, so tests can see it kept or removed.
   export TMPDIR="$TEST_TMP"
   touch "$CALLS"
@@ -43,7 +45,14 @@ setup() {
       *) echo "building $1"; echo "switched $1" ;;
     esac'
   # ssh [options] host command: the host is the next-to-last argument.
-  stub ssh 'echo "ssh $*" >>"$CALLS"; behave "${@: -2:1}"'
+  stub ssh 'echo "ssh $*" | tr "\n" " " | sed "s/ *\$//" >>"$CALLS"; echo >>"$CALLS"
+    echo "${@: -2:1}" >>"$SSH_HOSTS"; behave "${@: -2:1}"'
+  # nix build ... <flake>#nixosConfigurations.<host>.config...: prints the
+  # host's made-up system path, or fails if NIX_STATUS is set.
+  stub nix 'echo "nix $*" >>"$CALLS"
+    if [ "${NIX_STATUS:-0}" -ne 0 ]; then echo "error: build failed" >&2; exit "$NIX_STATUS"; fi
+    host=${*: -1}; host=${host#*nixosConfigurations.}; host=${host%%.*}
+    echo "/nix/store/0000-nixos-system-$host"'
   stub deploy-magnanix 'echo "deploy-magnanix (local)" >>"$CALLS"; behave ok-local'
   stub sudo 'echo "sudo $*" >>"$CALLS"; exit "${SUDO_STATUS:-0}"'
   stub hostname 'echo TestLocal'
@@ -144,15 +153,46 @@ logdirs() { find "$TMPDIR" -maxdepth 1 -name 'update-all-magnanix.*'; }
   ! kill -0 "$(cat "$TEST_TMP/sleep.pid")" 2>/dev/null
 }
 
-@test "by default deploys every host in modules/hosts except the VMs and tenabrae" {
-  # tenabrae (a Pi Zero 2 W) can't evaluate the flake, so deploy-magnanix can't
-  # run there; it's deployed from magnus (documentation/tenabrae.md).
+@test "by default deploys every real host: all of modules/hosts except the VMs" {
+  # Every real host must be in default_hosts; only the test VMs
+  # (modules/hosts/virtual) and CI's ephemeral machines are left out.
   expected=$(find "$BATS_TEST_DIRNAME/../../../hosts" -mindepth 1 -maxdepth 1 -type d \
-    ! -name virtual ! -name templates ! -name tenabrae -exec basename {} \; | sort)
+    ! -name virtual ! -name templates -exec basename {} \; | sort)
   [ -n "$expected" ]
 
   run bash "$SCRIPT"
   [ "$status" -eq 0 ]
-  actual=$(awk '/^ssh / { print $(NF - 1) }' "$CALLS" | sort)
+  actual=$(sort "$SSH_HOSTS")
   [ "$actual" = "$expected" ]
+}
+
+@test "builds tenabrae here from main and has it switch over ssh" {
+  run bash "$SCRIPT" tenabrae
+  [ "$status" -eq 0 ]
+  grep -qx "nix build --refresh --no-link --print-out-paths github:amatos/magnanix#nixosConfigurations.tenabrae.config.system.build.toplevel" "$CALLS"
+  [[ $output == *"[tenabrae] built /nix/store/0000-nixos-system-tenabrae"* ]]
+  # One ssh session that waits for the cache, then sets the profile and switches.
+  ssh_call=$(grep "^ssh " "$CALLS")
+  [[ $ssh_call == "ssh -n -o BatchMode=yes -o ConnectTimeout=10 tenabrae "* ]]
+  [[ $ssh_call == *"sudo nix-store --realise /nix/store/0000-nixos-system-tenabrae"* ]]
+  [[ $ssh_call == *"sudo nix-env --profile /nix/var/nix/profiles/system --set /nix/store/0000-nixos-system-tenabrae"* ]]
+  [[ $ssh_call == *"sudo /nix/store/0000-nixos-system-tenabrae/bin/switch-to-configuration switch"* ]]
+  ! grep -q "deploy-magnanix" "$CALLS"
+}
+
+@test "doesn't switch tenabrae when its build fails" {
+  NIX_STATUS=1 run bash "$SCRIPT" ok-a tenabrae
+  [ "$status" -eq 1 ]
+  [[ $output =~ ok-a\ +ok ]]
+  [[ $output =~ tenabrae\ +failed:\ exit\ status\ 1 ]]
+  [[ $output == *"    error: build failed"* ]]
+  ! grep -q "^ssh .* tenabrae " "$CALLS"
+}
+
+@test "builds tenabrae here even when run on tenabrae" {
+  stub hostname 'echo tenabrae'
+  run bash "$SCRIPT" tenabrae
+  [ "$status" -eq 0 ]
+  grep -q "^nix build " "$CALLS"
+  ! grep -q -e "^sudo" -e "deploy-magnanix" "$CALLS"
 }

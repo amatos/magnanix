@@ -10,8 +10,8 @@
 #   card on first boot. No UEFI, so base's systemd-boot is replaced.
 # - Too small to evaluate its own flake: build elsewhere and copy the result
 #   in. CI's aarch64-linux job builds it into the Attic cache. Install and
-#   deploy steps are in documentation/tenabrae.md. It is deliberately not in
-#   update-all-magnanix's default hosts.
+#   deploy steps are in documentation/tenabrae.md. update-all-magnanix
+#   deploys it that way (it's in the script's build_here_hosts).
 # - Host key: generated off-host (`host_tenabrae` in .sops.yaml; the private
 #   half is in 1Password). Before first boot, install it into the card's root
 #   file system (NIXOS_SD) at /etc/ssh/ssh_host_ed25519_key from a Linux
