@@ -68,3 +68,7 @@ its own file:
   and DNS fixes, network info, and a zoxide and fzf directory jumper (`zox`). They are written once for POSIX
   shells and once for fish, so keep the two files in step when adding or changing one. In `shell-functions-posix.nix`
   each entry becomes a shell function; in `shell-functions-fish.nix` it becomes a fish function.
+- **Pager:** `alberth`'s Home Manager config (`modules/users/alberth/alberth.nix`) sets `PAGER` to
+  `bat --color=always` and `MANPAGER` to `sh -c 'col -bx | bat -l man -p'`, both using bat's full store path.
+  `col -bx` strips man's overstrike bold and underline so bat can highlight the page as man syntax. bat itself
+  ignores `PAGER=bat` and falls back to `less`. Git still pages through delta (see [Git](git.md)).
