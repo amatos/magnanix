@@ -2,7 +2,7 @@
 # Platforms: nixos, darwin, home-manager
 # Purpose:   alberth's account, metadata and the small tool set that follows
 #            them to every host: gpg, direnv, ~/.local/bin scripts,
-#            deploy-magnanix and SSH client config.
+#            deploy-magnanix, SSH client config and the Starship prompt.
 #
 # Notes:
 # - `meta` (identity, SSH keys, GPG key) is read by shared aspects such as git
@@ -57,6 +57,7 @@ in
       den.aspects.alberth.deployMagnanix
       den.aspects.alberth.scripts
       den.aspects.alberth.ssh
+      den.aspects.alberth.starship
       den.aspects.direnv
       den.aspects.gpg
     ];
