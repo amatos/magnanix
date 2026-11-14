@@ -16,7 +16,7 @@ script, put it in the directory, add a `home.file` entry for it in `scripts.nix`
 | `dollar.sh`, `$`      | runs its arguments, so a pasted `$ cmd` works                                    |
 | `extract.sh`          | extracts an archive, or mounts a disk image, based on its extension              |
 | `switch-yubikey`      | points gpg's key stubs at the YubiKey that is plugged in now                     |
-| `update-all-magnanix` | runs `deploy-magnanix` on every host: muninn first, then the rest in parallel     |
+| `update-all-magnanix` | runs `deploy-magnanix` on every host: muninn first, then the rest in parallel    |
 | `velja-open.sh`       | `open "$@"`, for the Velja browser picker (macOS)                                |
 | `yubi-disable`        | turns off the OpenPGP USB interface of YubiKey 32146072, which lives in magnus   |
 | `yubi-enable`         | turns that interface back on and has gpg relearn the card                        |
