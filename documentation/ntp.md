@@ -18,7 +18,8 @@ requests, so nothing uses it.
   changes.
 - **tenabrae** sets `local.ntp.serverHost` to muninn's address, `10.0.4.129`, because its own name lookups go
   through its Pi-hole, whose DNS-over-TLS needs the clock to be right first. The router reserves that address for
-  muninn; if it changes, change tenabrae too. See [tenabrae](tenabrae.md#clock-and-dot).
+  muninn; if it changes, change tenabrae too. tenabrae's fallbacks start with time.cloudflare.com, also by
+  address. See [tenabrae](tenabrae.md#clock-and-dot).
 
 To check a client: `timedatectl timesync-status` on NixOS, `sntp muninn.home.matos.cc` on macOS.
 
