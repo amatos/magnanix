@@ -19,6 +19,11 @@ setup() {
   export ATTIC_PUSH_CONFIG="$TEST_TMP/attic-push"
   touch "$CALLS"
 
+  # The real env, for the env stub to run: the Nix build sandbox has no
+  # /usr/bin/env.
+  export REAL_ENV
+  REAL_ENV=$(command -v env)
+
   stubs="$TEST_TMP/bin"
   mkdir -p "$stubs"
   PATH="$stubs:$PATH"
@@ -66,7 +71,7 @@ setup() {
   stub sudo 'echo "sudo $*" >>"$CALLS"
     [ "${SUDO_STATUS:-0}" -ne 0 ] && exit "$SUDO_STATUS"
     [ "$1" = -v ] || exec "$@"'
-  stub env 'echo "env $*" >>"$CALLS"; exec /usr/bin/env "$@"'
+  stub env 'echo "env $*" >>"$CALLS"; exec "$REAL_ENV" "$@"'
   stub attic 'echo "attic $* (XDG_CONFIG_HOME=$XDG_CONFIG_HOME)" >>"$CALLS"; exit "${ATTIC_STATUS:-0}"'
   stub hostname 'echo TestLocal'
 }
