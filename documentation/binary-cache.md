@@ -72,6 +72,10 @@ builds and the unfree packages. On fortuna and muninn that includes what they bu
 - **Server away:** if the server can't be reached when it starts, the watcher exits and is restarted: systemd
   backs off from 10 s to 10 min, launchd retries every minute. A rejected token doesn't stop it; each push
   fails with an error in the log (`journalctl -u attic-watch-store` on NixOS).
+- **Pushing by hand:** the aspect also links the watcher's client config to `/etc/attic-push/attic/config.toml`,
+  so root can push without `attic login`: `sudo env XDG_CONFIG_HOME=/etc/attic-push "$(command -v attic)" push
+  muninn:magnanix <path>`. `update-all-magnanix` pushes tenabrae's build this way. `watch-store` only pushes paths
+  that become valid while it runs, so a path it missed (a stalled watcher, a restart) has to be pushed like this.
 - **No token yet:** sops-nix fails the build when a declared secret is missing from its file, so the watcher and
   its secret only exist once the host's file has `attic_push_token`. Until then each build prints an
   `attic.push: no attic_push_token ...` warning, and the rest of the host builds and switches as usual.

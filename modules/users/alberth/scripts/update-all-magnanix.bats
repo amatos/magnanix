@@ -2,7 +2,7 @@
 # Tests for update-all-magnanix. Run with `test-scripts` (all script tests) or
 # `bats modules/users/alberth/scripts/update-all-magnanix.bats`.
 #
-# ssh, deploy-magnanix, nix, sudo and hostname are stubs on PATH. The local
+# ssh, deploy-magnanix, nix, attic, sudo and hostname are stubs on PATH. The local
 # host is "testlocal", and what a deploy does is picked by the host's name (see
 # `behave` below). Every stub call is appended to $CALLS (newlines in arguments
 # become spaces), and every host ssh reaches to $SSH_HOSTS.
@@ -14,6 +14,9 @@ setup() {
   export SSH_HOSTS="$TEST_TMP/ssh-hosts"
   # The script's log directory goes here, so tests can see it kept or removed.
   export TMPDIR="$TEST_TMP"
+  # No push config unless a test makes one (with_push_config), whatever the
+  # machine running the tests has in /etc/attic-push.
+  export ATTIC_PUSH_CONFIG="$TEST_TMP/attic-push"
   touch "$CALLS"
 
   stubs="$TEST_TMP/bin"
@@ -54,7 +57,11 @@ setup() {
     host=${*: -1}; host=${host#*nixosConfigurations.}; host=${host%%.*}
     echo "/nix/store/0000-nixos-system-$host"'
   stub deploy-magnanix 'echo "deploy-magnanix (local)" >>"$CALLS"; behave ok-local'
-  stub sudo 'echo "sudo $*" >>"$CALLS"; exit "${SUDO_STATUS:-0}"'
+  stub sudo 'echo "sudo $*" >>"$CALLS"
+    [ "${SUDO_STATUS:-0}" -ne 0 ] && exit "$SUDO_STATUS"
+    [ "$1" = -v ] || exec "$@"'
+  stub env 'echo "env $*" >>"$CALLS"; exec /usr/bin/env "$@"'
+  stub attic 'echo "attic $* (XDG_CONFIG_HOME=$XDG_CONFIG_HOME)" >>"$CALLS"; exit "${ATTIC_STATUS:-0}"'
   stub hostname 'echo TestLocal'
 }
 
@@ -63,6 +70,14 @@ stub() {
   printf '#!%s\n%s\n' "$BASH" "$2" >"$stubs/$1"
   chmod +x "$stubs/$1"
 }
+
+with_push_config() {
+  mkdir -p "$ATTIC_PUSH_CONFIG/attic"
+  touch "$ATTIC_PUSH_CONFIG/attic/config.toml"
+}
+
+# line_of PATTERN: the number of the first line of $CALLS matching PATTERN.
+line_of() { grep -n -e "$1" "$CALLS" | head -n 1 | cut -d: -f1; }
 
 logdirs() { find "$TMPDIR" -maxdepth 1 -name 'update-all-magnanix.*'; }
 
@@ -174,7 +189,7 @@ logdirs() { find "$TMPDIR" -maxdepth 1 -name 'update-all-magnanix.*'; }
   # One ssh session that waits for the cache, then sets the profile and switches.
   ssh_call=$(grep "^ssh " "$CALLS")
   [[ $ssh_call == "ssh -n -o BatchMode=yes -o ConnectTimeout=10 tenabrae "* ]]
-  [[ $ssh_call == *"sudo nix-store --realise /nix/store/0000-nixos-system-tenabrae"* ]]
+  [[ $ssh_call == *"sudo nix-store --realise --option narinfo-cache-negative-ttl 0 /nix/store/0000-nixos-system-tenabrae"* ]]
   [[ $ssh_call == *"sudo nix-env --profile /nix/var/nix/profiles/system --set /nix/store/0000-nixos-system-tenabrae"* ]]
   [[ $ssh_call == *"sudo /nix/store/0000-nixos-system-tenabrae/bin/switch-to-configuration switch"* ]]
   ! grep -q "deploy-magnanix" "$CALLS"
@@ -195,4 +210,31 @@ logdirs() { find "$TMPDIR" -maxdepth 1 -name 'update-all-magnanix.*'; }
   [ "$status" -eq 0 ]
   grep -q "^nix build " "$CALLS"
   ! grep -q -e "^sudo" -e "deploy-magnanix" "$CALLS"
+}
+
+@test "pushes tenabrae's build to the cache before it switches" {
+  with_push_config
+  run bash "$SCRIPT" tenabrae
+  [ "$status" -eq 0 ]
+  grep -qx "attic push muninn:magnanix /nix/store/0000-nixos-system-tenabrae (XDG_CONFIG_HOME=$ATTIC_PUSH_CONFIG)" "$CALLS"
+  # sudo -v up front, then build, push, and only then ssh.
+  [ "$(line_of "^sudo -v$")" -lt "$(line_of "^nix build ")" ]
+  [ "$(line_of "^nix build ")" -lt "$(line_of "^attic push ")" ]
+  [ "$(line_of "^attic push ")" -lt "$(line_of "^ssh ")" ]
+}
+
+@test "doesn't switch tenabrae when the push fails" {
+  with_push_config
+  ATTIC_STATUS=1 run bash "$SCRIPT" tenabrae
+  [ "$status" -eq 1 ]
+  [[ $output =~ tenabrae\ +failed:\ exit\ status\ 1 ]]
+  ! grep -q "^ssh " "$CALLS"
+}
+
+@test "without a push config leaves pushing to the builders, without sudo" {
+  run bash "$SCRIPT" tenabrae
+  [ "$status" -eq 0 ]
+  [[ $output == *"[tenabrae] no push config in $ATTIC_PUSH_CONFIG; waiting for the builders to push it"* ]]
+  ! grep -q -e "^sudo" -e "^attic" "$CALLS"
+  grep -q "^ssh " "$CALLS"
 }
