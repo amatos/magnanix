@@ -1,7 +1,7 @@
 # Aspect:    den.aspects.base (added to every host via den.default.includes)
 # Platforms: nixos, darwin, home-manager (through the aspects it includes)
 # Purpose:   The baseline every host and user gets: hostname, shells, macOS
-#            defaults, sudo, mail, the binary cache client, git, Neovim and the
+#            defaults, sudo, mail, the binary cache client, NTP, git, Neovim and the
 #            everyday CLI/TUI tools, and Python (python3, uv, Ruff).
 #
 # Notes:
@@ -33,6 +33,7 @@
       den.aspects.git
       den.aspects.mail
       den.aspects.nix-tools
+      den.aspects.ntp.client
       den.aspects.nixosKernel # NixOS-only: defines just the `nixos` class
       den.aspects.python
       den.aspects.shell.bash

@@ -21,7 +21,7 @@ Documentation is best-effort, and believed to be correct -- however, I write doc
 | `darwintron`        | `aarch64-darwin` | nix-darwin | `ephemeral` | [disposable Tart VM](documentation/testing-vms.md#testing-changes-on-darwintron)                                |
 | `nixostron-aarch64` | `aarch64-linux`  | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under Tart on magnus                 |
 | `nixostron-x86_64`  | `x86_64-linux`   | NixOS      | `ephemeral` | [disposable VM](documentation/testing-vms.md#testing-changes-on-nixostron) under QEMU on muninn                 |
-| `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay; runs the nixostron VM                          |
+| `muninn`            | `x86_64-linux`   | NixOS      | `alberth`   | headless server: SSH (keys only), UEFI, Attic cache, SMTP relay, NTP server; runs the nixostron VM              |
 | `fortuna`           | `x86_64-linux`   | NixOS      | `alberth`   | AMD desktop: Hyprland with Noctalia, LUKS + btrfs via disko, SSH (keys only); second drive reserved for Windows |
 | `tenabrae`          | `aarch64-linux`  | NixOS      | `alberth`   | [Raspberry Pi Zero 2 W](documentation/tenabrae.md): Pi-hole with Quad9 over DoT, Wi-Fi, Tailscale, SSH (keys only) |
 
@@ -66,6 +66,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
 | [Remote builders](documentation/remote-builders.md)               | magnus building Linux (x86_64, aarch64 under QEMU) on fortuna and muninn                  |
 | [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
+| [NTP](documentation/ntp.md)                                       | network time from muninn's NTP server on the LAN and tailnet, and the server itself       |
 | [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons        |
 | [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |
 | [tenabrae](documentation/tenabrae.md)                             | the Pi-hole on a Raspberry Pi Zero 2 W: SD image install, deploying, secrets              |
