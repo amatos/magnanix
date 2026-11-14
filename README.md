@@ -66,6 +66,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
 | [Remote builders](documentation/remote-builders.md)               | magnus building Linux (x86_64, aarch64 under QEMU) on fortuna and muninn                  |
 | [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
+| [NTP](documentation/ntp.md)                                       | network time from muninn's NTP server on the LAN and tailnet, and the server itself       |
 | [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons        |
 | [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |
 | [tenabrae](documentation/tenabrae.md)                             | the Pi-hole on a Raspberry Pi Zero 2 W: SD image install, deploying, secrets              |
