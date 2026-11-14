@@ -154,7 +154,9 @@
             {
               sops.secrets = lib.genAttrs' names (
                 name:
-                lib.nameValuePair "espanso-${name}" {
+                # The name ends in .yml because Espanso resolves the symlink and
+                # rejects match files without an extension.
+                lib.nameValuePair "espanso-${name}.yml" {
                   sopsFile = secretsDir + "/${prefix}${name}.yaml";
                   format = "yaml";
                   key = ""; # the whole file
