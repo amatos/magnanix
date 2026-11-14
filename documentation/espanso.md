@@ -46,7 +46,8 @@ Keep only match files in the repo: Espanso would also try to load any other YAML
 
 `den.aspects.espanso.secure` finds every `secrets/users/<user>-espanso-<name>.yaml` and has sops-nix decrypt each
 one whole to `match/<name>.yml`; `alberth-espanso-street-address.yaml`, for example, becomes
-`match/street-address.yml`. alberth gets it on magnus, from `den.aspects.magnus.provides.alberth`. Edit a file
+`match/street-address.yml` (the sops secret itself is named `espanso-<name>.yml`: Espanso follows the symlink and
+rejects a target without an extension). alberth gets it on magnus, from `den.aspects.magnus.provides.alberth`. Edit a file
 from the dev shell, with a YubiKey plugged in:
 
 ```sh
