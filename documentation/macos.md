@@ -86,6 +86,18 @@ What's Your Sign? works through a Finder extension: after the first switch, open
 extension on in System Settings > General > Login Items & Extensions if Finder's context menu doesn't show
 "Signing Info".
 
+## Hazel
+
+`den.aspects.macos.hazel` (`modules/packages/hazel.nix`), included by `alberth.macDesktop`, installs Noodlesoft's
+Hazel, which files things automatically by rules set per watched folder. It isn't in nixpkgs, so it's the `hazel`
+Homebrew cask.
+
+Only the app comes from this repo. Hazel owns its rules (in `~/Library/Application Support/Hazel`) and rewrites
+them itself, so they're kept in step between Macs with Hazel's Rule Sync instead: for each folder, choose Rule Sync
+Settings from the Action menu and point it at a sync file in iCloud Drive ("Set up new sync file" on the first Mac,
+"Use existing sync file" on the others, before adding rules there). Rule Sync doesn't carry whether each rule is
+turned on, so rules arriving from another Mac start turned off. Hazel is paid; enter the licence in the app.
+
 ## OrbStack
 
 `den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`) installs OrbStack from nixpkgs

@@ -14,6 +14,7 @@
     includes = [
       den.aspects.alberth.macos.dock
       den.aspects.macos.appInspection
+      den.aspects.macos.hazel
       den.aspects.macos.macMouseFix
       den.aspects.macos.mas
       den.aspects.macos.setapp
