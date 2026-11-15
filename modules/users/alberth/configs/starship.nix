@@ -4,9 +4,9 @@
 #            user by den.aspects.shell.starship; this only adds the settings.
 #
 # Notes (changes from Starship's defaults):
-# - A powerline-style head: OS icon (blue) → user@host (red) → directory
-#   (green), followed by git branch/status and everything else via `$all`.
-#   Locally the host is black like the user; over SSH it turns cyan.
+# - A powerline-style head: OS icon (blue) → user@host (red locally,
+#   orange-red over SSH) → directory (green), followed by git branch/status
+#   and everything else via `$all`.
 # - Emoji symbols for the OS, language and git modules; the powerline
 #   separators still need a Nerd Font in the terminal.
 # - The prompt character is λ (✗ after a failed command).
@@ -73,12 +73,8 @@
           format = lib.concatStrings [
             "[](fg:blue)"
             "$os"
-            "[](bg:blue fg:red)"
-            "$username"
-            "$hostname"
-            "\${custom.hostname_local}"
-            "[ ](bg:red)"
-            "[](bg:red fg:green)"
+            "\${custom.block_local}"
+            "\${custom.block_ssh}"
             "$directory"
             "[ ](fg:green)"
             "$git_branch"
@@ -87,11 +83,7 @@
             "$character"
           ];
 
-          username = {
-            show_always = true;
-            format = "[$user](bg:red fg:black)";
-            disabled = false;
-          };
+          username.disabled = true;
 
           os = {
             disabled = false;
@@ -186,21 +178,23 @@
             format = versionFormat;
           };
 
-          # The built-in module covers SSH only, in cyan (red's complement) so
-          # a remote host stands out. trim_at (default ".") drops the domain.
-          hostname = {
-            ssh_only = true;
-            format = "[@$hostname](bg:red fg:cyan)";
+          hostname.disabled = true;
+
+          # Two custom blocks render user@host with powerline separators.
+          # Locally the block is red; over SSH it turns orange-red (256-color
+          # 202) so a remote session is immediately obvious.
+          custom.block_local = {
+            when = ''[ -z "$SSH_CONNECTION" ]'';
+            command = ''printf '%s@%s' "$(whoami)" "$(hostname -s)"'';
+            shell = [ "sh" ];
+            format = "[](bg:blue fg:red)[$output ](bg:red fg:black)[](bg:red fg:green)";
           };
 
-          # The built-in module has a single style, so the local host comes from
-          # this custom module instead, styled like the username. `sh` keeps the
-          # `when` test working whatever shell the prompt is drawn in.
-          custom.hostname_local = {
-            when = ''[ -z "$SSH_CONNECTION" ]'';
-            command = "hostname -s";
+          custom.block_ssh = {
+            when = ''[ -n "$SSH_CONNECTION" ]'';
+            command = ''printf '%s@%s' "$(whoami)" "$(hostname -s)"'';
             shell = [ "sh" ];
-            format = "[@$output](bg:red fg:black)";
+            format = "[](bg:blue fg:color(202))[$output ](bg:color(202) fg:black)[](bg:color(202) fg:green)";
           };
         };
       };
