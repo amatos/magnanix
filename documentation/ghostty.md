@@ -1,9 +1,25 @@
 # Ghostty
 
 The `ghostty` aspect (`modules/packages/ghostty.nix`) installs [Ghostty](https://ghostty.org) through Home Manager.
-Its config is written in Nix as `programs.ghostty.settings`, lands in `~/.config/ghostty/config`, and is checked
-with `ghostty +validate-config` whenever it changes. macOS uses `ghostty-bin` (the upstream app bundle), because
-`ghostty` doesn't build there.
+Its config is written in Nix as `programs.ghostty.settings` and checked with `ghostty +validate-config` whenever it
+changes. macOS uses `ghostty-bin` (the upstream app bundle), because `ghostty` doesn't build there.
+
+## Where the config lives
+
+| Platform | Config                                                                | Themes                     |
+| -------- | --------------------------------------------------------------------- | -------------------------- |
+| macOS    | `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty` | `~/.config/ghostty/themes` |
+| Linux    | `~/.config/ghostty/config`                                            | `~/.config/ghostty/themes` |
+
+On macOS Ghostty reads `~/.config/ghostty/config` and then the Application Support file, but Cmd+, (Settings)
+opens the Application Support file whenever it exists, so the config is written there. The file is a read-only
+symlink into the Nix store: change `modules/packages/ghostty.nix` and switch rather than editing it. The first
+switch replaces the comments-only template Ghostty creates there (`force = true`), which would otherwise stop
+activation.
+
+Themes stay in `~/.config/ghostty/themes` on every platform: it's the only user directory Ghostty searches for a
+theme named in `theme = …` (the other is the app's own bundled themes). A theme in Application Support would only
+load by its absolute path.
 
 ## Changes from Ghostty's defaults
 
