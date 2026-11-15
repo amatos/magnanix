@@ -15,6 +15,8 @@
 #                     than an alias: bash can't alias `$`, and fish can't run
 #                     a command named `$` at all)
 #   extract.sh        extracts an archive (or mounts a .dmg) by its extension
+#   fixdate.py        resets bogus Finder "Date Added" times on APFS to the
+#                     download, creation or modification date (macOS)
 #   switch-yubikey    points gpg's key stubs at the YubiKey now inserted
 #   update-all-magnanix   deploys every real (non-VM) host, muninn first
 #                     and then the rest in parallel: deploy-magnanix over
@@ -51,6 +53,10 @@
         };
         ".local/bin/extract.sh" = {
           source = ./scripts/extract.sh;
+          executable = true;
+        };
+        ".local/bin/fixdate.py" = {
+          source = ./scripts/fixdate.py;
           executable = true;
         };
         ".local/bin/switch-yubikey" = {
