@@ -58,10 +58,10 @@ its own file:
   in `programs.fish.interactiveShellInit`.
 - **Starship prompt:** the shell indicator is on, so each prompt shows which shell you're in: 🐚 bash, 🦓 zsh,
   🐟 fish, 🪟 PowerShell, and ❓ for anything else. `alberth`'s prompt always shows `user@host`, with the hostname
-  trimmed at the first `.` (`host.example.com` shows as `host`). Locally the host is black like the username; over
-  SSH it turns cyan so a remote session stands out. Starship's `hostname` module has one style, so it handles SSH
-  only, and a custom module (`custom.hostname_local`, run with `sh` so the test works from any shell) draws the
-  local host.
+  trimmed at the first `.` (`host.example.com` shows as `host`). Two custom blocks (`custom.block_local` and
+  `custom.block_ssh`, both run with `sh` so the `$SSH_CONNECTION` test works from any shell) replace the built-in
+  `username`/`hostname` modules. Locally the entire user@host segment is black-on-red; over SSH it shifts to
+  black-on-orange-red (256-color 202) so a remote session is immediately obvious.
 - **Nushell:** `programs.nushell` writes `config.nu` and `env.nu` (in `~/Library/Application Support/nushell` on
   macOS), so the atuin, direnv, starship, yazi and zoxide integrations load in it too. `loadSessionVariables` loads
   the Home Manager session variables (such as `EDITOR`) when Nushell starts without them, for example as the
