@@ -21,7 +21,7 @@ if [ -n "$nix_files" ]; then
 
   if ! printf '%s\n' "$nix_files" | xargs nix fmt -- --check >/dev/null 2>&1; then
     echo "pre-commit: some staged Nix files are not formatted." >&2
-    echo "pre-commit: run 'git ls-files -z \"*.nix\" | xargs -0 -r nix fmt', then 'git add' the changes." >&2
+    echo "pre-commit: run 'nix fmt', then 'git add' the changes." >&2
     exit 1
   fi
 fi

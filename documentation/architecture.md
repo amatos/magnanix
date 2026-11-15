@@ -181,6 +181,37 @@ not change when the channels do.
 The formatter is `nixfmt` (the RFC 166 style), also used to format the generated `flake.nix`:
 
 ```sh
-git ls-files -z '*.nix' | xargs -0 -r nix fmt                                    # format
-git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check       # check
+nix fmt                              # format every tracked .nix file
+nix fmt -- --check                   # check them (exits non-zero if any isn't formatted)
+nix fmt path/to/file.nix             # format just the files given
 ```
+
+Plain nixfmt reads stdin when it gets no files, so a bare `nix fmt` used to wait forever. The flake's formatter
+(`modules/flake/outputs.nix`) is a small wrapper, also named `nixfmt`: with no file arguments it runs nixfmt on every
+tracked `.nix` file from the repository root, passing options such as `--check` through. With files, or `-` for
+stdin, it runs nixfmt unchanged, so the pre-commit hook and CI (which pass file lists) work as before. The dev
+shell's `nixfmt` is the same wrapper. An option followed by a separate value (`--width 80`) looks like a file
+argument; write it as `--width=80`.
+
+### Future option: treefmt
+
+[treefmt](https://treefmt.com), through [treefmt-nix](https://github.com/numtide/treefmt-nix), is the usual
+replacement for a single-formatter `nix fmt`. It was left for later because it changes more than the wrapper does.
+
+Advantages:
+
+- Formats the whole tree by default and still accepts paths, so the hang can't happen.
+- Can run several formatters from one command, for example shfmt for the shell scripts or ruff for the Python
+  scripts, and Markdown formatting for the docs.
+- Caches results, so reruns only touch files that changed.
+- treefmt-nix provides a `checks.formatting` flake check, so formatting is checked by `nix flake check`.
+- With only nixfmt configured, the output is identical, so switching doesn't reformat the repository.
+
+Disadvantages:
+
+- treefmt doesn't accept nixfmt's options, so `nix fmt -- --check` breaks. The pre-commit hook and CI's
+  "Check Nix formatting" step would have to move to `treefmt --fail-on-change` or the `checks.formatting` check
+  in the same change.
+- The formatter becomes treefmt, so the dev shell no longer has `nixfmt` on `PATH` unless it's added separately.
+- A new flake input (treefmt-nix), added through the generated `flake.nix`, and a treefmt configuration to maintain.
+- Adding more formatters reformats those files once, which makes a large one-time diff.
