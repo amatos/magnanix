@@ -4,7 +4,7 @@
 #            builds, one `nh` wrapper per host, the flake-file generators
 #            (write-flake), checks, the dev shell (apply-configuration,
 #            darwintron-vm, nixostron-vm, test-scripts, sops tools) and the
-#            nixfmt formatter.
+#            nixfmt formatter wrapper.
 {
   config,
   inputs,
@@ -223,13 +223,44 @@ in
 
     # Nix formatter
 
-    # This applies the formatter that follows RFC 166, which defines a standard format:
+    # nixfmt, the formatter that follows RFC 166, which defines a standard format:
     # https://github.com/NixOS/rfcs/pull/166
 
-    # To format all Nix files:
-    # git ls-files -z '*.nix' | xargs -0 -r nix fmt
-    # To check formatting:
-    # git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check
-    formatter = forEachSupportedSystem ({ pkgs, ... }: pkgs.nixfmt);
+    # Plain nixfmt reads stdin when given no files, so a bare `nix fmt` waits
+    # forever. This wrapper runs it on every tracked .nix file instead when no
+    # file is given (options such as --check still apply); with files, or `-`
+    # for stdin, it is nixfmt unchanged. It is named nixfmt so the dev shell's
+    # `nixfmt` behaves the same way. See documentation/architecture.md#formatting,
+    # which also covers treefmt as a possible replacement.
+    #   nix fmt                  # format every tracked .nix file
+    #   nix fmt -- --check       # check them
+    #   nix fmt path/to/file.nix # format just that file
+    formatter = forEachSupportedSystem (
+      { pkgs, ... }:
+      pkgs.writeShellApplication {
+        name = "nixfmt";
+        runtimeInputs = [
+          pkgs.findutils
+          pkgs.git
+        ];
+        text = ''
+          nixfmt=${lib.getExe pkgs.nixfmt}
+
+          # Any argument that isn't an option (or is `-`, stdin) is a file to format.
+          for arg in "$@"; do
+            case "$arg" in
+              - | [!-]*) exec "$nixfmt" "$@" ;;
+            esac
+          done
+
+          if ! root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+            echo "nixfmt: no files given and not inside a git repository" >&2
+            exit 1
+          fi
+          cd "$root"
+          git ls-files -z '*.nix' | xargs -0 -r "$nixfmt" "$@"
+        '';
+      }
+    );
   };
 }
