@@ -80,6 +80,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [Espanso](documentation/espanso.md)                               | the text expander: public, personal-repo and sops-encrypted matches                       |
 | [Neovim](documentation/neovim.md)                                 | LazyVim from Nix, EDITOR/VISUAL, theme                                                    |
 | [Git](documentation/git.md)                                       | git defaults and tools, commit signing, Tower                                             |
+| [SSH](documentation/ssh.md)                                       | alberth's SSH client hosts and the 1Password SSH agent                                    |
 | [Claude Code](documentation/claude-code.md)                       | Claude Code config and the settings.json merge                                            |
 | [Fastfetch](documentation/fastfetch.md)                           | the login banner and its wrapper                                                          |
 | [Languages](documentation/languages.md)                           | Python, Ruby, Rust and the other language toolchains                                      |
