@@ -182,7 +182,7 @@
 
           # Two custom blocks render user@host with powerline separators.
           # Locally the block is red; over SSH it turns orange-red (256-color
-          # 202) so a remote session is immediately obvious.
+          # #ff5f00) so a remote session is immediately obvious.
           custom.block_local = {
             when = ''[ -z "$SSH_CONNECTION" ]'';
             command = ''printf '%s@%s' "$(whoami)" "$(hostname -s)"'';
@@ -194,7 +194,7 @@
             when = ''[ -n "$SSH_CONNECTION" ]'';
             command = ''printf '%s@%s' "$(whoami)" "$(hostname -s)"'';
             shell = [ "sh" ];
-            format = "[](bg:blue fg:color(202))[$output ](bg:color(202) fg:black)[](bg:color(202) fg:green)";
+            format = "[](bg:blue fg:#ff5f00)[$output ](bg:#ff5f00 fg:black)[](bg:#ff5f00 fg:green)";
           };
         };
       };

@@ -61,7 +61,7 @@ its own file:
   trimmed at the first `.` (`host.example.com` shows as `host`). Two custom blocks (`custom.block_local` and
   `custom.block_ssh`, both run with `sh` so the `$SSH_CONNECTION` test works from any shell) replace the built-in
   `username`/`hostname` modules. Locally the entire user@host segment is black-on-red; over SSH it shifts to
-  black-on-orange-red (256-color 202) so a remote session is immediately obvious.
+  black-on-orange-red (#ff5f00) so a remote session is immediately obvious.
 - **Nushell:** `programs.nushell` writes `config.nu` and `env.nu` (in `~/Library/Application Support/nushell` on
   macOS), so the atuin, direnv, starship, yazi and zoxide integrations load in it too. `loadSessionVariables` loads
   the Home Manager session variables (such as `EDITOR`) when Nushell starts without them, for example as the
