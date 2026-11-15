@@ -15,6 +15,7 @@ script, put it in the directory, add a `home.file` entry for it in `scripts.nix`
 | `control-dock.sh`     | turns Dock autohide on or off (macOS)                                            |
 | `dollar.sh`, `$`      | runs its arguments, so a pasted `$ cmd` works                                    |
 | `extract.sh`          | extracts an archive, or mounts a disk image, based on its extension              |
+| `fixdate.py`          | resets bogus Finder "Date Added" times on APFS (macOS)                           |
 | `switch-yubikey`      | points gpg's key stubs at the YubiKey that is plugged in now                     |
 | `update-all-magnanix` | runs `deploy-magnanix` on every host: muninn first, then the rest in parallel    |
 | `velja-open.sh`       | `open "$@"`, for the Velja browser picker (macOS)                                |
@@ -69,6 +70,24 @@ there.
 
 It exits 1 with an error if it gets no file or more than one, if the file doesn't exist, or if it doesn't know the
 extension. `bunzip2`, `gunzip` and `uncompress` replace the compressed file with the uncompressed one.
+
+## fixdate.py
+
+`fixdate.py [--apply] [options] <path>...` finds items whose Finder "Date Added" is before `--cutoff` (default
+1990-01-01, local time) and resets it to the item's download date, else its creation time, else its modification
+time, whichever is first to be plausible. Contents, modification times and code signatures are left alone. It only
+runs on macOS.
+
+- **Dry run by default:** `--apply` writes the changes.
+- **`--bad-date YYYY-MM-DD`:** also treats a Date Added on that local day as bogus, and rejects replacements on it.
+  Repeatable.
+- **Packages:** `.app` bundles and other packages count as one item; `--into-packages` scans inside them.
+- **Volumes:** it stays on each path's volume unless given `--cross-filesystems`.
+- **`-q`:** prints only errors and the summary.
+
+Use `sudo` for items you don't own, such as most of `/Applications`; items still denied under sudo are SIP-protected.
+It exits 1 if any item couldn't be read or changed. `sudo` runs it with `/usr/bin/python3`, so it must stay
+compatible with Python 3.9.
 
 ## switch-yubikey
 

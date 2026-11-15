@@ -24,7 +24,9 @@ scripts and tests are picked up without registering them anywhere:
 | Python tests                 | `test_*.py`                                       | `python3 -I <file>` (stdlib unittest) |
 | Python lint and formatting   | `*.py`                                            | `ruff check`, `ruff format --check`   |
 
-It runs every section even after one fails, and exits non-zero if any failed.
+It searches every file in the repo except `.git/` and two local-only directories that are never in the flake source:
+`.delta/` (local clones and worktrees of this repo, whose git sample hooks would fail shellcheck) and `.direnv/`
+(direnv's generated scripts). It runs every section even after one fails, and exits non-zero if any failed.
 
 ## Writing tests
 
@@ -38,7 +40,9 @@ Keep a script's tests next to it, named after it: `update-all-magnanix.bats` bes
   the script under test through its interpreter (`bash "$SCRIPT"`, `sh "$SCRIPT"`) for the same reason. To run one file while working on it:
   `nix shell nixpkgs#bats nixpkgs#procps -c bats path/to/file.bats`.
 - **Python:** use the standard library's `unittest`, so the tests need nothing beyond `python3`. The file must run
-  on its own (`unittest.main()` at the end) and exit non-zero on failure.
+  on its own (`unittest.main()` at the end) and exit non-zero on failure. CI also runs it on Linux, so patch out
+  macOS-only calls with `unittest.mock` and mark real-filesystem tests `skipUnless(sys.platform == "darwin")`; see
+  `modules/users/alberth/scripts/test_fixdate.py`.
 
 ## Limits
 
