@@ -21,6 +21,11 @@
 #   TERM=xterm-256color where that's impossible).
 # - macOS uses `ghostty-bin` (the upstream app bundle); `ghostty` doesn't
 #   build there.
+# - On macOS the config goes to Ghostty's preferred path,
+#   ~/Library/Application Support/com.mitchellh.ghostty/config.ghostty (the
+#   file Cmd+, opens), instead of ~/.config/ghostty/config. Themes stay in
+#   ~/.config/ghostty/themes, the only user directory Ghostty searches for
+#   theme names.
 {
   den.aspects.ghostty = {
     # Lets hosts that don't run Ghostty still serve SSH sessions coming from it.
@@ -60,6 +65,11 @@
           "van-helsing"
         ];
         themeName = variant: if variant == "pro" then "dracula-pro" else "dracula-pro-${variant}";
+
+        # On macOS Ghostty loads ~/.config/ghostty/config and then this file, and
+        # Cmd+, opens this one whenever it exists, so the config lives here.
+        isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+        appSupportConfig = "Library/Application Support/com.mitchellh.ghostty/config.ghostty";
       in
       {
         programs.ghostty = {
@@ -67,8 +77,8 @@
           # The `ghostty` package doesn't build on macOS; `ghostty-bin` is the upstream app bundle.
           package = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.ghostty-bin else pkgs.ghostty;
 
-          # Written to ~/.config/ghostty/config and checked with
-          # `ghostty +validate-config` whenever it changes.
+          # Written to ~/.config/ghostty/config (on macOS, to `appSupportConfig`
+          # instead) and checked with `ghostty +validate-config` whenever it changes.
           settings = {
             # Ghostty's built-in Dracula, always available.
             theme = "Dracula";
@@ -114,22 +124,37 @@
           };
         };
 
+        # On macOS, write the generated config to Ghostty's preferred path instead
+        # of the XDG one Home Manager uses (see `appSupportConfig` above).
+        home.file.${appSupportConfig} = lib.mkIf isDarwin {
+          inherit (config.xdg.configFile."ghostty/config") source;
+          # Ghostty creates a comments-only template here the first time Cmd+,
+          # finds no config, which would otherwise block activation.
+          force = true;
+          onChange = "${lib.getExe config.programs.ghostty.package} +validate-config --config-file=${lib.escapeShellArg "${config.home.homeDirectory}/${appSupportConfig}"}";
+        };
+
         # Lets modules/den/dracula-pro.nix clone the checkout on this host.
         magnanix.draculaPro.usedBy = lib.mkIf draculaPro.enable [ "ghostty" ];
 
         # The PRO variants as named themes, to try one by hand (for example
         # `theme = dracula-pro-blade`). Nothing in the generated config names them,
         # so these links dangling before the checkout exists is harmless.
-        xdg.configFile = lib.mkIf draculaPro.enable (
-          lib.listToAttrs (
-            map (
-              variant:
-              lib.nameValuePair "ghostty/themes/${themeName variant}" {
-                source = config.lib.file.mkOutOfStoreSymlink "${draculaProThemes}/${variant}";
-              }
-            ) draculaProVariants
-          )
-        );
+        xdg.configFile = lib.mkMerge [
+          (lib.mkIf draculaPro.enable (
+            lib.listToAttrs (
+              map (
+                variant:
+                lib.nameValuePair "ghostty/themes/${themeName variant}" {
+                  source = config.lib.file.mkOutOfStoreSymlink "${draculaProThemes}/${variant}";
+                }
+              ) draculaProVariants
+            )
+          ))
+
+          # The config is written to `appSupportConfig` on macOS instead.
+          { "ghostty/config".enable = !isDarwin; }
+        ];
       };
   };
 }
