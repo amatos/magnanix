@@ -72,7 +72,7 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 | [tenabrae](documentation/tenabrae.md)                             | the Pi-hole on a Raspberry Pi Zero 2 W: SD image install, deploying, secrets              |
 | [Test VMs](documentation/testing-vms.md)                          | darwintron and nixostron: testing a branch before it lands                                |
 | [Continuous Integration](documentation/ci.md)                     | the build workflow, runners, cache access                                                 |
-| [macOS](documentation/macos.md)                                   | System Settings, the Dock, mouse buttons, OrbStack's volume, App Store apps               |
+| [macOS](documentation/macos.md)                                   | System Settings, the Dock, mouse buttons, AlDente, OrbStack's volume, App Store apps      |
 | [Game streaming](documentation/game-streaming.md)                 | Sunshine and Steam (Big Picture or desktop) headless on fortuna, Moonlight on magnus      |
 | [Fonts](documentation/fonts.md)                                   | where fonts come from                                                                     |
 | [Shells](documentation/shells.md)                                 | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell, pager             |

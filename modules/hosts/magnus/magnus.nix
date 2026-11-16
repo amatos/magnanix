@@ -51,6 +51,7 @@ in
       den.aspects.ghostty
       den.aspects.macos._1password
       den.aspects.macos.acorn
+      den.aspects.macos.alDente
       den.aspects.macos.amphetamine
       den.aspects.macos.appleDeveloper
       den.aspects.macos.autoMounter
