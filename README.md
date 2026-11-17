@@ -55,36 +55,36 @@ deploy-magnanix                             # pull main in ~/Developer/magnanix 
 
 ## Documentation
 
-| Topic                                                             | What's in it                                                                              |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [Architecture](documentation/architecture.md)                     | layout, how aspects are included, user metadata, Determinate settings, inputs, formatting |
-| [Applying and updating](documentation/applying.md)                | applying the configuration, deploy-magnanix, weekly input updates, direnv                 |
-| [Scripts](documentation/scripts.md)                               | alberth's scripts in `~/.local/bin`: what each one does                                   |
-| [Testing scripts](documentation/testing-scripts.md)               | `test-scripts`: shellcheck, bats, zsh -n, Python unittest and ruff for the scripts        |
-| [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                                 |
-| [Secrets](documentation/secrets.md)                               | sops and age, YubiKeys, how secrets are wired, login passwords                            |
-| [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                          |
-| [Remote builders](documentation/remote-builders.md)               | magnus building Linux (x86_64, aarch64 under QEMU) on fortuna and muninn                  |
-| [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                |
-| [NTP](documentation/ntp.md)                                       | network time from muninn's NTP server on the LAN and tailnet, and the server itself       |
-| [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons        |
-| [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                  |
-| [tenabrae](documentation/tenabrae.md)                             | the Pi-hole on a Raspberry Pi Zero 2 W: SD image install, deploying, secrets              |
-| [Test VMs](documentation/testing-vms.md)                          | darwintron and nixostron: testing a branch before it lands                                |
-| [Continuous Integration](documentation/ci.md)                     | the build workflow, runners, cache access                                                 |
-| [macOS](documentation/macos.md)                                   | System Settings, the Dock, mouse buttons, AlDente, OrbStack's volume, App Store apps      |
-| [Game streaming](documentation/game-streaming.md)                 | Sunshine and Steam (Big Picture or desktop) headless on fortuna, Moonlight on magnus      |
-| [Fonts](documentation/fonts.md)                                   | where fonts come from                                                                     |
-| [Shells](documentation/shells.md)                                 | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell, pager             |
-| [Ghostty](documentation/ghostty.md)                               | the terminal: theme, copy on select, middle-click paste, starting directory, terminfo     |
-| [Espanso](documentation/espanso.md)                               | the text expander: public, personal-repo and sops-encrypted matches                       |
-| [Neovim](documentation/neovim.md)                                 | LazyVim from Nix, EDITOR/VISUAL, theme                                                    |
-| [Git](documentation/git.md)                                       | git defaults and tools, commit signing, Tower                                             |
-| [SSH](documentation/ssh.md)                                       | alberth's SSH client hosts and the 1Password SSH agent                                    |
-| [Claude Code](documentation/claude-code.md)                       | Claude Code config and the settings.json merge                                            |
-| [Fastfetch](documentation/fastfetch.md)                           | the login banner and its wrapper                                                          |
-| [Languages](documentation/languages.md)                           | Python, Ruby, Rust and the other language toolchains                                      |
-| [TODO](documentation/todo.md)                                     | open work                                                                                 |
+| Topic                                                             | What's in it                                                                                         |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [Architecture](documentation/architecture.md)                     | layout, how aspects are included, user metadata, Determinate settings, inputs, formatting            |
+| [Applying and updating](documentation/applying.md)                | applying the configuration, deploy-magnanix, weekly input updates, direnv                            |
+| [Scripts](documentation/scripts.md)                               | alberth's scripts in `~/.local/bin`: what each one does                                              |
+| [Testing scripts](documentation/testing-scripts.md)               | `test-scripts`: shellcheck, bats, zsh -n, Python unittest and ruff for the scripts                   |
+| [Adding hosts and users](documentation/adding-hosts-and-users.md) | step-by-step for a new machine or account                                                            |
+| [Secrets](documentation/secrets.md)                               | sops and age, YubiKeys, how secrets are wired, login passwords                                       |
+| [Binary cache](documentation/binary-cache.md)                     | the Attic server, pulling from it, pushing to it                                                     |
+| [Remote builders](documentation/remote-builders.md)               | magnus building Linux (x86_64, aarch64 under QEMU) on fortuna and muninn                             |
+| [Mail](documentation/mail.md)                                     | outgoing mail through the SMTP relay, and the relay itself                                           |
+| [NTP](documentation/ntp.md)                                       | network time from muninn's NTP server on the LAN and tailnet, and the server itself                  |
+| [Thunderbird](documentation/thunderbird.md)                       | alberth's Fastmail mail, calendars and contacts, YubiKey OpenPGP, maildir, add-ons                   |
+| [TLS certificates](documentation/tls-certificates.md)             | Let's Encrypt through certbot and LuaDNS                                                             |
+| [tenabrae](documentation/tenabrae.md)                             | the Pi-hole on a Raspberry Pi Zero 2 W: SD image install, deploying, secrets                         |
+| [Test VMs](documentation/testing-vms.md)                          | darwintron and nixostron: testing a branch before it lands                                           |
+| [Continuous Integration](documentation/ci.md)                     | the build workflow, runners, cache access                                                            |
+| [macOS](documentation/macos.md)                                   | System Settings, the Dock, mouse buttons, Creative Cloud, AlDente, OrbStack's volume, App Store apps |
+| [Game streaming](documentation/game-streaming.md)                 | Sunshine and Steam (Big Picture or desktop) headless on fortuna, Moonlight on magnus                 |
+| [Fonts](documentation/fonts.md)                                   | where fonts come from                                                                                |
+| [Shells](documentation/shells.md)                                 | zsh, fish, bash, Nushell, Starship, aliases and functions, login shell, pager                        |
+| [Ghostty](documentation/ghostty.md)                               | the terminal: theme, copy on select, middle-click paste, starting directory, terminfo                |
+| [Espanso](documentation/espanso.md)                               | the text expander: public, personal-repo and sops-encrypted matches                                  |
+| [Neovim](documentation/neovim.md)                                 | LazyVim from Nix, EDITOR/VISUAL, theme                                                               |
+| [Git](documentation/git.md)                                       | git defaults and tools, commit signing, Tower                                                        |
+| [SSH](documentation/ssh.md)                                       | alberth's SSH client hosts and the 1Password SSH agent                                               |
+| [Claude Code](documentation/claude-code.md)                       | Claude Code config and the settings.json merge                                                       |
+| [Fastfetch](documentation/fastfetch.md)                           | the login banner and its wrapper                                                                     |
+| [Languages](documentation/languages.md)                           | Python, Ruby, Rust and the other language toolchains                                                 |
+| [TODO](documentation/todo.md)                                     | open work                                                                                            |
 
 Planning notes: [CICD_PLAN.md](documentation/CICD_PLAN.md), [TAILSCALE_SETUP.md](documentation/TAILSCALE_SETUP.md).
 
