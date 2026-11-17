@@ -98,6 +98,20 @@ Settings from the Action menu and point it at a sync file in iCloud Drive ("Set 
 "Use existing sync file" on the others, before adding rules there). Rule Sync doesn't carry whether each rule is
 turned on, so rules arriving from another Mac start turned off. Hazel is paid; enter the licence in the app.
 
+## Adobe Creative Cloud
+
+`den.aspects.macos.adobeCreativeCloud` (`modules/packages/adobe-creative-cloud.nix`), included by magnus, installs
+the Adobe Creative Cloud app. It isn't in nixpkgs, so it's the `adobe-creative-cloud` Homebrew cask, which runs
+Adobe's installer silently with sudo; the switch that installs it may ask for an admin password.
+
+Only the Creative Cloud app comes from this repo. Sign in to the Adobe account in it, then install Photoshop,
+Lightroom and the other Adobe apps from there; Creative Cloud installs, updates and licenses them, and updates
+itself.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves `~/Creative Cloud Files` to the
+> Trash along with Adobe's settings. Check that everything there has synced first.
+
 ## AlDente
 
 `den.aspects.macos.alDente` (`modules/packages/aldente.nix`), included by magnus, installs AppHouseKitchen's
