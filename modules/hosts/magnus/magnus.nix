@@ -107,6 +107,7 @@ in
       den.aspects.tailscale
       den.aspects.tex
       den.aspects.tui.macos.tart
+      den.aspects.whatsapp
       den.aspects.zed
       den.aspects.zsa.voyager
     ];

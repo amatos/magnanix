@@ -65,6 +65,7 @@ in
       den.aspects.remote-build.server
       den.aspects.steam
       den.aspects.tailscale
+      den.aspects.whatsapp
       den.aspects.zed
     ];
 

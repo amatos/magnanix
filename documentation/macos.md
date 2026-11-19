@@ -182,6 +182,20 @@ launchd daemon runs the same script at boot to unlock and mount it (log: `/var/l
 
 Existing OrbStack data in `~/.orbstack/data` is not moved (activation warns if it exists).
 
+## WhatsApp
+
+`den.aspects.whatsapp` (`modules/packages/whatsapp.nix`), included by magnus and fortuna, installs WhatsApp. On
+macOS it's Meta's native app, the `whatsapp` Homebrew cask, which updates itself (`auto_updates`, so `brew upgrade`
+leaves it alone). Meta doesn't make a Linux client, so on NixOS it installs [Karere](https://github.com/tobagin/karere)
+from nixpkgs, a GTK4 app that wraps WhatsApp Web. nixpkgs removed wasistlos (formerly whatsapp-for-linux) as
+unmaintained and recommends Karere instead.
+
+Link each one to your phone by scanning the QR code it shows on first launch.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which deletes WhatsApp's local chat database on
+> the Mac. Chats sync back from the phone after linking again.
+
 ## App Store apps
 
 Mac App Store apps are installed by `brew bundle` through `mas` (`homebrew.masApps`), which needs you signed in to
