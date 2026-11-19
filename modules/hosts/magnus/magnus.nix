@@ -53,6 +53,7 @@ in
       den.aspects.macos.acorn
       den.aspects.macos.adobeCreativeCloud
       den.aspects.macos.alDente
+      den.aspects.macos.alfred
       den.aspects.macos.amphetamine
       den.aspects.macos.appleDeveloper
       den.aspects.macos.autoMounter

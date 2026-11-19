@@ -135,6 +135,21 @@ Check for Updates… in the app still works for checking by hand, but don't inst
 After the first switch, open AlDente and let it install its privileged helper, which it needs to control charging.
 AlDente Pro's licence is entered in the app.
 
+## Alfred
+
+`den.aspects.macos.alfred` (`modules/packages/alfred.nix`), included by magnus, installs Alfred 6, the launcher and
+productivity app. It's the `alfred` Homebrew cask: nixpkgs' `alfred` is an unrelated Linux mesh-networking tool.
+
+Alfred updates itself (the cask is `auto_updates`, so `brew upgrade` leaves it alone). The `alfred` cask follows the
+current major version; when Alfred 7 ships, the cask moves to it and Alfred 6 stays available as `alfred@6`, so pin
+that if the upgrade licence hasn't been bought. Enter the Powerpack licence in the app, and to keep workflows and
+snippets across Macs, point Advanced > Syncing at a folder in iCloud Drive or Dropbox.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves
+> `~/Library/Application Support/Alfred` (workflows, snippets, clipboard history) to the Trash. Settings in a sync
+> folder are kept.
+
 ## OrbStack
 
 `den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`) installs OrbStack from nixpkgs
