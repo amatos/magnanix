@@ -29,7 +29,7 @@
 # - Linux: a wrapper picks the X11 or Wayland build from $WAYLAND_DISPLAY. The
 #   Wayland build reads /dev/input (`input` group) and types through
 #   /dev/uinput (`uinput` group), so every user on the host gets both.
-# - The search bar opens with Alt+Space (Option+Space on macOS).
+# - The search bar's shortcut (Alt+Space, Option+Space on macOS) is off.
 { lib, ... }:
 {
   # Options for every user, so a user aspect can set its repo once even on hosts
@@ -95,6 +95,9 @@
     homeManager = {
       services.espanso = {
         enable = true;
+
+        # No search bar shortcut (default Alt+Space / Option+Space).
+        configs.default.search_shortcut = "off";
 
         # Public, shareable matches only. Everyday personal ones go in the
         # personal repo; sensitive ones in `secure`.
