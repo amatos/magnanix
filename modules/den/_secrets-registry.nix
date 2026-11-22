@@ -38,6 +38,7 @@
     # Home Manager: per-machine user keys (`age-keygen -y ~/.config/sops-nix/key.txt`)
     alberth_magnus = "age1e9m0g8y8g6270wjqnpexm3x8fvntfyvuf3d4td0hge3hzkgezugsm6gh8l";
     alberth_muninn = "age1lkrmja7y0ru7yqfgckumgzzakgs06lsvmleysvrl9tm0xdp3sa6q7p84fn";
+    alberth_fortuna = "age1qj8zxqx8avzy2j2hkvh0pat5va5la0ayz0xfuqcee3gl5a5vtvfsdsrgty";
     ephemeral_darwintron = "age1rd88xaq8el7hm5rn3en6jhy8elfdn8z0elnfrd63q74vsxmanvascxh5sd";
     ephemeral_nixostron = "age1t7ewwhp7ywczmqz0ycvc8q0pjs96h4mqkzqj3nvucapupqy2wcrqvnkqw3";
   };
@@ -81,6 +82,7 @@
     "users/alberth/espanso/street-address.yml" = [
       "alberth_magnus"
       "alberth_muninn"
+      "alberth_fortuna"
     ];
     "users/ephemeral/canary" = [
       "ephemeral_darwintron"
