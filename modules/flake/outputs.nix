@@ -78,6 +78,40 @@ in
       // lib.mapAttrs (_: mkApp: mkApp pkgsWithDeterminateNix) config.flake-file.apps
     );
 
+    # What the `secrets` command (nix-secrets) edits and rekeys against: a minimal
+    # configuration with every registry secret enabled, so the CLI sees every secret
+    # with the same recipients the hosts get (see modules/den/_nix-secrets-shared.nix).
+    # One per system, because the CLI builds the manifest with the local system's
+    # pkgs: nix-darwin on macOS, NixOS on Linux. Never deployed.
+    secretsAdmin = forEachSupportedSystem (
+      { system, ... }:
+      let
+        isDarwin = lib.hasSuffix "-darwin" system;
+        registry = import ../den/_secrets-registry.nix;
+      in
+      (if isDarwin then inputs.nix-darwin.lib.darwinSystem else inputs.nixpkgs.lib.nixosSystem) {
+        modules = [
+          (
+            if isDarwin then
+              inputs.nix-secrets.darwinModules.default
+            else
+              inputs.nix-secrets.nixosModules.default
+          )
+          {
+            nixpkgs.hostPlatform = system;
+            system.stateVersion = if isDarwin then 7 else "26.05";
+            security.nix-secrets = import ../den/_nix-secrets-shared.nix { inherit inputs lib; } // {
+              # The `secrets` command passes the YubiKey identities with --identity.
+              identityPaths = [ ];
+              activate.enable = false;
+            };
+          }
+          { security.nix-secrets.secrets = lib.mapAttrs (_: _: { enable = true; }) registry.secrets; }
+        ]
+        ++ lib.optional (!isDarwin) { boot.isContainer = true; };
+      }
+    );
+
     # `nix flake check` fails when flake.nix is out of date with the modules
     # Linux systems also build the nixostron host for their architecture, so
     # `nix flake check` on a Linux host catches a nixostron that no longer builds.
@@ -108,6 +142,30 @@ in
     # Development environment
     devShells = forEachSupportedSystem (
       { system, pkgs }:
+      let
+        # The age identities of the plugged-in YubiKeys, for sops (SOPS_AGE_KEY_CMD) and
+        # `secrets`. With more than one plugged in, the plugin tries them in its own
+        # order, so when the preferred one (13125942, which needs no PIN or touch) is
+        # there, only its identity is printed. Override with YUBIKEY_PREFERRED_SERIAL.
+        yubikeyIdentities = pkgs.writeShellApplication {
+          name = "yubikey-identities";
+          runtimeInputs = [
+            pkgs.age-plugin-yubikey
+            pkgs.gnugrep
+          ];
+          text = ''
+            preferred="''${YUBIKEY_PREFERRED_SERIAL:-13125942}"
+            # --identity --serial exits 0 with no output for a key that isn't plugged in,
+            # so check the list first. Captured rather than piped: `grep -q` stops at the
+            # first match, and under pipefail the plugin's SIGPIPE would fail the test.
+            keys="$(age-plugin-yubikey --list 2>/dev/null || true)"
+            if grep -q "Serial: $preferred," <<<"$keys"; then
+              exec age-plugin-yubikey --identity --serial "$preferred"
+            fi
+            exec age-plugin-yubikey --identity
+          '';
+        };
+      in
       {
         default = pkgs.mkShellNoCC {
           packages = [
@@ -116,6 +174,7 @@ in
                 # Shell script for applying the nix-darwin configuration (which includes Home Manager).
                 # Run this to apply the configuration in this flake to your macOS system:
                 # nix develop --command apply-configuration
+                # Extra arguments go to darwin-rebuild (e.g. --override-input secrets path:...).
                 pkgs.writeShellApplication {
                   name = "apply-configuration";
                   runtimeInputs = [
@@ -128,7 +187,7 @@ in
                     echo "> Applying nix-darwin configuration for $host..."
 
                     echo "> Running darwin-rebuild switch as root..."
-                    sudo darwin-rebuild switch --flake ".#$host"
+                    sudo darwin-rebuild switch --flake ".#$host" "$@"
                     echo "> darwin-rebuild switch was successful ✅"
 
                     echo "> macOS config was successfully applied 🚀"
@@ -138,6 +197,7 @@ in
                 # Shell script for applying the NixOS configuration (which includes Home Manager).
                 # Run this on a NixOS host to apply the configuration in this flake:
                 # nix develop --command apply-configuration
+                # Extra arguments go to nixos-rebuild (e.g. --override-input secrets path:...).
                 pkgs.writeShellApplication {
                   name = "apply-configuration";
                   text = ''
@@ -146,7 +206,7 @@ in
                     echo "> Applying NixOS configuration for $host..."
 
                     echo "> Running nixos-rebuild switch as root..."
-                    sudo nixos-rebuild switch --flake ".#$host"
+                    sudo nixos-rebuild switch --flake ".#$host" "$@"
                     echo "> nixos-rebuild switch was successful ✅"
 
                     echo "> NixOS config was successfully applied 🚀"
@@ -193,10 +253,48 @@ in
             # Lints and tests the shell and Python scripts: `test-scripts`
             (mkTestScripts pkgs)
 
+            # nix-secrets, run against the `secretsAdmin` output so every secret is in
+            # reach with its registry recipients: `secrets edit <name>`, `secrets rekey`,
+            # `secrets decrypt <name>`. See documentation/NIX_SECRETS_PLAN.md.
+            (pkgs.writeShellApplication {
+              name = "secrets";
+              runtimeInputs = [
+                (inputs.nix-secrets.packages.${system}.nix-secrets.override {
+                  extraPackages = [
+                    pkgs.age
+                    pkgs.age-plugin-yubikey
+                  ];
+                })
+                yubikeyIdentities
+                pkgs.git
+              ];
+              text = ''
+                repo="$(git rev-parse --show-toplevel)"
+                # Where `edit` and `rekey` write: a clone of amatos/secrets (git@github.com:amatos/secrets.git).
+                export NIX_SECRETS_STORAGE_PATH="''${NIX_SECRETS_STORAGE_PATH:-$HOME/Developer/secrets}"
+                if [ ! -d "$NIX_SECRETS_STORAGE_PATH" ]; then
+                  echo "secrets: no storage at $NIX_SECRETS_STORAGE_PATH; clone amatos/secrets there or set NIX_SECRETS_STORAGE_PATH" >&2
+                  exit 1
+                fi
+
+                # The plugged-in YubiKeys' identities (the preferred one alone if it is
+                # there). nix-secrets skips identity paths that aren't regular files, so
+                # this can't be a process substitution. They only point at a key on a
+                # YubiKey, so they aren't secret; the file is removed anyway.
+                identities="$(mktemp)"
+                trap 'rm -f "$identities"' EXIT
+                yubikey-identities >"$identities" 2>/dev/null || true
+
+                nix-secrets --module-system secretsAdmin --flake "$repo#${system}" \
+                  --identity "$identities" "$@"
+              '';
+            })
+
             # Tools for creating and editing secrets
             pkgs.sops
             pkgs.age
             pkgs.age-plugin-yubikey
+            yubikeyIdentities
             pkgs.ssh-to-age
             # Hashing login passwords (`openssl passwd -6`)
             pkgs.openssl
@@ -207,8 +305,9 @@ in
           ];
 
           # sops only uses a YubiKey when given its age-plugin-yubikey identity, so ask the
-          # plugin for the identities of whichever YubiKeys are plugged in.
-          env.SOPS_AGE_KEY_CMD = "age-plugin-yubikey --identity";
+          # plugin for the identities of the plugged-in YubiKeys (the preferred one alone
+          # if it is there; see yubikey-identities above).
+          env.SOPS_AGE_KEY_CMD = "yubikey-identities";
 
           # Enable the tracked pre-commit hook (.githooks/pre-commit)
           shellHook = ''

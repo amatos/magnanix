@@ -414,6 +414,27 @@
         "type": "github"
       }
     },
+    "nix-secrets": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1795264911,
+        "narHash": "sha256-MIltvL1t7PQsZhrqJHkBCSxHyuXVcZq6wls0ahIQB/4=",
+        "owner": "unnamed-systems",
+        "repo": "nix-secrets",
+        "rev": "c451d665f43c0edb7402d8699714956e6509b002",
+        "type": "github"
+      },
+      "original": {
+        "owner": "unnamed-systems",
+        "ref": "v0.5.4",
+        "repo": "nix-secrets",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1794872590,
@@ -489,9 +510,27 @@
         "lazyvim-nix": "lazyvim-nix",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
+        "nix-secrets": "nix-secrets",
         "nixpkgs": "nixpkgs_2",
+        "secrets": "secrets",
         "sops-nix": "sops-nix",
         "zen-browser": "zen-browser"
+      }
+    },
+    "secrets": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795367779,
+        "narHash": "sha256-zhvLsFyMZcoxMm3lAbhRePIFV5lxQYr3GmhdUGOFPkY=",
+        "owner": "amatos",
+        "repo": "secrets",
+        "rev": "cc37d562ca40e01ba00480818c0f3963a239bfb4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amatos",
+        "repo": "secrets",
+        "type": "github"
       }
     },
     "sops-nix": {
