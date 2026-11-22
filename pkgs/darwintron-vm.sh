@@ -170,11 +170,19 @@ send_source() {
 }
 
 apply() {
-  log "applying configuration"
+  local nix='NIX_SENTRY_ENDPOINT="" /nix/var/nix/profiles/default/bin/nix'
+  local override='--override-input secrets "path:$HOME/Developer/secrets"'
+  # Build first, so the switch below only activates. The build can take a long time on a
+  # fresh guest, and Determinate Nix restores its lines to /etc/bashrc and /etc/zshrc in
+  # the meantime, which would undo the move before the activation checks for it.
+  log "building the configuration"
+  guest "$user" "cd ~/Developer/magnanix && $nix build --no-link $override .#darwinConfigurations.darwintron.system"
   # nix-darwin refuses to replace these on its first activation. This can't live in the
-  # seed: Determinate's boot hook puts them back.
-  guest "$user" 'for f in /etc/bashrc /etc/zshrc; do if [ -e "$f" ] && [ ! -L "$f" ]; then sudo mv "$f" "$f.before-nix-darwin"; fi; done'
-  guest "$user" 'cd ~/Developer/magnanix && NIX_SENTRY_ENDPOINT="" /nix/var/nix/profiles/default/bin/nix develop --override-input secrets "path:$HOME/Developer/secrets" --command apply-configuration --override-input secrets "path:$HOME/Developer/secrets"'
+  # seed: Determinate's boot hook puts them back. If a backup already exists, the file is
+  # one Determinate restored, so drop it instead of overwriting the original.
+  guest "$user" 'for f in /etc/bashrc /etc/zshrc; do if [ -e "$f" ] && [ ! -L "$f" ]; then if [ -e "$f.before-nix-darwin" ]; then sudo rm "$f"; else sudo mv "$f" "$f.before-nix-darwin"; fi; fi; done'
+  log "applying configuration"
+  guest "$user" "cd ~/Developer/magnanix && $nix develop $override --command apply-configuration $override"
 }
 
 check_canaries() {
