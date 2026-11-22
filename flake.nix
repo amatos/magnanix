@@ -58,8 +58,16 @@
     nix-homebrew = {
       url = "github:zhaofengli/nix-homebrew";
     };
+    nix-secrets = {
+      url = "github:unnamed-systems/nix-secrets/v0.5.4";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpkgs = {
       url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    };
+    secrets = {
+      url = "github:amatos/secrets";
+      flake = false;
     };
     sops-nix = {
       url = "github:Mic92/sops-nix";
