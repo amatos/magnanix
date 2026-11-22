@@ -43,10 +43,12 @@ secret() {
 
 # -F /dev/null skips the user's config, whose `*` rule points at the 1Password agent.
 # Host keys aren't checked: the address is a local NAT lease and the key changes on injection.
+# BatchMode: early in a boot sshd can be up before it accepts the key, and ssh would then
+# wait at a password prompt forever instead of failing so wait_for_ssh can retry.
 guest() {
   local login="$1"
   shift
-  ssh -F /dev/null -i "$work/access_key" -o IdentitiesOnly=yes -o IdentityAgent=none \
+  ssh -F /dev/null -i "$work/access_key" -o IdentitiesOnly=yes -o IdentityAgent=none -o BatchMode=yes \
     -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR \
     -o ConnectTimeout=5 -o ServerAliveInterval=30 "$login@$ip" "$@"
 }
