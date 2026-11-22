@@ -51,7 +51,7 @@ renamed copy. tenabrae's initrd failed this way, looking for `terminfo/l/linux`.
 
 ## Attic
 
-Builds done on fortuna and muninn are pushed to Attic by their own `attic.push` watchers. fortuna's watcher only starts once `attic_push_token` is in `secrets/hosts/fortuna.yaml`. To set
+Builds done on fortuna and muninn are pushed to Attic by their own `attic.push` watchers. fortuna's watcher only starts once `amatos/secrets` has `hosts/fortuna/attic_push_token`. To set
 it up, see "Pushing to the cache" in [Binary cache](binary-cache.md).
 
 ## Keys
@@ -67,7 +67,7 @@ it up, see "Pushing to the cache" in [Binary cache](binary-cache.md).
 
 - **Host keys:** each builder's `ssh_host_ed25519_key.pub` is pinned in `remote-build.nix`, base64-encoded as
   `publicHostKey`. Root on magnus doesn't need `known_hosts` entries for them. They are the same keys the hosts
-  decrypt sops secrets with (`host_fortuna` and `host_muninn` in `.sops.yaml`).
+  decrypt their secrets with (`host_fortuna` and `host_muninn` in `modules/den/_secrets-registry.nix`).
 
 ## Checking it
 

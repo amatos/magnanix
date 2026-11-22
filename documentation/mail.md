@@ -40,7 +40,9 @@ to the App Store. On NixOS, log in to the tailnet once with `sudo tailscale up`.
   verifies the name has to use `smtp.home.matos.cc`. Until certbot has issued the certificate, port 25 accepts
   mail without TLS (and logs a warning), and port 465 fails.
 
-The app password is `fastmail_smtp_password` in `secrets/hosts/muninn.yaml`, which only muninn and the YubiKeys can
-decrypt. sops-nix writes it into Postfix's SASL password table at `/run/secrets/rendered/postfix-sasl-passwords`
-(root only) and restarts Postfix when it changes. To replace it, create a new app password in Fastmail's settings
-(Privacy & Security), paste it in with `sops secrets/hosts/muninn.yaml`, and switch muninn.
+The app password is the secret `hosts/muninn/fastmail_smtp_password`, which only muninn and the YubiKeys can
+decrypt. nix-secrets writes it into Postfix's SASL password table at
+`/run/nix-secrets/templates/postfix-sasl-passwords` (root only), and Postfix restarts when it changes. To replace
+it, create a new app password in Fastmail's settings (Privacy & Security), paste it in with
+`secrets edit hosts/muninn/fastmail_smtp_password`, push and lock it (see [Secrets](secrets.md#editing)), and
+switch muninn.

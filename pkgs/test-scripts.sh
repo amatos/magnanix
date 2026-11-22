@@ -38,8 +38,12 @@ run() {
   fi
 }
 
-# Every regular file outside .git; result* symlinks aren't followed.
-mapfile -d '' files < <(find . -path ./.git -prune -o -type f -print0 | sort -z)
+# Every regular file outside .git and the local-only .delta (clones and
+# worktrees of this repo, with git's sample hooks) and .direnv (generated
+# scripts); result* symlinks aren't followed.
+mapfile -d '' files < <(
+  find . \( -path ./.git -o -path ./.delta -o -path ./.direnv \) -prune -o -type f -print0 | sort -z
+)
 
 shell_scripts=()
 zsh_scripts=()

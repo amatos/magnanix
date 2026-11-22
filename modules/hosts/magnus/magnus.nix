@@ -51,6 +51,9 @@ in
       den.aspects.ghostty
       den.aspects.macos._1password
       den.aspects.macos.acorn
+      den.aspects.macos.adobeCreativeCloud
+      den.aspects.macos.alDente
+      den.aspects.macos.alfred
       den.aspects.macos.amphetamine
       den.aspects.macos.appleDeveloper
       den.aspects.macos.autoMounter
@@ -97,6 +100,7 @@ in
       den.aspects.macos.velja
       den.aspects.macos.windowsApp
       den.aspects.macos.zavala
+      den.aspects.nix-access-tokens
       den.aspects.openssh
       # Linux builds go to fortuna, then muninn, then the Native Linux Builder
       den.aspects.remote-build.client
@@ -104,6 +108,7 @@ in
       den.aspects.tailscale
       den.aspects.tex
       den.aspects.tui.macos.tart
+      den.aspects.whatsapp
       den.aspects.zed
       den.aspects.zsa.voyager
     ];

@@ -6,8 +6,8 @@
 #            documentation/testing-vms.md.
 #
 # Notes:
-# - Its only user is `ephemeral`, whose secrets are fake; it can't read
-#   common.yaml or any real user's secrets.
+# - Its only user is `ephemeral`, whose secrets are fake; it can't read any
+#   real host's or user's secrets.
 # - Automatic macOS updates are forced off so an update can't reboot the VM
 #   mid-test.
 # - The `canary` secrets prove system and Home Manager decryption work.
@@ -30,7 +30,7 @@
         system.defaults.SoftwareUpdate.AutomaticallyInstallMacOSUpdates = lib.mkForce false;
 
         # Checked by darwintron-vm to prove system secrets decrypt.
-        sops.secrets.canary = { };
+        security.nix-secrets.secrets."hosts/darwintron/canary".enable = true;
       };
   };
 
@@ -39,6 +39,6 @@
     includes = [ den.batteries.primary-user ];
 
     # Checked by darwintron-vm to prove Home Manager secrets decrypt.
-    homeManager.sops.secrets.canary = { };
+    homeManager.security.nix-secrets.secrets."users/ephemeral/canary".enable = true;
   };
 }

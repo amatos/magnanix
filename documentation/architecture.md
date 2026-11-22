@@ -16,12 +16,11 @@ flake.lock                     pinned inputs
 .githooks/pre-commit           formatting and flake.nix up-to-date checks (enabled by the dev shell)
 .github/workflows/             CI and the weekly flake input update PR (see ci.md, applying.md)
 .github/actions/attic-cache/   composite action that joins Tailscale and sets up the Attic cache for CI
-.sops.yaml                     sops recipients and creation rules
-secrets/                       encrypted secrets: common, per host, per user, and the test VMs' bootstrap keys
+.sops.yaml, secrets/           the old sops-nix secrets, unused; kept until the nix-secrets cleanup
 documentation/                 this documentation, plus CICD_PLAN.md, TAILSCALE_SETUP.md and the tailnet ACL policy
 pkgs/                          the darwintron-vm / nixostron-vm scripts and locally packaged software
 modules/
-├── den/                       the framework and what every host shares: base, Determinate Nix, sops, Homebrew,
+├── den/                       the framework and what every host shares: base, Determinate Nix, nix-secrets, Homebrew,
 │                              Home Manager integration, disko, magnanix.repoDir and magnanix.draculaPro options,
 │                              and _versions.nix (the branch each core input tracks)
 ├── flake/outputs.nix          the flake's outputs: configurations, nh wrappers, checks, dev shell, formatter
@@ -40,7 +39,8 @@ Every `.nix` file starts with a header naming the aspect(s) it defines, the plat
 (`nixos`, `darwin`, `home-manager`) and what it is for, followed by notes on anything that differs from the
 defaults. Read the header first when you need to know what a file does or why something is set.
 
-The `base`, `determinate`, `sops` and `macos.homebrew` aspects are added to every host through `den.default.includes`.
+The `base`, `determinate`, `nix-secrets`, `sops` (unused, until the cleanup) and `macos.homebrew` aspects are added
+to every host through `den.default.includes`.
 Per-host settings go in `den.aspects.<host>`, and per-user settings in `den.aspects.<user>` (its `homeManager`
 attribute is the user's Home Manager configuration).
 
@@ -181,6 +181,37 @@ not change when the channels do.
 The formatter is `nixfmt` (the RFC 166 style), also used to format the generated `flake.nix`:
 
 ```sh
-git ls-files -z '*.nix' | xargs -0 -r nix fmt                                    # format
-git ls-files -z '*.nix' | xargs -0 -r nix develop --command nixfmt --check       # check
+nix fmt                              # format every tracked .nix file
+nix fmt -- --check                   # check them (exits non-zero if any isn't formatted)
+nix fmt path/to/file.nix             # format just the files given
 ```
+
+Plain nixfmt reads stdin when it gets no files, so a bare `nix fmt` used to wait forever. The flake's formatter
+(`modules/flake/outputs.nix`) is a small wrapper, also named `nixfmt`: with no file arguments it runs nixfmt on every
+tracked `.nix` file from the repository root, passing options such as `--check` through. With files, or `-` for
+stdin, it runs nixfmt unchanged, so the pre-commit hook and CI (which pass file lists) work as before. The dev
+shell's `nixfmt` is the same wrapper. An option followed by a separate value (`--width 80`) looks like a file
+argument; write it as `--width=80`.
+
+### Future option: treefmt
+
+[treefmt](https://treefmt.com), through [treefmt-nix](https://github.com/numtide/treefmt-nix), is the usual
+replacement for a single-formatter `nix fmt`. It was left for later because it changes more than the wrapper does.
+
+Advantages:
+
+- Formats the whole tree by default and still accepts paths, so the hang can't happen.
+- Can run several formatters from one command, for example shfmt for the shell scripts or ruff for the Python
+  scripts, and Markdown formatting for the docs.
+- Caches results, so reruns only touch files that changed.
+- treefmt-nix provides a `checks.formatting` flake check, so formatting is checked by `nix flake check`.
+- With only nixfmt configured, the output is identical, so switching doesn't reformat the repository.
+
+Disadvantages:
+
+- treefmt doesn't accept nixfmt's options, so `nix fmt -- --check` breaks. The pre-commit hook and CI's
+  "Check Nix formatting" step would have to move to `treefmt --fail-on-change` or the `checks.formatting` check
+  in the same change.
+- The formatter becomes treefmt, so the dev shell no longer has `nixfmt` on `PATH` unless it's added separately.
+- A new flake input (treefmt-nix), added through the generated `flake.nix`, and a treefmt configuration to maintain.
+- Adding more formatters reformats those files once, which makes a large one-time diff.

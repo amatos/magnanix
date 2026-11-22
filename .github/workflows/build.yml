@@ -107,6 +107,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
+        # Read access to the private amatos/secrets input (the `secrets` flake input).
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.SECRETS_REPO_TOKEN }}
 
       - name: Check Nix formatting
         run: git ls-files -z '*.nix' | xargs -0 -r nix fmt -- --check
@@ -149,6 +153,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v12
+        # Read access to the private amatos/secrets input (the `secrets` flake input).
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.SECRETS_REPO_TOKEN }}
 
       # Also on macOS, where the scripts meet BSD tools.
       - name: Lint and test shell and Python scripts (test-scripts)
@@ -212,6 +220,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v12
+        # Read access to the private amatos/secrets input (the `secrets` flake input).
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.SECRETS_REPO_TOKEN }}
 
       # Optional: if muninn is unreachable the job builds without the cache.
       - name: Use muninn's Attic cache
@@ -256,6 +268,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
+        # Read access to the private amatos/secrets input (the `secrets` flake input).
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.SECRETS_REPO_TOKEN }}
 
       # Optional: if muninn is unreachable the job builds without the cache.
       - name: Use muninn's Attic cache
@@ -308,6 +324,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
+        # Read access to the private amatos/secrets input (the `secrets` flake input).
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.SECRETS_REPO_TOKEN }}
 
       # Optional: if muninn is unreachable the job builds without the cache.
       - name: Use muninn's Attic cache

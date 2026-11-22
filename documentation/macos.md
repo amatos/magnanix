@@ -86,6 +86,62 @@ What's Your Sign? works through a Finder extension: after the first switch, open
 extension on in System Settings > General > Login Items & Extensions if Finder's context menu doesn't show
 "Signing Info".
 
+## Hazel
+
+`den.aspects.macos.hazel` (`modules/packages/hazel.nix`), included by `alberth.macDesktop`, installs Noodlesoft's
+Hazel, which files things automatically by rules set per watched folder. It isn't in nixpkgs, so it's the `hazel`
+Homebrew cask.
+
+Only the app comes from this repo. Hazel owns its rules (in `~/Library/Application Support/Hazel`) and rewrites
+them itself, so they're kept in step between Macs with Hazel's Rule Sync instead: for each folder, choose Rule Sync
+Settings from the Action menu and point it at a sync file in iCloud Drive ("Set up new sync file" on the first Mac,
+"Use existing sync file" on the others, before adding rules there). Rule Sync doesn't carry whether each rule is
+turned on, so rules arriving from another Mac start turned off. Hazel is paid; enter the licence in the app.
+
+## Adobe Creative Cloud
+
+`den.aspects.macos.adobeCreativeCloud` (`modules/packages/adobe-creative-cloud.nix`), included by magnus, installs
+the Adobe Creative Cloud app. It isn't in nixpkgs, so it's the `adobe-creative-cloud` Homebrew cask, which runs
+Adobe's installer silently with sudo; the switch that installs it may ask for an admin password.
+
+Only the Creative Cloud app comes from this repo. Sign in to the Adobe account in it, then install Photoshop,
+Lightroom and the other Adobe apps from there; Creative Cloud installs, updates and licenses them, and updates
+itself.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves `~/Creative Cloud Files` to the
+> Trash along with Adobe's settings. Check that everything there has synced first.
+
+## AlDente
+
+`den.aspects.macos.alDente` (`modules/packages/aldente.nix`), included by magnus, installs AppHouseKitchen's
+AlDente, which caps the MacBook's charge level to extend battery life. It's the `aldente` Homebrew cask, in
+`/Applications`.
+
+AlDente updates itself (the cask is `auto_updates`, so `brew upgrade` leaves it alone).
+
+After the first switch, open AlDente and let it install its privileged helper, which it needs to control charging.
+AlDente Pro's licence is entered in the app.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which removes the privileged helper and moves
+> AlDente's preferences and charging statistics to the Trash.
+
+## Alfred
+
+`den.aspects.macos.alfred` (`modules/packages/alfred.nix`), included by magnus, installs Alfred 6, the launcher and
+productivity app. It's the `alfred` Homebrew cask: nixpkgs' `alfred` is an unrelated Linux mesh-networking tool.
+
+Alfred updates itself (the cask is `auto_updates`, so `brew upgrade` leaves it alone). The `alfred` cask follows the
+current major version; when Alfred 7 ships, the cask moves to it and Alfred 6 stays available as `alfred@6`, so pin
+that if the upgrade licence hasn't been bought. Enter the Powerpack licence in the app, and to keep workflows and
+snippets across Macs, point Advanced > Syncing at a folder in iCloud Drive or Dropbox.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves
+> `~/Library/Application Support/Alfred` (workflows, snippets, clipboard history) to the Trash. Settings in a sync
+> folder are kept.
+
 ## OrbStack
 
 `den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`) installs OrbStack from nixpkgs
@@ -117,6 +173,20 @@ launchd daemon runs the same script at boot to unlock and mount it (log: `/var/l
 > ```
 
 Existing OrbStack data in `~/.orbstack/data` is not moved (activation warns if it exists).
+
+## WhatsApp
+
+`den.aspects.whatsapp` (`modules/packages/whatsapp.nix`), included by magnus and fortuna, installs WhatsApp. On
+macOS it's Meta's native app, the `whatsapp` Homebrew cask, which updates itself (`auto_updates`, so `brew upgrade`
+leaves it alone). Meta doesn't make a Linux client, so on NixOS it installs [Karere](https://github.com/tobagin/karere)
+from nixpkgs, a GTK4 app that wraps WhatsApp Web. nixpkgs removed wasistlos (formerly whatsapp-for-linux) as
+unmaintained and recommends Karere instead.
+
+Link each one to your phone by scanning the QR code it shows on first launch.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which deletes WhatsApp's local chat database on
+> the Mac. Chats sync back from the phone after linking again.
 
 ## App Store apps
 

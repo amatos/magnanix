@@ -20,10 +20,14 @@ A failed test keeps its VM for inspection. `darwintron-vm ssh` opens a shell on 
 deletes it. Each test checks the canary secrets, the login shell and the hostname, and prints an `nvd` diff when
 starting from the baseline.
 
-The VM keeps one identity however often it is rebuilt. `secrets/bootstrap/darwintron.yaml` holds its private keys,
-encrypted to the YubiKeys and `alberth_magnus`. The script decrypts them on `magnus`, pipes them in over SSH before
-activation, and removes them before saving an image, so neither image contains them. The public halves are
-`host_darwintron` and `ephemeral_darwintron` in `.sops.yaml`.
+The VM keeps one identity however often it is rebuilt. `bootstrap/darwintron/` in `amatos/secrets` holds its
+private keys (`host_key`, `user_key`, `access_key`), encrypted to the YubiKeys and `alberth_magnus`. The script
+takes them from the storage the ref's `flake.lock` pins, decrypts them on `magnus` with
+`~/.config/sops-nix/key.txt`, derives the public halves with `ssh-keygen -y`, pipes them in over SSH before
+activation, and removes them before saving an image, so neither image contains them. It checks the keys against
+`host_darwintron` and `ephemeral_darwintron` in the ref's `modules/den/_secrets-registry.nix`. The guest has no
+GitHub token for the private `secrets` input, so the script also sends that storage to `~/Developer/secrets` and
+applies with `--override-input secrets path:…`.
 
 The image is pinned by digest at the top of `pkgs/darwintron-vm.sh`. YubiKeys, 1Password, the App Store and audio
 hardware can't be tested in the VM.
@@ -69,12 +73,16 @@ both canary secrets decrypt, the hostname and login shell are right, and sshd re
 test from the baseline also prints `nix store diff-closures`, and skips the rollback when the ref builds the
 baseline's own system (as `test main` does), since there is no new generation to undo.
 
-The VM keeps one identity however often it is rebuilt. `secrets/bootstrap/nixostron.yaml` holds its host key,
-`ephemeral`'s age key and the access key, encrypted to the YubiKeys, `alberth_magnus` and
-`alberth_muninn`. The script decrypts them on the host and puts them in `/var/lib/nixostron-keys` on the guest: via
+The VM keeps one identity however often it is rebuilt. `bootstrap/nixostron/` in `amatos/secrets` holds its host
+key, `ephemeral`'s age key and the access key, encrypted to the YubiKeys, `alberth_magnus` and `alberth_muninn`.
+The script takes them from the storage the ref's `flake.lock` pins and decrypts them on the host with
+`~/.config/sops-nix/key.txt` (or the plugged-in YubiKeys where there's no such key, as on fortuna). It derives the
+public halves with `ssh-keygen -y`, checks them against `host_nixostron` and `ephemeral_nixostron` in the ref's
+`modules/den/_secrets-registry.nix`, and puts the keys in `/var/lib/nixostron-keys` on the guest: via
 nixos-anywhere's `--extra-files` or SSH on Tart, and as a read-only QEMU share on muninn. The `nixostron-keys`
-activation script installs them before sops-nix runs, and the Tart script removes them before saving an image. The
-public halves are `host_nixostron` and `ephemeral_nixostron` in `.sops.yaml`.
+activation script installs them before nix-secrets runs, and the Tart script removes them before saving an image.
+Builds on the host (QEMU, nixos-anywhere) fetch the private `secrets` input with the host's own GitHub token; a
+switch on the guest gets a copy of the storage and `--override-input secrets path:…`.
 
 `nix flake check` on a Linux machine also builds the nixostron host for its architecture.
 

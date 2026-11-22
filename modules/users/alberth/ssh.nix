@@ -1,7 +1,8 @@
 # User:      alberth (den.aspects.alberth.ssh)
 # Platforms: home-manager
 # Purpose:   alberth's SSH client config (~/.ssh/config), starting from an empty
-#            config (enableDefaultConfig = false) with a github.com entry.
+#            config (enableDefaultConfig = false) with github.com and
+#            unifi (short name and FQDN) entries.
 #
 # Notes:
 # - The 1Password SSH agent (IdentityAgent) is added by den.aspects._1password,
@@ -17,6 +18,10 @@
         settings."github.com" = {
           HostName = "github.com";
           User = "git";
+        };
+        settings."unifi unifi.home.matos.cc" = {
+          HostName = "unifi.home.matos.cc";
+          User = "root";
         };
       };
     };

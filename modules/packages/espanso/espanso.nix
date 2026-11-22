@@ -8,7 +8,7 @@
 #            - personal: a private git repo checked out at
 #                        magnanix.espanso.dir (cloned on activation from
 #                        magnanix.espanso.repo) and linked as match/personal
-#            - secure:   sops-encrypted secrets/users/<user>-espanso-<name>.yaml,
+#            - secure:   the nix-secrets secrets users/<user>/espanso/<name>.yml,
 #                        each decrypted to match/<name>.yml (espanso.secure)
 #
 # Notes:
@@ -19,9 +19,10 @@
 # - The personal clone is best-effort, like Dracula PRO's: it runs only when
 #   the directory is missing, never pulls, and only warns when credentials are
 #   unavailable (no SSH agent, or Home Manager's systemd unit on NixOS).
-# - Edit a secure file with `sops secrets/users/<user>-espanso-<name>.yaml`;
-#   new files are picked up by name, no Nix change needed. Only machines whose
-#   user age key is a recipient (see .sops.yaml) can include `secure`. Run
+# - Edit a secure file with `secrets edit users/<user>/espanso/<name>.yml`. A
+#   new file is picked up by name once it's in the registry and the `secrets`
+#   input is updated. Only machines whose user age key is a recipient (see
+#   modules/den/_secrets-registry.nix) can include `secure`. Run
 #   `espanso restart` after a switch that changes one: the symlink target
 #   moves, which Espanso doesn't always notice.
 # - macOS: Espanso needs Accessibility permission. The binary lives in the Nix
@@ -29,8 +30,8 @@
 # - Linux: a wrapper picks the X11 or Wayland build from $WAYLAND_DISPLAY. The
 #   Wayland build reads /dev/input (`input` group) and types through
 #   /dev/uinput (`uinput` group), so every user on the host gets both.
-# - The search bar opens with Alt+Space (Option+Space on macOS).
-{ lib, ... }:
+# - The search bar's shortcut (Alt+Space, Option+Space on macOS) is off.
+{ inputs, lib, ... }:
 {
   # Options for every user, so a user aspect can set its repo once even on hosts
   # without Espanso; the clone only happens where services.espanso is enabled.
@@ -96,6 +97,9 @@
       services.espanso = {
         enable = true;
 
+        # No search bar shortcut (default Alt+Space / Option+Space).
+        configs.default.search_shortcut = "off";
+
         # Public, shareable matches only. Everyday personal ones go in the
         # personal repo; sensitive ones in `secure`.
         matches.base.matches = [
@@ -130,37 +134,33 @@
       )
     ];
 
-    # A user's sops-encrypted matches: every secrets/users/<user>-espanso-<name>.yaml,
-    # decrypted whole to match/<name>.yml. Include from
+    # A user's encrypted matches: every users/<user>/espanso/<name>.yml.enc in
+    # amatos/secrets, decrypted to match/<name>.yml. Include from
     # `den.aspects.<host>.provides.<user>` on hosts that also include `espanso` and
     # where the user's age key can decrypt those files.
     secure.includes = [
       (
         { user, ... }:
         let
-          secretsDir = ../../../secrets/users;
-          prefix = "${user.userName}-espanso-";
-          names = lib.pipe (builtins.readDir secretsDir) [
-            (lib.filterAttrs (
-              file: type: type == "regular" && lib.hasPrefix prefix file && lib.hasSuffix ".yaml" file
-            ))
+          dir = "users/${user.userName}/espanso";
+          # The names keep `.yml` because Espanso resolves the symlink and
+          # rejects match files without an extension.
+          names = lib.pipe "${inputs.secrets}/${dir}" [
+            (path: if builtins.pathExists path then builtins.readDir path else { })
+            (lib.filterAttrs (file: type: type == "regular" && lib.hasSuffix ".yml.enc" file))
             lib.attrNames
-            (map (file: lib.removeSuffix ".yaml" (lib.removePrefix prefix file)))
+            (map (lib.removeSuffix ".enc"))
           ];
         in
         {
           homeManager =
             { config, ... }:
             {
-              sops.secrets = lib.genAttrs' names (
+              security.nix-secrets.secrets = lib.genAttrs' names (
                 name:
-                # The name ends in .yml because Espanso resolves the symlink and
-                # rejects match files without an extension.
-                lib.nameValuePair "espanso-${name}.yml" {
-                  sopsFile = secretsDir + "/${prefix}${name}.yaml";
-                  format = "yaml";
-                  key = ""; # the whole file
-                  path = "${config.xdg.configHome}/espanso/match/${name}.yml";
+                lib.nameValuePair "${dir}/${name}" {
+                  enable = true;
+                  path = "${config.xdg.configHome}/espanso/match/${name}";
                 }
               );
             };

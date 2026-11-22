@@ -13,7 +13,7 @@ with `_`. Matches come from three places:
 |---|---|---|---|
 | Public | `services.espanso.matches`: shared ones in the aspect, a user's own in their user aspect (`;;pgpkey` in `alberth.nix`, from `meta.gpgKey`) | `match/base.yml`, `match/<user>.yml` | anything fine to publish |
 | Personal | a private git repo (`magnanix.espanso.repo`) | `match/personal`, a link to the checkout at `magnanix.espanso.dir` | everyday snippets |
-| Secure | `secrets/users/<user>-espanso-<name>.yaml`, sops-encrypted | `match/<name>.yml` (a symlink) | account numbers, keys, anything that shouldn't be plaintext on GitHub |
+| Secure | the encrypted secrets `users/<user>/espanso/<name>.yml` in `amatos/secrets` | `match/<name>.yml` (a symlink) | account numbers, keys, anything that shouldn't be plaintext on GitHub |
 
 A trigger must be unique across all three; Espanso warns about duplicates.
 
@@ -44,34 +44,33 @@ Keep only match files in the repo: Espanso would also try to load any other YAML
 
 ## Secure matches
 
-`den.aspects.espanso.secure` finds every `secrets/users/<user>-espanso-<name>.yaml` and has sops-nix decrypt each
-one whole to `match/<name>.yml`; `alberth-espanso-street-address.yaml`, for example, becomes
-`match/street-address.yml` (the sops secret itself is named `espanso-<name>.yml`: Espanso follows the symlink and
-rejects a target without an extension). alberth gets it on magnus, from `den.aspects.magnus.provides.alberth`. Edit a file
-from the dev shell, with a YubiKey plugged in:
+`den.aspects.espanso.secure` finds every `users/<user>/espanso/<name>.yml.enc` in the locked `secrets` input
+(`amatos/secrets`, see [Secrets](secrets.md)) and has nix-secrets decrypt each one to `match/<name>.yml`;
+`users/alberth/espanso/street-address.yml` becomes `match/street-address.yml`. The names keep `.yml` because
+Espanso follows the symlink and rejects a target without an extension. alberth gets it on magnus, from
+`den.aspects.magnus.provides.alberth`. Edit a file from the dev shell, with a YubiKey plugged in:
 
 ```sh
-sops secrets/users/alberth-espanso-street-address.yaml
+secrets edit users/alberth/espanso/street-address.yml
 ```
 
-To add a file without the plaintext ever touching the disk, pipe it to sops; new files need no Nix change, but
-must be added to git before the flake can see them:
+To add a file, first add its name to `modules/den/_secrets-registry.nix` with the same recipients as
+`street-address.yml`. Then write it without the plaintext ever touching the disk by piping it in (`EDITOR=-`
+makes `secrets edit` read the new value from standard input):
 
 ```sh
-f=secrets/users/alberth-espanso-<name>.yaml
 printf 'matches:\n  - trigger: ";;x"\n    replace: "..."\n' |
-  sops encrypt --filename-override "$f" /dev/stdin > "$f"
-git add "$f"
+  EDITOR=- secrets edit users/alberth/espanso/<name>.yml
 ```
 
-Then apply the configuration and run `espanso restart` (the symlink's target changes on each switch, which Espanso
-does not always notice). sops encrypts the values, not the keys, so the public file shows how many matches there
-are and roughly how long each value is, but not what they say. The file names (`<name>`) are public too.
+Then push `amatos/secrets`, run `nix flake update secrets`, apply the configuration and run `espanso restart` (the
+symlink's target changes on each switch, which Espanso does not always notice). Only the file names (`<name>`)
+are visible in magnanix's public registry; the private repo holds age files, which don't show the number or size
+of the matches.
 
-`.sops.yaml` encrypts `secrets/users/alberth-*.yaml` to the same recipients as `alberth.yaml`, which includes only
-magnus's user key. To use `secure` on another machine, add that machine's `alberth_<host>` key to the rule, run
-`sops updatekeys` on each `secrets/users/alberth-espanso-*.yaml`, and include `den.aspects.espanso.secure` from the host's
-`provides.alberth`.
+The registry gives `users/alberth/espanso/*` to alberth's key on magnus, muninn and fortuna (`alberth_<host>`). To
+use `secure` on another machine, add that machine's key to those entries, run `secrets rekey`, push and lock, and
+include `den.aspects.espanso.secure` from the host's `provides.alberth`.
 
 ## Match file format
 
@@ -95,4 +94,5 @@ matches:
   Wayland build reads keyboards from `/dev/input` and types through `/dev/uinput`, so the aspect enables
   `hardware.uinput` and adds the host's users to the `input` and `uinput` groups. Log out and in after the
   first switch for the groups to apply.
-- The search bar opens with Alt+Space (Option+Space on macOS).
+- The search bar's shortcut (Alt+Space, Option+Space on macOS) is turned off with `search_shortcut = "off"` in
+  `services.espanso.configs.default`.

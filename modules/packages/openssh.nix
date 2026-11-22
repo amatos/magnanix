@@ -7,14 +7,14 @@
 #
 # Notes:
 # - NixOS: sshd with port 22 open. It also generates
-#   /etc/ssh/ssh_host_ed25519_key, which sops-nix decrypts system secrets with.
+#   /etc/ssh/ssh_host_ed25519_key, which nix-secrets decrypts system secrets with.
 # - macOS: Apple's sshd (System Settings > General > Sharing > Remote Login),
 #   turned on at activation. Settings go in
 #   /etc/ssh/sshd_config.d/100-nix-darwin.conf.
 {
   den.aspects.openssh = {
     # NixOS: sshd, with port 22 opened in the firewall. It also creates
-    # /etc/ssh/ssh_host_ed25519_key, the key sops-nix decrypts system secrets with.
+    # /etc/ssh/ssh_host_ed25519_key, the key nix-secrets decrypts system secrets with.
     nixos.services.openssh = {
       enable = true;
       settings = {

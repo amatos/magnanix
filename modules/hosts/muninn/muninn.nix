@@ -33,10 +33,11 @@ in
       den.aspects.certbot
       den.aspects.fonts
       den.aspects.audio
+      den.aspects.nix-access-tokens
       den.aspects.tailscale
 
       # Headless server: SSH (keys only) is the way in. It also creates
-      # /etc/ssh/ssh_host_ed25519_key, the key sops-nix decrypts system secrets with.
+      # /etc/ssh/ssh_host_ed25519_key, the key nix-secrets decrypts system secrets with.
       den.aspects.openssh
 
       # Binary cache for the other machines on the LAN

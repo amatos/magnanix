@@ -12,13 +12,13 @@
 #   in. CI's aarch64-linux job builds it into the Attic cache. Install and
 #   deploy steps are in documentation/tenabrae.md. update-all-magnanix
 #   deploys it that way (it's in the script's build_here_hosts).
-# - Host key: generated off-host (`host_tenabrae` in .sops.yaml; the private
+# - Host key: generated off-host (`host_tenabrae` in the secrets registry; the private
 #   half is in 1Password). Before first boot, install it into the card's root
 #   file system (NIXOS_SD) at /etc/ssh/ssh_host_ed25519_key from a Linux
-#   machine; see documentation/tenabrae.md. sops-nix decrypts with it during
+#   machine; see documentation/tenabrae.md. nix-secrets decrypts with it during
 #   activation, so without it there's no Wi-Fi and no password.
-# - Secrets (secrets/hosts/tenabrae.yaml): `wireless_env` (psk_voxdev=...)
-#   and `pihole_env` (see modules/packages/pihole.nix).
+# - Secrets: `hosts/tenabrae/wireless_env` (psk_voxdev=...) and
+#   `hosts/tenabrae/pihole_env` (see modules/packages/pihole.nix).
 # - Interface names are the kernel's (wlan0), not predictable names, so the
 #   firewall rules can name the Wi-Fi interface.
 { den, lib, ... }:
@@ -34,6 +34,7 @@ in
 
   den.aspects.tenabrae = {
     includes = [
+      den.aspects.nix-access-tokens
       den.aspects.openssh
       den.aspects.pihole
       den.aspects.tailscale
@@ -145,14 +146,17 @@ in
           options brcmfmac feature_disable=0x82000
         '';
         # wpa_supplicant runs as its own user and reads the file itself.
-        sops.secrets.wireless_env.owner = config.systemd.services.wpa_supplicant.serviceConfig.User;
+        security.nix-secrets.secrets."hosts/tenabrae/wireless_env" = {
+          enable = true;
+          owner = config.systemd.services.wpa_supplicant.serviceConfig.User;
+        };
         # voxdev: a 2.4 GHz, WPA2-only network for this host; the chip is
         # 2.4 GHz only. The router reserves this host's address. WPA2 only: the
         # default list also offers SAE (WPA3) and fast transition, which this
         # chip's firmware can't do.
         networking.wireless = {
           enable = true;
-          secretsFile = config.sops.secrets.wireless_env.path;
+          secretsFile = config.security.nix-secrets.secrets."hosts/tenabrae/wireless_env".path;
           networks.voxdev = {
             pskRaw = "ext:psk_voxdev";
             authProtocols = [ "WPA-PSK" ];

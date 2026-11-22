@@ -38,8 +38,8 @@ in
   #   2. sudo nix run github:nix-community/disko -- --mode destroy,format,mount ./modules/hosts/fortuna/_disk-config.nix
   #   3. nixos-generate-config --no-filesystems --root /mnt, and replace
   #      _hardware-configuration.nix with /mnt/etc/nixos/hardware-configuration.nix
-  #   4. copy the pre-generated SSH host key (the one `host_fortuna` in .sops.yaml
-  #      is derived from) to /mnt/etc/ssh/, so sops-nix can decrypt alberth's password
+  #   4. copy the pre-generated SSH host key (`host_fortuna` in the secrets
+  #      registry) to /mnt/etc/ssh/, so nix-secrets can decrypt alberth's password
   #   5. sudo nixos-install --no-root-passwd --flake .#fortuna (root stays locked:
   #      base sets users.mutableUsers = false, so a root password would not stick)
   den.aspects.fortuna = {
@@ -59,12 +59,14 @@ in
       den.aspects.fonts
       den.aspects.game-streaming
       den.aspects.ghostty
+      den.aspects.nix-access-tokens
       den.aspects.noctalia
       den.aspects.openssh
       # magnus's first-choice Linux builder (x86_64, and aarch64 under QEMU)
       den.aspects.remote-build.server
       den.aspects.steam
       den.aspects.tailscale
+      den.aspects.whatsapp
       den.aspects.zed
     ];
 

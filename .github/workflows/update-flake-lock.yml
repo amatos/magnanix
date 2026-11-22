@@ -42,6 +42,10 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
+        # Read access to the private amatos/secrets input (the `secrets` flake input).
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.SECRETS_REPO_TOKEN }}
 
       # The cache only speeds up `write-flake`; the update works without it.
       - name: Use muninn's Attic cache
@@ -51,6 +55,24 @@ jobs:
           ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           ts-audience: ${{ secrets.TS_AUDIENCE }}
           attic-token: ${{ secrets.ATTIC_TOKEN }}
+
+      # nix-secrets is pinned to a release tag (modules/den/_versions.nix), which
+      # `nix flake update` never moves. Stable tags only (vX.Y.Z), so release
+      # candidates are skipped. Runs first, so the lock and write-flake see the new tag.
+      - name: Bump nix-secrets to its latest release tag
+        id: nix-secrets
+        run: |
+          file=modules/den/_versions.nix
+          old=$(sed -nE 's/^ *nix-secrets = "(v[0-9]+\.[0-9]+\.[0-9]+)";.*/\1/p' "$file")
+          # Assigned on their own lines so a failing command stops `bash -e`.
+          tags=$(git ls-remote --tags --refs https://github.com/unnamed-systems/nix-secrets)
+          # shellcheck disable=SC2001 # strips a prefix from every line, not one variable
+          new=$(sed 's|.*refs/tags/||' <<<"$tags" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          [ -n "$old" ] && [ -n "$new" ] || { echo "::error::could not read the nix-secrets tags"; exit 1; }
+          sed -i -E "s/^( *nix-secrets = \")v[0-9]+\.[0-9]+\.[0-9]+(\";)/\1$new\2/" "$file"
+          echo "old=$old" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+          echo "nix-secrets: $old -> $new"
 
       - name: Update flake.lock
         run: nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
@@ -75,6 +97,14 @@ jobs:
             echo
             echo '- [ ] CI evaluates and builds every host (this branch always gets a full build)'
             echo '- [ ] `darwintron-vm test update-flake-lock` passes on magnus'
+            if [ "${{ steps.nix-secrets.outputs.old }}" != "${{ steps.nix-secrets.outputs.new }}" ]; then
+              echo
+              echo 'nix-secrets: `${{ steps.nix-secrets.outputs.old }}` → `${{ steps.nix-secrets.outputs.new }}`'
+              echo "([changes](https://github.com/unnamed-systems/nix-secrets/compare/${{ steps.nix-secrets.outputs.old }}...${{ steps.nix-secrets.outputs.new }}))"
+              echo
+              echo '- [ ] Read the nix-secrets changes; on a minor bump also run `nixostron-vm test update-flake-lock`'
+              echo '- [ ] If `darwintron-vm test` fails to build the nix-secrets patch, upstream may have fixed #9: see D8 in documentation/NIX_SECRETS_PLAN.md'
+            fi
           } > "$RUNNER_TEMP/pr-body.md"
 
       - name: Create or update pull request
@@ -86,6 +116,7 @@ jobs:
           add-paths: |
             flake.lock
             flake.nix
+            modules/den/_versions.nix
           commit-message: "chore(flake): update inputs"
           title: "chore(flake): update inputs"
           body-path: ${{ runner.temp }}/pr-body.md

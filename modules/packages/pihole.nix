@@ -15,7 +15,7 @@
 #   FTL listens on all interfaces (listeningMode ALL) because its default, LOCAL,
 #   drops tailnet queries: tailscale0 has a /32, so no client is "local" to it.
 # - No DHCP: the router keeps handing out addresses, with this host as its DNS.
-# - Dashboard password: `pihole_env` in the host's secrets file, a line
+# - Dashboard password: the nix-secrets secret `hosts/tenabrae/pihole_env`, a line
 #   `FTLCONF_webserver_api_password=...`. FTL reads FTLCONF_* variables over
 #   pihole.toml and hashes the password itself, so the plain text never reaches
 #   the Nix store. Without it the dashboard is open to anyone who can reach it.
@@ -70,8 +70,9 @@
           };
 
           # The dashboard password, as an FTLCONF_ override (see the header).
-          sops.secrets.pihole_env = { };
-          systemd.services.pihole-ftl.serviceConfig.EnvironmentFile = config.sops.secrets.pihole_env.path;
+          security.nix-secrets.secrets."hosts/tenabrae/pihole_env".enable = true;
+          systemd.services.pihole-ftl.serviceConfig.EnvironmentFile =
+            config.security.nix-secrets.secrets."hosts/tenabrae/pihole_env".path;
 
           # Pi-hole's only upstream: Quad9 over DNS-over-TLS. Pi-hole caches, so
           # Unbound's own cache stays small to spare RAM.

@@ -22,20 +22,16 @@
 #   nixostron-vm destroy               stop and delete nixostron
 #
 # Private keys are never stored in an image: they are decrypted on the host for each
-# boot and removed again before an image is saved.
+# boot and removed again before an image is saved. They come from the locked `secrets`
+# input (amatos/secrets).
 
 user="ephemeral"
 
 repo="$(git rev-parse --show-toplevel)"
-bootstrap="$repo/secrets/bootstrap/nixostron.yaml"
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nixostron-vm"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-# The user's own age key (alberth_magnus, alberth_muninn) if there is one; otherwise
-# sops falls back to the dev shell's SOPS_AGE_KEY_CMD, i.e. a plugged-in YubiKey.
-if [ -f "$HOME/.config/sops-nix/key.txt" ]; then
-  export SOPS_AGE_KEY_FILE="$HOME/.config/sops-nix/key.txt"
-fi
+storage=""
 
 case "$(uname -s)" in
   Darwin)
@@ -61,13 +57,40 @@ die() {
   exit 1
 }
 
-secret() {
-  (umask 077 && sops -d --extract "[\"$1\"]" "$bootstrap" >"$work/$1")
+# The storage (amatos/secrets) at the revision a flake.lock pins, from the Nix store.
+# Fetching it uses the host's GitHub token (den.aspects.nix-access-tokens).
+use_storage() {
+  local rev
+  rev="$(jq -r '.nodes.secrets.locked.rev // empty' "$1")"
+  [ -n "$rev" ] || die "$1 has no locked secrets input"
+  storage="$(nix flake prefetch --json "github:amatos/secrets/$rev" | jq -r .storePath)"
 }
 
+# The age identity to decrypt the bootstrap keys with: the user's own key
+# (alberth_magnus, alberth_muninn) if there is one, otherwise the plugged-in YubiKeys.
+identity() {
+  if [ ! -f "$work/identity" ]; then
+    if [ -f "$HOME/.config/sops-nix/key.txt" ]; then
+      ln -s "$HOME/.config/sops-nix/key.txt" "$work/identity"
+    else
+      (umask 077 && yubikey-identities >"$work/identity")
+    fi
+  fi
+  echo "$work/identity"
+}
+
+# Decrypts bootstrap/nixostron/<name> to $work/<name>.
+secret() {
+  (umask 077 && age -d -i "$(identity)" "$storage/bootstrap/nixostron/$1.enc" >"$work/$1")
+}
+
+# A private key's public half, `ssh-ed25519 <key>` without a comment.
+public_key() { ssh-keygen -y -f "$1" | awk '{print $1, $2}'; }
+
+# Uses the storage of the checked-out ref if there is one, else this checkout's.
 access_key() {
+  [ -n "$storage" ] || use_storage "$repo/flake.lock"
   secret access_key
-  chmod 600 "$work/access_key"
 }
 
 # Options shared by ssh and nixos-anywhere. -F /dev/null (ssh only) skips the user's
@@ -76,10 +99,12 @@ access_key() {
 ssh_opts=(-o IdentitiesOnly=yes -o IdentityAgent=none -o UserKnownHostsFile=/dev/null
   -o StrictHostKeyChecking=no -o LogLevel=ERROR -o ConnectTimeout=5 -o ServerAliveInterval=30)
 
+# BatchMode: early in a boot sshd can be up before it accepts the key, and ssh would then
+# wait at a password prompt forever instead of failing so wait_for_ssh can retry.
 guest() {
   local login="$1"
   shift
-  ssh -F /dev/null -i "$work/access_key" "${ssh_opts[@]}" -p "$port" "$login@$ip" "$@"
+  ssh -F /dev/null -i "$work/access_key" -o BatchMode=yes "${ssh_opts[@]}" -p "$port" "$login@$ip" "$@"
 }
 
 wait_for_ssh() {
@@ -96,25 +121,25 @@ wait_for_ssh() {
 # --- Checks (both backends) -------------------------------------------------------
 
 expected_recipient() {
-  # Reads the checked-out .sops.yaml so a ref with different keys fails here, not mid-switch.
-  grep -F "&$1 " "$work/src/.sops.yaml" | awk '{print $NF}'
+  # Reads the checked-out registry so a ref with different keys fails here, not mid-switch.
+  nix eval --raw --file "$work/src/modules/den/_secrets-registry.nix" "aliases.$1"
 }
 
 check_keys() {
-  local host_age user_age
-  host_age="$(ssh-keygen -y -f "$work/host_key" | ssh-to-age)"
+  local user_age
   user_age="$(age-keygen -y "$work/user_key")"
-  [ "$host_age" = "$(expected_recipient host_nixostron)" ] ||
-    die "the bootstrap host key is not host_nixostron in .sops.yaml"
+  [ "$(cat "$work/host_key_pub")" = "$(expected_recipient host_nixostron)" ] ||
+    die "the bootstrap host key is not host_nixostron in the secrets registry"
   [ "$user_age" = "$(expected_recipient ephemeral_nixostron)" ] ||
-    die "the bootstrap user key is not ephemeral_nixostron in .sops.yaml"
-  log "keys match .sops.yaml"
+    die "the bootstrap user key is not ephemeral_nixostron in the secrets registry"
+  log "keys match the secrets registry"
 }
 
+# The `nixostron-keys` activation script installs host_key_pub as the host's .pub.
 decrypt_keys() {
   secret host_key
-  secret host_key_pub
   secret user_key
+  public_key "$work/host_key" >"$work/host_key_pub"
   check_keys
 }
 
@@ -122,8 +147,8 @@ check_canaries() {
   # The Home Manager one is decrypted by a user service, which starts with the session.
   local system_value home_value _
   for _ in $(seq 1 30); do
-    system_value="$(guest "$user" 'sudo cat /run/secrets/canary' 2>/dev/null || true)"
-    home_value="$(guest "$user" 'cat ~/.config/sops-nix/secrets/canary' 2>/dev/null || true)"
+    system_value="$(guest "$user" 'sudo cat /run/nix-secrets/secrets/hosts/nixostron/canary' 2>/dev/null || true)"
+    home_value="$(guest "$user" 'cat ~/.local/share/nix-secrets/secrets/users/ephemeral/canary' 2>/dev/null || true)"
     if [ "$system_value" = "nixostron-system-canary" ] && [ "$home_value" = "ephemeral-home-canary" ]; then
       log "both canaries decrypted"
       return 0
@@ -153,10 +178,14 @@ check_system() {
   log "system checks passed"
 }
 
+# Extracts ref to $work/src and switches to the storage its flake.lock pins. The
+# host evaluates it (QEMU builds, nixos-anywhere), fetching the private `secrets`
+# input with its own token; only a switch on the guest needs the storage sent over.
 send_source() {
   log "checking out $1 ($(git rev-parse --short "$1"))"
   mkdir -p "$work/src"
   git archive "$1" | tar -x -C "$work/src"
+  use_storage "$work/src/flake.lock"
 }
 
 # --- Tart (magnus) ----------------------------------------------------------------
@@ -297,7 +326,7 @@ inject_keys() {
 }
 
 remove_keys() {
-  # Decrypted secrets live on sops-nix's RAM disks, so they don't reach the saved image.
+  # Decrypted secrets live under /run (tmpfs), so they don't reach the saved image.
   # sshd generates a new, unrelated host key the next time it starts.
   log "removing keys"
   guest "$user" 'rm -f ~/.config/sops-nix/key.txt; sudo rm -rf /var/lib/nixostron-keys /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_ed25519_key.pub'
@@ -307,14 +336,17 @@ apply() {
   log "applying configuration"
   tar -C "$work/src" -cf - . |
     guest "$user" 'rm -rf ~/magnanix; mkdir -p ~/magnanix; tar -xf - -C ~/magnanix'
-  guest "$user" "sudo nixos-rebuild switch --flake ~/magnanix#$host"
+  # The guest has no credentials for the private `secrets` input, so it gets a copy.
+  tar -C "$storage" -cf - . |
+    guest "$user" 'chmod -R u+w ~/secrets 2>/dev/null; rm -rf ~/secrets; mkdir -p ~/secrets; tar -xf - -C ~/secrets'
+  guest "$user" "sudo nixos-rebuild switch --flake ~/magnanix#$host --override-input secrets path:\$HOME/secrets"
 }
 
 build_seed() {
   require_tart seed
   vm_exists "$seed_vm" && die "$seed_vm exists; delete it first with: tart delete $seed_vm"
-  secret access_key_pub
   access_key
+  public_key "$work/access_key" >"$work/access_key.pub"
 
   log "cloning $image"
   tart clone "$image" "$seed_vm"
@@ -327,7 +359,7 @@ build_seed() {
     if SSHPASS="admin" sshpass -e ssh -F /dev/null -o UserKnownHostsFile=/dev/null \
       -o StrictHostKeyChecking=no -o LogLevel=ERROR -o ConnectTimeout=5 \
       -o PubkeyAuthentication=no "$seed_user@$ip" \
-      'umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys' <"$work/access_key_pub" 2>/dev/null; then
+      'umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys' <"$work/access_key.pub" 2>/dev/null; then
       up=1
       break
     fi
@@ -349,8 +381,8 @@ build_baseline() {
   local ref="${1:-main}"
   vm_exists "$seed_vm" || die "$seed_vm does not exist; run: nixostron-vm seed"
   vm_exists "$baseline_vm" && die "$baseline_vm exists; delete it first with: tart delete $baseline_vm"
-  access_key
   send_source "$ref"
+  access_key
   decrypt_keys
 
   tart clone "$seed_vm" "$baseline_vm"
@@ -373,8 +405,8 @@ tart_test() {
   if [ -z "$fresh" ] && [ "$(cat "$state_dir/baseline-rev" 2>/dev/null)" != "$(git rev-parse main)" ]; then
     log "warning: $baseline_vm was not built from the current main"
   fi
-  access_key
   send_source "$ref"
+  access_key
   decrypt_keys
 
   tart clone "$from" "$test_vm"
@@ -454,8 +486,8 @@ qemu_test() {
   if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
     die "port $port is already in use"
   fi
-  access_key
   send_source "$ref"
+  access_key
 
   # Kept outside $work so --keep can leave the VM running after the script exits
   rm -rf "$disk_dir"

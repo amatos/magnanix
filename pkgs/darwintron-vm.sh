@@ -10,7 +10,8 @@
 #   darwintron-vm destroy              stop and delete darwintron
 #
 # Neither image stores private keys: they are decrypted on magnus for each boot, piped
-# in over SSH and removed again before an image is saved.
+# in over SSH and removed again before an image is saved. They come from the locked
+# `secrets` input (amatos/secrets), decrypted with alberth's age key on magnus.
 
 # Pinned so macOS only changes when this line does. macOS 27.2.
 image="ghcr.io/cirruslabs/macos-golden-gate-vanilla@sha256:b35695ce30453bcc1db961a476740be72a44c2a2e464b73ece1ff0fcac12a873"
@@ -25,11 +26,10 @@ memory_mb=12288
 disk_gb=100
 
 repo="$(git rev-parse --show-toplevel)"
-bootstrap="$repo/secrets/bootstrap/darwintron.yaml"
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/darwintron-vm"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-export SOPS_AGE_KEY_FILE="$HOME/.config/sops-nix/key.txt"
+age_key="$HOME/.config/sops-nix/key.txt"
 
 log() { printf '> %s\n' "$*" >&2; }
 die() {
@@ -37,16 +37,31 @@ die() {
   exit 1
 }
 
-secret() {
-  (umask 077 && sops -d --extract "[\"$1\"]" "$bootstrap" >"$work/$1")
+# The storage (amatos/secrets) at the revision a flake.lock pins, from the Nix store.
+# Fetching it uses the host's GitHub token (den.aspects.nix-access-tokens).
+use_storage() {
+  local rev
+  rev="$(jq -r '.nodes.secrets.locked.rev // empty' "$1")"
+  [ -n "$rev" ] || die "$1 has no locked secrets input"
+  storage="$(nix flake prefetch --json "github:amatos/secrets/$rev" | jq -r .storePath)"
 }
+
+# Decrypts bootstrap/darwintron/<name> to $work/<name>.
+secret() {
+  (umask 077 && age -d -i "$age_key" "$storage/bootstrap/darwintron/$1.enc" >"$work/$1")
+}
+
+# A private key's public half, `ssh-ed25519 <key>` without a comment.
+public_key() { ssh-keygen -y -f "$1" | awk '{print $1, $2}'; }
 
 # -F /dev/null skips the user's config, whose `*` rule points at the 1Password agent.
 # Host keys aren't checked: the address is a local NAT lease and the key changes on injection.
+# BatchMode: early in a boot sshd can be up before it accepts the key, and ssh would then
+# wait at a password prompt forever instead of failing so wait_for_ssh can retry.
 guest() {
   local login="$1"
   shift
-  ssh -F /dev/null -i "$work/access_key" -o IdentitiesOnly=yes -o IdentityAgent=none \
+  ssh -F /dev/null -i "$work/access_key" -o IdentitiesOnly=yes -o IdentityAgent=none -o BatchMode=yes \
     -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR \
     -o ConnectTimeout=5 -o ServerAliveInterval=30 "$login@$ip" "$@"
 }
@@ -101,63 +116,81 @@ shut_down() {
 }
 
 expected_recipient() {
-  # Reads the checked-out .sops.yaml so a ref with different keys fails here, not mid-switch.
-  grep -F "&$1 " "$work/src/.sops.yaml" | awk '{print $NF}'
+  # Reads the checked-out registry so a ref with different keys fails here, not mid-switch.
+  nix eval --raw --file "$work/src/modules/den/_secrets-registry.nix" "aliases.$1"
 }
 
 inject_keys() {
   log "injecting keys"
   secret host_key
-  secret host_key_pub
   secret user_key
+  public_key "$work/host_key" >"$work/host_key.pub"
   guest "$user" "sudo sh -c 'umask 077; cat > /etc/ssh/ssh_host_ed25519_key; chown root:wheel /etc/ssh/ssh_host_ed25519_key'" \
     <"$work/host_key"
-  guest "$user" "sudo sh -c 'umask 022; cat > /etc/ssh/ssh_host_ed25519_key.pub'" <"$work/host_key_pub"
+  guest "$user" "sudo sh -c 'umask 022; cat > /etc/ssh/ssh_host_ed25519_key.pub'" <"$work/host_key.pub"
   guest "$user" 'umask 077; mkdir -p ~/.config/sops-nix; cat > ~/.config/sops-nix/key.txt' <"$work/user_key"
 }
 
 check_keys() {
-  local host_age user_age
-  host_age="$(guest "$user" 'sudo ssh-keygen -y -f /etc/ssh/ssh_host_ed25519_key' | ssh-to-age)"
+  local host_pub user_age
+  host_pub="$(guest "$user" 'sudo ssh-keygen -y -f /etc/ssh/ssh_host_ed25519_key' | awk '{print $1, $2}')"
   user_age="$(guest "$user" 'cat ~/.config/sops-nix/key.txt' | age-keygen -y)"
-  [ "$host_age" = "$(expected_recipient host_darwintron)" ] ||
-    die "the guest's host key is not host_darwintron in .sops.yaml"
+  [ "$host_pub" = "$(expected_recipient host_darwintron)" ] ||
+    die "the guest's host key is not host_darwintron in the secrets registry"
   [ "$user_age" = "$(expected_recipient ephemeral_darwintron)" ] ||
-    die "the guest's user key is not ephemeral_darwintron in .sops.yaml"
-  log "keys match .sops.yaml"
+    die "the guest's user key is not ephemeral_darwintron in the secrets registry"
+  log "keys match the secrets registry"
 }
 
 remove_keys() {
-  # Decrypted secrets live on sops-nix's RAM disks, so they don't reach the saved image.
+  # Decrypted secrets live on nix-secrets' RAM disks, so they don't reach the saved image.
   # macOS generates a new, unrelated host key the next time sshd starts.
   log "removing keys"
   guest "$user" 'rm -f ~/.config/sops-nix/key.txt; sudo rm -f /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_ed25519_key.pub'
 }
 
-send_source() {
-  log "sending $1 ($(git rev-parse --short "$1"))"
+# Extracts ref to $work/src and switches to the storage its flake.lock pins.
+checkout() {
   mkdir -p "$work/src"
   git archive "$1" | tar -x -C "$work/src"
+  use_storage "$work/src/flake.lock"
+}
+
+send_source() {
+  log "sending $1 ($(git rev-parse --short "$1"))"
   # A plain tree rather than a clone: vanilla macOS has no git until the Command Line
   # Tools are installed, and a path flake sees exactly what `git archive` wrote.
   tar -C "$work/src" -cf - . |
     guest "$user" 'rm -rf ~/Developer/magnanix; mkdir -p ~/Developer/magnanix; tar -xf - -C ~/Developer/magnanix'
+  # The storage goes separately: the guest has no credentials for the private `secrets`
+  # input, so apply() passes this copy with --override-input.
+  log "sending the secrets storage"
+  tar -C "$storage" -cf - . |
+    guest "$user" 'chmod -R u+w ~/Developer/secrets 2>/dev/null; rm -rf ~/Developer/secrets; mkdir -p ~/Developer/secrets; tar -xf - -C ~/Developer/secrets'
 }
 
 apply() {
-  log "applying configuration"
+  local nix='NIX_SENTRY_ENDPOINT="" /nix/var/nix/profiles/default/bin/nix'
+  local override='--override-input secrets "path:$HOME/Developer/secrets"'
+  # Build first, so the switch below only activates. The build can take a long time on a
+  # fresh guest, and Determinate Nix restores its lines to /etc/bashrc and /etc/zshrc in
+  # the meantime, which would undo the move before the activation checks for it.
+  log "building the configuration"
+  guest "$user" "cd ~/Developer/magnanix && $nix build --no-link $override .#darwinConfigurations.darwintron.system"
   # nix-darwin refuses to replace these on its first activation. This can't live in the
-  # seed: Determinate's boot hook puts them back.
-  guest "$user" 'for f in /etc/bashrc /etc/zshrc; do if [ -e "$f" ] && [ ! -L "$f" ]; then sudo mv "$f" "$f.before-nix-darwin"; fi; done'
-  guest "$user" 'cd ~/Developer/magnanix && NIX_SENTRY_ENDPOINT="" /nix/var/nix/profiles/default/bin/nix develop --command apply-configuration'
+  # seed: Determinate's boot hook puts them back. If a backup already exists, the file is
+  # one Determinate restored, so drop it instead of overwriting the original.
+  guest "$user" 'for f in /etc/bashrc /etc/zshrc; do if [ -e "$f" ] && [ ! -L "$f" ]; then if [ -e "$f.before-nix-darwin" ]; then sudo rm "$f"; else sudo mv "$f" "$f.before-nix-darwin"; fi; fi; done'
+  log "applying configuration"
+  guest "$user" "cd ~/Developer/magnanix && $nix develop $override --command apply-configuration $override"
 }
 
 check_canaries() {
   # Both are decrypted by launchd jobs, which may still be running just after a boot.
   local system_value home_value _
   for _ in $(seq 1 30); do
-    system_value="$(guest "$user" 'sudo cat /run/secrets/canary' 2>/dev/null || true)"
-    home_value="$(guest "$user" 'cat ~/.config/sops-nix/secrets/canary' 2>/dev/null || true)"
+    system_value="$(guest "$user" 'sudo cat /run/nix-secrets/secrets/hosts/darwintron/canary' 2>/dev/null || true)"
+    home_value="$(guest "$user" 'cat ~/.local/share/nix-secrets/secrets/users/ephemeral/canary' 2>/dev/null || true)"
     if [ "$system_value" = "darwintron-system-canary" ] && [ "$home_value" = "ephemeral-home-canary" ]; then
       log "both canaries decrypted"
       return 0
@@ -187,9 +220,9 @@ reboot_and_check() {
 
 build_seed() {
   vm_exists "$seed_vm" && die "$seed_vm exists; delete it first with: tart delete $seed_vm"
+  use_storage "$repo/flake.lock"
   secret access_key
-  secret access_key_pub
-  chmod 600 "$work/access_key"
+  public_key "$work/access_key" >"$work/access_key.pub"
 
   log "cloning $image"
   tart clone "$image" "$seed_vm"
@@ -202,7 +235,7 @@ build_seed() {
     if SSHPASS="admin" sshpass -e ssh -F /dev/null -o UserKnownHostsFile=/dev/null \
       -o StrictHostKeyChecking=no -o LogLevel=ERROR -o ConnectTimeout=5 \
       -o PubkeyAuthentication=no "admin@$ip" \
-      'umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys' <"$work/access_key_pub" 2>/dev/null; then
+      'umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys' <"$work/access_key.pub" 2>/dev/null; then
       up=1
       break
     fi
@@ -220,7 +253,7 @@ build_seed() {
   guest admin "echo 18f93a46bfd9af8bcfb91f7d | xxd -r -p | sudo tee /etc/kcpassword >/dev/null; sudo chmod 600 /etc/kcpassword; sudo defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser $user"
   guest admin "echo '$user ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/$user >/dev/null; sudo chmod 440 /etc/sudoers.d/$user; sudo createhomedir -c -u $user >/dev/null 2>&1 || true"
   guest admin "sudo sh -c 'umask 077; mkdir -p /Users/$user/.ssh; cat > /Users/$user/.ssh/authorized_keys; chown -R $user:staff /Users/$user/.ssh'" \
-    <"$work/access_key_pub"
+    <"$work/access_key.pub"
 
   log "installing Determinate Nix"
   guest admin 'curl -fsSL https://install.determinate.systems/nix | sh -s -- install --determinate --no-confirm'
@@ -239,8 +272,8 @@ build_baseline() {
   local ref="${1:-main}"
   vm_exists "$seed_vm" || die "$seed_vm does not exist; run: darwintron-vm seed"
   vm_exists "$baseline_vm" && die "$baseline_vm exists; delete it first with: tart delete $baseline_vm"
+  checkout "$ref"
   secret access_key
-  chmod 600 "$work/access_key"
 
   tart clone "$seed_vm" "$baseline_vm"
   boot "$baseline_vm"
@@ -275,8 +308,8 @@ run_test() {
   if [ "$from" = "$baseline_vm" ] && [ "$(cat "$state_dir/baseline-rev" 2>/dev/null)" != "$(git rev-parse main)" ]; then
     log "warning: $baseline_vm was not built from the current main"
   fi
+  checkout "$ref"
   secret access_key
-  chmod 600 "$work/access_key"
 
   tart clone "$from" "$test_vm"
   boot "$test_vm"
@@ -320,8 +353,8 @@ case "${1:-}" in
     run_test "$@"
     ;;
   ssh)
+    use_storage "$repo/flake.lock"
     secret access_key
-    chmod 600 "$work/access_key"
     ip="$(tart ip "$test_vm")"
     guest "$user"
     ;;
