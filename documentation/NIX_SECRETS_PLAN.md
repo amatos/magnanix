@@ -1,6 +1,6 @@
 # Plan: replace sops-nix with nix-secrets, secrets in `amatos/secrets`
 
-## Status: 🧪 Phase 0 passed with workarounds (next: Phase 1)
+## Status: 🚧 Phase 1 in review ([#127](https://github.com/amatos/magnanix/pull/127)); Phase 0 passed with workarounds
 
 Phase 0 ran on the throwaway branch `spike/nix-secrets` (local, not merged); its results are under Phase 0 in §5,
 and the macOS workarounds it needed are D8. Nothing else is implemented. Sections 1–2 evaluate
@@ -147,8 +147,8 @@ Every host evaluates the flake itself (`deploy-magnanix` pulls and switches loca
 VMs. All of them need read access to `amatos/secrets`.
 
 - **Recommended:** `inputs.secrets = { url = "github:amatos/secrets"; flake = false; }`, with a fine-grained PAT
-  (read-only *Contents* on `amatos/secrets`) as `github_access_token`, rendered into the Nix config as
-  `access-tokens = github.com=<token>` and readable by `alberth`. This is the existing
+  (read-only *Contents* on `amatos/secrets`) as `github_secrets_repo_access_token`, rendered into the Nix config as
+  `access-tokens = github.com=<token>` and readable by root and the admin group. This was the
   [TODO](todo.md) item, and it also lifts GitHub's anonymous rate limit. To avoid a chicken-and-egg problem,
   Phase 1 wires it up with **sops-nix, before the cutover**.
 - **Alternative:** `git+ssh://git@github.com/amatos/secrets`, which uses whatever SSH key the user has. That's
@@ -181,7 +181,7 @@ lists, matched to which hosts actually use each secret:
 
 - `common/alberth_password`: drop `host_magnus`. `.sops.yaml` says macOS hosts "can decrypt it but never use it".
 - `common/certbot_luadns`: only magnus, muninn and fortuna include `certbot`; drop tenabrae.
-- `common/github_access_token`: every host that runs `deploy-magnanix` (magnus, muninn, fortuna, tenabrae).
+- `common/github_secrets_repo_access_token`: every host that runs `deploy-magnanix` (magnus, muninn, fortuna, tenabrae).
 
 - `users/alberth/*`: alberth's Home Manager secrets go to his user key on every machine that has one:
   `alberth_magnus`, `alberth_muninn` (it exists but isn't on the `alberth` rule today) and the new
@@ -240,7 +240,7 @@ A plain directory tree, no `flake.nix` (`flake = false`). Secret name = path wit
 README.md                         what this is, how to edit (points at magnanix documentation/secrets.md)
 common/alberth_password.enc
 common/certbot_luadns.enc
-common/github_access_token.enc
+common/github_secrets_repo_access_token.enc
 hosts/darwintron/canary.enc
 hosts/fortuna/attic_push_token.enc
 hosts/magnus/attic_push_token.enc
@@ -268,7 +268,7 @@ bootstrap/nixostron/{host_key,user_key,access_key}.enc
 | ------------------------------------------------- | --------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
 | `common.yaml : alberth_password`                  | `common/alberth_password`               | host_muninn, host_fortuna, host_tenabrae (D6)       | `users/alberth/alberth.nix`, `neededForUsers`               |
 | `common.yaml : certbot_luadns`                    | `common/certbot_luadns`                 | host_magnus, host_muninn, host_fortuna (D6)         | `packages/certbot.nix` (nixos and darwin)                   |
-| `common.yaml : github_access_token`               | `common/github_access_token`            | host_magnus, host_muninn, host_fortuna, host_tenabrae | new: Nix `access-tokens` (Phase 1)                          |
+| `common.yaml : github_secrets_repo_access_token`  | `common/github_secrets_repo_access_token` | host_magnus, host_muninn, host_fortuna, host_tenabrae | new: Nix `access-tokens` (Phase 1)                          |
 | `hosts/<h>.yaml : attic_push_token`               | `hosts/<h>/attic_push_token`            | host_<h>                                            | `packages/attic.nix` (magnus, muninn, fortuna)              |
 | `hosts/muninn.yaml : atticd_env`                  | `hosts/muninn/atticd_env`               | host_muninn                                         | `packages/attic.nix`                                        |
 | `hosts/muninn.yaml : fastmail_smtp_password`      | `hosts/muninn/fastmail_smtp_password`   | host_muninn                                         | `packages/mail.nix` template                                |
@@ -341,17 +341,22 @@ Found on the way and fixed on `main`: `wait_for_ssh` in both VM scripts could ha
 
 ### Phase 1: GitHub token, still on sops-nix (independent of nix-secrets)
 
-This is the [TODO](todo.md) item, done first so every host can fetch a private input before the cutover needs
-it.
+Done first so every host can fetch a private input before the cutover needs it.
 
-1. Create a fine-grained PAT: read-only *Contents* on `amatos/secrets` (public repos are readable anyway). Put it in
-   `common.yaml : github_access_token` (`sops secrets/common.yaml`).
-2. New aspect `modules/packages/nix-access-tokens.nix` (included by `base`): a sops template
-   `access-tokens = github.com=<placeholder>`, `owner = alberth`, mode `0400`, and an `!include` of its path:
-   `nix.extraOptions` on NixOS, `environment.etc."nix/nix.custom.conf".text = lib.mkAfter …` on macOS.
-   `!include` skips a missing file, so a host without the secret still works.
-3. Add a CI secret `SECRETS_REPO_TOKEN` (the same PAT or a separate one) to `amatos/magnanix`.
-4. Deploy to every host (`update-all-magnanix`), then confirm on each one: `nix flake metadata github:amatos/secrets`.
+1. ✅ Create a fine-grained PAT: read-only *Contents* on `amatos/secrets` (public repos are readable anyway). Put
+   it in `common.yaml : github_secrets_repo_access_token` (`sops secrets/common.yaml`). The older, unused
+   `github_access_token` in the same file stays until it's removed and revoked ([TODO](todo.md)).
+2. ✅ New aspect `modules/packages/nix-access-tokens.nix` ([#127](https://github.com/amatos/magnanix/pull/127)),
+   included by magnus, muninn, fortuna and tenabrae, not by `base`: the test VMs can't decrypt `common.yaml`. A
+   sops template renders `access-tokens = github.com=<placeholder>`, readable by root and the admin group
+   (`wheel` on NixOS, `admin` on macOS, mode `0440`), and the Nix config `!include`s its path:
+   `nix.extraOptions` on NixOS, `environment.etc."nix/nix.custom.conf".text = lib.mkAfter …` on macOS. Nix
+   skips an `!include` that is missing or unreadable, so a host without the secret and other users such as
+   `nix-ssh` still work.
+3. ✅ Add a CI secret `SECRETS_REPO_TOKEN` (the same PAT or a separate one) to `amatos/magnanix`.
+4. Deploy to every host (`update-all-magnanix`), then confirm on each one:
+   `nix flake metadata github:amatos/secrets`. It fetches the repo and then reports that `flake.nix` doesn't
+   exist, which is expected: the repo isn't a flake.
 
 ### Phase 2: create the storage in `amatos/secrets`
 
