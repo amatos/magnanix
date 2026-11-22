@@ -59,6 +59,7 @@ in
       den.aspects.fonts
       den.aspects.game-streaming
       den.aspects.ghostty
+      den.aspects.nix-access-tokens
       den.aspects.noctalia
       den.aspects.openssh
       # magnus's first-choice Linux builder (x86_64, and aarch64 under QEMU)

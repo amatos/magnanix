@@ -34,6 +34,7 @@ in
 
   den.aspects.tenabrae = {
     includes = [
+      den.aspects.nix-access-tokens
       den.aspects.openssh
       den.aspects.pihole
       den.aspects.tailscale

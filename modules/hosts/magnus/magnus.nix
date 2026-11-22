@@ -100,6 +100,7 @@ in
       den.aspects.macos.velja
       den.aspects.macos.windowsApp
       den.aspects.macos.zavala
+      den.aspects.nix-access-tokens
       den.aspects.openssh
       # Linux builds go to fortuna, then muninn, then the Native Linux Builder
       den.aspects.remote-build.client
