@@ -222,8 +222,6 @@ in
                 pkgs.age
                 pkgs.git
                 pkgs.jq
-                pkgs.sops
-                pkgs.ssh-to-age
                 pkgs.sshpass
               ];
               # Its commands are single-quoted on purpose: they expand on the guest.
@@ -241,8 +239,6 @@ in
                 pkgs.git
                 pkgs.jq
                 pkgs.nixos-anywhere
-                pkgs.sops
-                pkgs.ssh-to-age
                 pkgs.sshpass
               ];
               # Its commands are single-quoted on purpose: they expand on the guest.

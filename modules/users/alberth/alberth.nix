@@ -14,7 +14,7 @@
 # - ~/.ssh/authorized_keys is a real file (mode 600), not a store symlink,
 #   because sshd's StrictModes rejects the group-writable store.
 # - PAGER and MANPAGER are bat (see documentation/shells.md).
-# - NixOS password: `alberth_password` (yescrypt hash) in secrets/common.yaml.
+# - NixOS password: the nix-secrets secret `common/alberth_password` (a yescrypt hash).
 #   It always wins over `passwd`. macOS passwords are never managed here.
 # - Heavier sets are opt-in per host, from den.aspects.<host>.provides.alberth:
 #   alberth.dev (language toolchains, gh), alberth.macDesktop (Dock, Mac apps)
@@ -171,8 +171,8 @@ in
         #
         # Never manage this password on macOS: nix-darwin has no password option, and
         # changing it with `dscl` breaks the login keychain and the FileVault token.
-        sops.secrets.alberth_password = {
-          sopsFile = ../../../secrets/common.yaml;
+        security.nix-secrets.secrets."common/alberth_password" = {
+          enable = true;
           neededForUsers = true;
         };
 
@@ -183,7 +183,7 @@ in
             "tty"
           ];
 
-          hashedPasswordFile = config.sops.secrets.alberth_password.path;
+          hashedPasswordFile = config.security.nix-secrets.secrets."common/alberth_password".path;
         };
       };
   };

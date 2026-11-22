@@ -1,9 +1,12 @@
 # Plan: replace sops-nix with nix-secrets, secrets in `amatos/secrets`
 
-## Status: 🚧 Phase 1 in review ([#127](https://github.com/amatos/magnanix/pull/127)); Phase 0 passed with workarounds
+## Status: 🚧 Phases 3–4 (the cutover) in review; Phases 0–2 done
 
 Phase 0 ran on the throwaway branch `spike/nix-secrets` (local, not merged); its results are under Phase 0 in §5,
-and the macOS workarounds it needed are D8. Nothing else is implemented. Sections 1–2 evaluate
+and the macOS workarounds it needed are D8. Phase 1 (the GitHub token, [#127](https://github.com/amatos/magnanix/pull/127))
+and Phase 2 (the storage, [#129](https://github.com/amatos/magnanix/pull/129)) are merged and deployed. Phases 3–4
+moved every consumer to nix-secrets; "As implemented" under Phase 4 lists where they differ from this plan.
+Sections 1–2 evaluate
 [nix-secrets](https://github.com/unnamed-systems/nix-secrets) against this flake; section 3 explains the
 design decisions; sections 4–6 are the implementation and migration steps; section 7 records what was decided in
 review.
@@ -461,6 +464,30 @@ All of Phases 3 and 4 land as one PR. Mechanical changes per file:
   `ls -l /run/nix-secrets/secrets/...`; on NixOS hosts also log in with the password.
 - **Rollback:** `darwin-rebuild --rollback` or `nixos-rebuild switch --rollback`. The previous generation still has
   sops-nix and its encrypted files in the store, and Phase 1's token is still included from its old path.
+
+#### As implemented
+
+- **Canary paths:** the defaults (`/run/nix-secrets/secrets/hosts/<vm>/canary`,
+  `~/.local/share/nix-secrets/secrets/users/ephemeral/canary`), which the spike already proved, rather than
+  explicit ones. A custom path would have to stay clear of the directories nix-secrets manages itself.
+- **The VM scripts** take the storage from the ref's own `flake.lock` (`nix flake prefetch
+  github:amatos/secrets/<rev>`, with magnus's token) instead of a `git archive` of a local clone, and decrypt with
+  `age -d -i ~/.config/sops-nix/key.txt` (nixostron-vm falls back to `yubikey-identities`, for fortuna).
+  `expected_recipient` reads the ref's `_secrets-registry.nix` with `nix eval --file`, which needs no flake
+  evaluation and no private input. They send the storage to the guest only for a switch run there; QEMU builds and
+  nixos-anywhere evaluate on the host, which fetches the input itself, so neither gets `--override-input`. Still
+  to confirm on a real run: nixos-anywhere (`nixostron-vm baseline` or `test --fresh`) and whether `nix develop`
+  on darwintron needs the override (it's still passed to both).
+- **The token's legacy `!include`** is there for the switch itself, not for rollback: a rolled-back generation
+  has its own `nix.conf` and its own sops-nix. On darwin nix-secrets activates from a launchd daemon after the
+  switch, so the old file (left in `/run` until reboot) keeps the token available in between.
+- **`restartTrigger`** is the read-only option `local.nix-secrets.restartTrigger` (NixOS), defined in the
+  aspect. Postfix also triggers on the template's content.
+- **The `sops` aspect** stays in every host's includes with no secrets, so the sops-nix input is still used and
+  Phase 6 removes the aspect with it.
+- **Baselines:** `darwintron-vm baseline` and `nixostron-vm baseline` check the new canaries, so rebuild the
+  baselines from `main` after the merge. Until then, `test` from the old baseline works: the injected keys are
+  the same.
 
 ### Phase 5: soak
 

@@ -18,10 +18,11 @@
 #   what cache.nixos.org lacks: unfree packages and this flake's own builds.
 # - connect-timeout = 5: a host that can't reach the cache loses a few seconds
 #   instead of curl's default 300 s per substitution.
-# - push only starts once secrets/hosts/<host>.yaml has `attic_push_token`;
+# - push only starts once amatos/secrets has `hosts/<host>/attic_push_token`;
 #   until then the build prints a warning and everything else still switches.
 # - Creating the cache and tokens is done by hand: see
 #   documentation/binary-cache.md.
+{ inputs, ... }:
 let
   # The names clients reach the server by: LAN DNS and Tailscale.
   lanHost = "muninn.home.matos.cc";
@@ -43,10 +44,13 @@ let
     connect-timeout = 5;
   };
 
-  # The push watcher's name for the server in its client config, and the secret
-  # (in secrets/hosts/<host>.yaml) holding the host's push token.
+  # The push watcher's name for the server in its client config.
   serverName = "muninn";
-  tokenSecret = "attic_push_token";
+
+  # The nix-secrets secrets holding the host's push token and atticd's
+  # environment, for the host named `hostName`.
+  tokenSecret = hostName: "hosts/${hostName}/attic_push_token";
+  serverEnvSecret = hostName: "hosts/${hostName}/atticd_env";
 
   # Where a pushing host also links the watcher's client config, as an
   # XDG_CONFIG_HOME at a fixed path, so `sudo attic push` can use it by hand
@@ -61,13 +65,13 @@ let
       pkgs,
     }:
     rec {
-      # sops-nix fails the build when a declared secret is missing from its file,
-      # so the watcher only exists once the token is there. Until then every build
-      # warns instead, and the rest of the host still builds and switches. sops
-      # leaves the key names in plain text, so a top-level key starts a line.
-      sopsFile = config.sops.defaultSopsFile;
-      hasToken = lib.hasInfix "\n${tokenSecret}:" ("\n" + builtins.readFile sopsFile);
-      warning = "attic.push: no `${tokenSecret}` in secrets/hosts/${baseNameOf sopsFile}, so this host doesn't push to the Attic cache. See \"Pushing to the cache\" in documentation/binary-cache.md.";
+      # nix-secrets fails evaluation when an enabled secret has no file in the
+      # storage, so the watcher only exists once the token is there. Until then
+      # every build warns instead, and the rest of the host still builds and
+      # switches.
+      secret = tokenSecret config.networking.hostName;
+      hasToken = builtins.pathExists "${inputs.secrets}/${secret}.enc";
+      warning = "attic.push: no `${secret}` in amatos/secrets, so this host doesn't push to the Attic cache. See \"Pushing to the cache\" in documentation/binary-cache.md.";
 
       # The client config, used as the watcher's XDG_CONFIG_HOME. It reads the
       # token from the secret's file, so nothing has to run `attic login` or put
@@ -81,7 +85,7 @@ let
 
           [servers.${serverName}]
           endpoint = "http://${config.local.attic.serverHost}:${toString port}/"
-          token-file = "${config.sops.secrets.${tokenSecret}.path}"
+          token-file = "${config.security.nix-secrets.secrets.${secret}.path}"
         '';
       };
 
@@ -141,7 +145,8 @@ in
 
           # ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64, the key atticd signs its access
           # tokens with. Replacing it invalidates every token issued so far.
-          environmentFile = config.sops.secrets.atticd_env.path;
+          environmentFile =
+            config.security.nix-secrets.secrets.${serverEnvSecret config.networking.hostName}.path;
 
           settings = {
             listen = "[::]:${toString port}";
@@ -162,11 +167,14 @@ in
           };
         };
 
-        # From secrets/hosts/<host>.yaml. systemd reads the environment file as root
-        # before starting atticd's dynamic user, so the default root-only mode works.
-        # Don't set owner/group: atticd uses DynamicUser, so there's no `atticd`
-        # user for sops-install-secrets to look up and activation fails.
-        sops.secrets.atticd_env.restartUnits = [ "atticd.service" ];
+        # systemd reads the environment file as root before starting atticd's
+        # dynamic user, so the default root-only mode works. Don't set
+        # owner/group: atticd uses DynamicUser, so there's no `atticd` user for
+        # activation to look up, and it fails.
+        security.nix-secrets.secrets.${serverEnvSecret config.networking.hostName}.enable = true;
+        systemd.services.atticd.restartTriggers = [
+          (config.local.nix-secrets.restartTrigger (serverEnvSecret config.networking.hostName))
+        ];
 
         # On SIGTERM atticd waits for open downloads to finish, so with a client
         # mid-substitution it would sit out systemd's default 90 s and be killed
@@ -199,7 +207,7 @@ in
           { warnings = lib.optional (!watcher.hasToken) watcher.warning; }
 
           (lib.mkIf watcher.hasToken {
-            sops.secrets.${tokenSecret}.restartUnits = [ "attic-watch-store.service" ];
+            security.nix-secrets.secrets.${watcher.secret}.enable = true;
             environment.etc = watcher.etc;
 
             systemd.services.attic-watch-store = {
@@ -209,6 +217,7 @@ in
               # On the server itself, wait for atticd too.
               after = [ "network-online.target" ] ++ lib.optional config.services.atticd.enable "atticd.service";
               environment.XDG_CONFIG_HOME = "${watcher.configHome}";
+              restartTriggers = [ (config.local.nix-secrets.restartTrigger watcher.secret) ];
               # Keep retrying however long the server is away.
               startLimitIntervalSec = 0;
               serviceConfig = {
@@ -239,7 +248,7 @@ in
           { warnings = lib.optional (!watcher.hasToken) watcher.warning; }
 
           (lib.mkIf watcher.hasToken {
-            sops.secrets.${tokenSecret} = { };
+            security.nix-secrets.secrets.${watcher.secret}.enable = true;
 
             # A daemon rather than a user agent: it runs without anyone logged in,
             # and as root it can read the secret.

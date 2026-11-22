@@ -21,12 +21,12 @@
 #   /etc/letsencrypt-certs/<name>/: owned by the primary user (0400) on macOS,
 #   readable by the `cert-readers` group (every normal user, 0440) on NixOS.
 #   Point services at those copies.
-# - Credentials: `certbot_luadns` in secrets/common.yaml (an INI file with
-#   dns_luadns_email and dns_luadns_token), so the host must be a recipient
-#   of common.yaml.
+# - Credentials: the nix-secrets secret `common/certbot_luadns` (an INI file
+#   with dns_luadns_email and dns_luadns_token), so the host must be one of its
+#   recipients in modules/den/_secrets-registry.nix.
 # - Manual issuance (`certbot certonly --dns-luadns --dns-luadns-credentials
-#   /run/secrets/certbot_luadns -d example.com`) skips the deploy hook, so the
-#   copy only appears after its first renewal.
+#   /run/nix-secrets/secrets/common/certbot_luadns -d example.com`) skips the
+#   deploy hook, so the copy only appears after its first renewal.
 {
   den.aspects.certbot = {
     darwin =
@@ -66,7 +66,7 @@
             pkgs.coreutils
           ];
           text = ''
-            credentials=${lib.escapeShellArg config.sops.secrets.certbot_luadns.path}
+            credentials=${lib.escapeShellArg config.security.nix-secrets.secrets."common/certbot_luadns".path}
             failed=0
             for fqdn in "$@"; do
               cert_name="''${fqdn#\*.}"
@@ -111,7 +111,7 @@
             }
           ];
 
-          sops.secrets.certbot_luadns.sopsFile = ../../secrets/common.yaml;
+          security.nix-secrets.secrets."common/certbot_luadns".enable = true;
 
           environment.systemPackages = [ certbotWithPlugins ];
 
@@ -183,7 +183,7 @@
             pkgs.coreutils
           ];
           text = ''
-            credentials=${lib.escapeShellArg config.sops.secrets.certbot_luadns.path}
+            credentials=${lib.escapeShellArg config.security.nix-secrets.secrets."common/certbot_luadns".path}
             failed=0
             for fqdn in "$@"; do
               cert_name="''${fqdn#\*.}"
@@ -228,7 +228,7 @@
             }
           ];
 
-          sops.secrets.certbot_luadns.sopsFile = ../../secrets/common.yaml;
+          security.nix-secrets.secrets."common/certbot_luadns".enable = true;
 
           environment.systemPackages = [ certbotWithPlugins ];
 

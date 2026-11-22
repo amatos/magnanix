@@ -24,7 +24,7 @@
 #   only accepts senders that are the account's identities (printers, routers
 #   and NAS boxes send as anything).
 # - Sends to smtp.fastmail.com:465, verifying its certificate, logging in with
-#   the app password `fastmail_smtp_password` from the host's secrets file.
+#   the app password, the nix-secrets secret `hosts/<host>/fastmail_smtp_password`.
 # - Needs the `certbot` aspect: it requests the smtp.* certificates and serves
 #   smtp.home.matos.cc's on both ports. Until it's issued, port 25 works
 #   without TLS and port 465 fails.
@@ -126,7 +126,9 @@ in
         # One certificate is served for both names. Clients don't verify it
         # (smtp_tls_security_level = may), so either name's certificate will do.
         certDir = "/etc/letsencrypt-certs/${builtins.head relayNames}";
-        saslPasswords = config.sops.templates.postfix-sasl-passwords.path;
+        passwordSecret = "hosts/${config.networking.hostName}/fastmail_smtp_password";
+        saslTemplate = config.security.nix-secrets.templates.postfix-sasl-passwords;
+        saslPasswords = saslTemplate.path;
       in
       {
         options.local.mail.relay.interfaces = lib.mkOption {
@@ -141,14 +143,18 @@ in
         config = {
           local.certbot.fqdns = relayNames;
 
-          sops.secrets.fastmail_smtp_password = { };
+          security.nix-secrets.secrets.${passwordSecret}.enable = true;
           # Postfix's SASL password table. Only root can read it; the smtp client
           # opens it before dropping privileges. `texthash` reads the file as is,
           # so it needs no `postmap`.
-          sops.templates.postfix-sasl-passwords = {
-            content = "${fastmail} ${fastmailUser}:${config.sops.placeholder.fastmail_smtp_password}\n";
-            restartUnits = [ "postfix.service" ];
-          };
+          security.nix-secrets.templates.postfix-sasl-passwords.content = "${fastmail} ${fastmailUser}:${
+            config.security.nix-secrets.secrets.${passwordSecret}
+          }\n";
+          # Restart when the password or the table's layout changes.
+          systemd.services.postfix.restartTriggers = [
+            saslTemplate.content
+            (config.local.nix-secrets.restartTrigger passwordSecret)
+          ];
 
           services.postfix = {
             enableSmtp = true;

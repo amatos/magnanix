@@ -5,9 +5,9 @@
 1. Copy `modules/hosts/templates/_darwin_template.nix` or `_nix_template.nix` to
    `modules/hosts/<hostname>/<hostname>.nix`.
 2. Replace `CHANGE_HOSTNAME` and `CHANGE_USERNAME`, and set the platform and `system.stateVersion`.
-3. For secrets, add the host's age key (and the user's per-machine key) and a creation rule to `.sops.yaml`, then
-   create `secrets/hosts/<hostname>.yaml`. No Nix change is needed: the `sops` aspect points each host at
-   `secrets/hosts/<hostname>.yaml` by name.
+3. For secrets, add the host's SSH host key as `host_<hostname>` (and the user's per-machine age key as
+   `<user>_<hostname>`) to `modules/den/_secrets-registry.nix`, add them to the secrets the host uses, run
+   `secrets rekey`, push `amatos/secrets` and run `nix flake update secrets`. See [Secrets](secrets.md).
 4. Adjust the host's apps in `den.aspects.<hostname>` (see [Features](architecture.md#features)). The templates start with a default
    set: `_1password`, `browsers`, `fonts`, `ghostty`, `openssh`, `audio` and `zed`, plus `bluetooth` on NixOS.
 5. On NixOS, put the machine's generated `hardware-configuration.nix` next to the host file, in
@@ -30,5 +30,5 @@
 5. Optionally add a `meta` set (see [User metadata](architecture.md#user-metadata)) and include features from `modules/packages/`.
    Every user gets Starship's default prompt; for a custom one, set `programs.starship.settings` in a user aspect (see
    `modules/users/alberth/configs/starship.nix` and [Shells](shells.md)).
-6. For secrets, add the user's per-machine age key and a creation rule to `.sops.yaml`, then create
-   `secrets/users/<username>.yaml`.
+6. For secrets, add the user's per-machine age key to `modules/den/_secrets-registry.nix` as
+   `<username>_<host>`, and create the user's secrets under `users/<username>/` (see [Secrets](secrets.md)).

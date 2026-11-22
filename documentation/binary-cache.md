@@ -13,10 +13,11 @@ open transfers to finish, so its stop timeout is cut from systemd's 90 s to 10 s
 otherwise keep the cache down for the full 90 s before atticd is killed anyway. Transfers cut off by the restart are
 retried (`attic watch-store`) or built locally instead (CI's `--fallback`, see [CI](ci.md)).
 
-The server signs its access tokens with `atticd_env` in `secrets/hosts/muninn.yaml`, an environment file that
+The server signs its access tokens with the secret `hosts/muninn/atticd_env`, an environment file that
 sets `ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64`. Replacing it invalidates every token issued with it. To rotate it,
-generate a key with `openssl genrsa -traditional 4096 | openssl base64 -A` and paste it in with
-`sops secrets/hosts/muninn.yaml`.
+generate a key with `openssl genrsa -traditional 4096 | openssl base64 -A`, paste it in with
+`secrets edit hosts/muninn/atticd_env`, push and lock it (see [Secrets](secrets.md#editing)), and switch muninn,
+which restarts atticd.
 
 Caches and tokens are created with commands, not from the flake. After the first switch on `muninn`, run this
 there once:
@@ -65,8 +66,8 @@ builds and the unfree packages. On fortuna and muninn that includes what they bu
 
 - **Server name:** the same `local.attic.serverHost` the host pulls from (the Tailscale name on hosts with the
   `tailscale` aspect). On the server itself it reaches its own atticd through that name and starts after `atticd.service`.
-- **Token:** `attic_push_token` in the host's `secrets/hosts/<host>.yaml`, decrypted to
-  `/run/secrets/attic_push_token` (root only). The watcher's client config is generated in the Nix store and
+- **Token:** the secret `hosts/<host>/attic_push_token`, decrypted to
+  `/run/nix-secrets/secrets/hosts/<host>/attic_push_token` (root only). The watcher's client config is generated in the Nix store and
   reads the token from that file, so nothing runs `attic login`, and the users' own `~/.config/attic` is
   untouched.
 - **Server away:** if the server can't be reached when it starts, the watcher exits and is restarted: systemd
@@ -76,9 +77,10 @@ builds and the unfree packages. On fortuna and muninn that includes what they bu
   so root can push without `attic login`: `sudo env XDG_CONFIG_HOME=/etc/attic-push "$(command -v attic)" push
   muninn:magnanix <path>`. `update-all-magnanix` pushes tenabrae's build this way. `watch-store` only pushes paths
   that become valid while it runs, so a path it missed (a stalled watcher, a restart) has to be pushed like this.
-- **No token yet:** sops-nix fails the build when a declared secret is missing from its file, so the watcher and
-  its secret only exist once the host's file has `attic_push_token`. Until then each build prints an
-  `attic.push: no attic_push_token ...` warning, and the rest of the host builds and switches as usual.
+- **No token yet:** nix-secrets fails evaluation when an enabled secret has no file in the storage, so the watcher
+  and its secret only exist once `amatos/secrets` has `hosts/<host>/attic_push_token.enc`. Until then each build
+  prints an `attic.push: no hosts/<host>/attic_push_token ...` warning, and the rest of the host builds and
+  switches as usual.
 
 To set it up for a host:
 
@@ -88,14 +90,15 @@ To set it up for a host:
    atticd-atticadm make-token --sub <host> --validity "1y" --pull magnanix --push magnanix
    ```
 
-2. Add it to the host's secrets as `attic_push_token`, on its own line at the top level (just the token, no
-   quotes or `Bearer`):
+2. Add `hosts/<host>/attic_push_token` to `modules/den/_secrets-registry.nix` (recipient `host_<host>`) if it
+   isn't there, and store the token (just the token, no quotes or `Bearer`):
 
    ```sh
-   sops secrets/hosts/<host>.yaml      # attic_push_token: <token>
+   secrets edit hosts/<host>/attic_push_token
    ```
 
-3. Commit, and switch the host. The warning goes away and the watcher starts.
+3. Push `amatos/secrets`, run `nix flake update secrets`, commit, and switch the host. The warning goes away and
+   the watcher starts.
 
-The token expires after a year. To replace it, mint a new one and repeat step 2. On NixOS the switch restarts
+The token expires after a year. To replace it, mint a new one and repeat steps 2 and 3. On NixOS the switch restarts
 the watcher; on macOS restart it by hand with `sudo launchctl kickstart -k system/org.nixos.attic-watch-store`.
