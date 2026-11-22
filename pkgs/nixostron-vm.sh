@@ -76,10 +76,12 @@ access_key() {
 ssh_opts=(-o IdentitiesOnly=yes -o IdentityAgent=none -o UserKnownHostsFile=/dev/null
   -o StrictHostKeyChecking=no -o LogLevel=ERROR -o ConnectTimeout=5 -o ServerAliveInterval=30)
 
+# BatchMode: early in a boot sshd can be up before it accepts the key, and ssh would then
+# wait at a password prompt forever instead of failing so wait_for_ssh can retry.
 guest() {
   local login="$1"
   shift
-  ssh -F /dev/null -i "$work/access_key" "${ssh_opts[@]}" -p "$port" "$login@$ip" "$@"
+  ssh -F /dev/null -i "$work/access_key" -o BatchMode=yes "${ssh_opts[@]}" -p "$port" "$login@$ip" "$@"
 }
 
 wait_for_ssh() {
