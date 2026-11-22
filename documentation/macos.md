@@ -115,25 +115,17 @@ itself.
 ## AlDente
 
 `den.aspects.macos.alDente` (`modules/packages/aldente.nix`), included by magnus, installs AppHouseKitchen's
-AlDente, which caps the MacBook's charge level to extend battery life. It comes from nixpkgs (`aldente`, unfree) into
-`/Applications/Nix Apps`.
+AlDente, which caps the MacBook's charge level to extend battery life. It's the `aldente` Homebrew cask, in
+`/Applications`.
 
-AlDente updates only with nixpkgs; its built-in updater (Sparkle) is turned off. nix-darwin copies each app from
-the Nix store over `/Applications/Nix Apps` on every switch, so an update installed from inside the app would be
-reverted, without a warning, at the next switch. Home Manager sets three keys in
-`targets.darwin.defaults."com.apphousekitchen.aldente-pro"`:
-
-| Key                       | Value   | Why                                                                                                    |
-| ------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `SUEnableAutomaticChecks` | `false` | no scheduled update checks (the app's `Info.plist` turns them on)                                      |
-| `SUAutomaticallyUpdate`   | `false` | no silent background installs (also on in `Info.plist`)                                                |
-| `checkForUpdates`         | `false` | AlDente's own "Allow automatic updates" setting, which otherwise stays on and can turn Sparkle back on |
-
-The nixpkgs package can lag behind AlDente's releases. If AlDente offers an update anyway, choose Skip This Version.
-Check for Updates… in the app still works for checking by hand, but don't install from it.
+AlDente updates itself (the cask is `auto_updates`, so `brew upgrade` leaves it alone).
 
 After the first switch, open AlDente and let it install its privileged helper, which it needs to control charging.
 AlDente Pro's licence is entered in the app.
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which removes the privileged helper and moves
+> AlDente's preferences and charging statistics to the Trash.
 
 ## Alfred
 
