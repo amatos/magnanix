@@ -1,11 +1,12 @@
 # Plan: replace sops-nix with nix-secrets, secrets in `amatos/secrets`
 
-## Status: 🚧 Phases 3–4 (the cutover) in review; Phases 0–2 done
+## Status: 🚧 Phase 5 (soak) since 2026-11-22; Phases 0–4 done
 
 Phase 0 ran on the throwaway branch `spike/nix-secrets` (local, not merged); its results are under Phase 0 in §5,
 and the macOS workarounds it needed are D8. Phase 1 (the GitHub token, [#127](https://github.com/amatos/magnanix/pull/127))
 and Phase 2 (the storage, [#129](https://github.com/amatos/magnanix/pull/129)) are merged and deployed. Phases 3–4
-moved every consumer to nix-secrets; "As implemented" under Phase 4 lists where they differ from this plan.
+([#130](https://github.com/amatos/magnanix/pull/130)) moved every consumer to nix-secrets and were deployed to all
+four hosts on 2026-11-22; "As implemented" under Phase 4 lists where they differ from this plan.
 Sections 1–2 evaluate
 [nix-secrets](https://github.com/unnamed-systems/nix-secrets) against this flake; section 3 explains the
 design decisions; sections 4–6 are the implementation and migration steps; section 7 records what was decided in
@@ -493,6 +494,17 @@ All of Phases 3 and 4 land as one PR. Mechanical changes per file:
 
 Keep sops-nix's files and input in place (rollback depends on them) for a week or two of normal deploys. Include
 at least one `secrets rekey` and one secret change on muninn, to exercise D5.
+
+Started 2026-11-22, after the cutover reached magnus, muninn, fortuna and tenabrae. Before Phase 6:
+
+- [ ] Both VM baselines rebuilt from `main` (`darwintron-vm baseline`, `nixostron-vm baseline`), so `test`
+      checks the nix-secrets canaries from a nix-secrets baseline.
+- [ ] A `secrets rekey`, pushed, locked and deployed everywhere.
+- [ ] A secret change on muninn (for example `hosts/muninn/fastmail_smtp_password`) restarts the service that
+      reads it (D5).
+- [ ] A reboot of each host: secrets come back from the activation at boot, and the legacy token file under
+      `/run/secrets` is gone, so the token comes from nix-secrets alone.
+- [ ] No sops-nix or nix-secrets errors in normal deploys.
 
 ### Phase 6: cleanup
 
