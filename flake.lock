@@ -520,11 +520,11 @@
     "secrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1795311478,
-        "narHash": "sha256-lWd7IKt1vgYSNry7LlYzoKT8o/4T0BoSXjrPe1qdjf4=",
+        "lastModified": 1795367779,
+        "narHash": "sha256-zhvLsFyMZcoxMm3lAbhRePIFV5lxQYr3GmhdUGOFPkY=",
         "owner": "amatos",
         "repo": "secrets",
-        "rev": "dc4cc041c8d2f600399019311d6c367ec2f92eef",
+        "rev": "cc37d562ca40e01ba00480818c0f3963a239bfb4",
         "type": "github"
       },
       "original": {
