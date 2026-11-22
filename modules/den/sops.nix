@@ -5,6 +5,9 @@
 #            declare a secret without naming its file.
 #
 # Notes:
+# - LEGACY: no aspect declares a sops secret any more; nix-secrets
+#   (modules/den/nix-secrets.nix) replaced it. This file, .sops.yaml and
+#   secrets/ stay until the cleanup (documentation/NIX_SECRETS_PLAN.md, Phase 6).
 # - Hosts decrypt with their SSH host key; users with a per-machine age key in
 #   ~/.config/sops-nix/key.txt, which must exist before the first switch.
 { den, inputs, ... }:

@@ -27,21 +27,21 @@ see [Deploying a change](#deploying-a-change).
 
 ## Secrets
 
-`secrets/hosts/tenabrae.yaml` (edit with `sops secrets/hosts/tenabrae.yaml` from the dev shell):
+Edit with `secrets edit <name>` from the dev shell (see [Secrets](secrets.md#editing)):
 
-| Key            | Value                                                          |
-| -------------- | -------------------------------------------------------------- |
-| `wireless_env` | `psk_voxdev=<passphrase>`, bare (no quotes or trailing spaces) |
-| `pihole_env`   | `FTLCONF_webserver_api_password=<dashboard password>`          |
+| Secret                         | Value                                                          |
+| ------------------------------ | -------------------------------------------------------------- |
+| `hosts/tenabrae/wireless_env`  | `psk_voxdev=<passphrase>`, bare (no quotes or trailing spaces) |
+| `hosts/tenabrae/pihole_env`    | `FTLCONF_webserver_api_password=<dashboard password>`          |
 
-The host decrypts these, and `alberth_password` from `secrets/common.yaml`, with its SSH host key. That key was
-generated off-host. Its age recipient is `host_tenabrae` in `.sops.yaml`, and the private half is kept in
-1Password.
+The host decrypts these, `common/alberth_password` and `common/github_secrets_repo_access_token` with its SSH
+host key. That key was generated off-host. Its public half is `host_tenabrae` in
+`modules/den/_secrets-registry.nix`, and the private half is kept in 1Password.
 
 ## Installing
 
-1. Make sure tenabrae can decrypt `common.yaml`: run `sops updatekeys secrets/common.yaml`, and commit the
-   result. `grep -c "recipient: age1" secrets/common.yaml` should count tenabrae's key too. Without it,
+1. Make sure `host_tenabrae` is a recipient of `common/alberth_password` in the registry, and that the locked
+   `secrets` input was rekeyed since (`secrets rekey`, push, `nix flake update secrets`). Without it,
    `alberth_password` fails to decrypt and you can't log in.
 2. On fortuna, from a checkout of this repo at the commit you want, build the image. fortuna builds aarch64
    under QEMU itself, and anything already in Attic is downloaded instead of built. (To use CI's build instead,
@@ -79,7 +79,7 @@ generated off-host. Its age recipient is `host_tenabrae` in `.sops.yaml`, and th
    sudo umount /mnt && sync
    ```
 
-   Then delete the local copy (`shred -u ssh_host_ed25519_key`) and pull the card. sops-nix decrypts with this
+   Then delete the local copy (`shred -u ssh_host_ed25519_key`) and pull the card. nix-secrets decrypts with this
    key during activation, so the Pi needs it from the first boot on.
 6. Boot the Pi. It joins `voxdev`, expands the root partition to fill the card, and starts sshd and Pi-hole.
    Check with `ssh alberth@tenabrae`, then run `sudo tailscale up` once.
@@ -88,8 +88,8 @@ generated off-host. Its age recipient is `host_tenabrae` in `.sops.yaml`, and th
 If Wi-Fi never comes up, put the card back in fortuna and read the Pi's journal:
 `sudo mount -o ro /dev/disk/by-label/NIXOS_SD /mnt`, then `sudo journalctl -D /mnt/var/log/journal -b 0` (`-b 0`
 is the last boot it recorded; check `--list-boots`). Without the
-host key, sops can't decrypt the Wi-Fi passphrase (or alberth's password), so the Pi can't connect and you can't
-log in at the console. Look for `sops-install-secrets` errors, and check that
+host key, nix-secrets can't decrypt the Wi-Fi passphrase (or alberth's password), so the Pi can't connect and you
+can't log in at the console. Look for nix-secrets errors during activation, and check that
 `/mnt/etc/ssh/ssh_host_ed25519_key` is the key from 1Password (`ssh-keygen -y -f` on it should print
 `host_tenabrae`'s public key). If sshd generated its own key on a boot that lacked it, reinstall the right one
 the same way.

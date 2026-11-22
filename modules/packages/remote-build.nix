@@ -18,8 +18,8 @@
 #   Determinate module uses). Generated off-host and installed by hand; see
 #   documentation/remote-builders.md.
 # - Builders' host keys are pinned below (publicHostKey), so root on magnus
-#   needs no known_hosts entry. They are the same keys the hosts decrypt sops
-#   secrets with; re-pin here if one is ever replaced.
+#   needs no known_hosts entry. They are the same keys the hosts decrypt
+#   nix-secrets with; re-pin here if one is ever replaced.
 # - aarch64-linux on the x86_64 builders runs under QEMU user emulation
 #   (binfmt): several times slower than native, so it suits configs whose heavy
 #   parts come from a cache (tenabrae), not compiling big packages.

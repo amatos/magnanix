@@ -1,6 +1,5 @@
-# Aspects:   den.aspects.nix-secrets       (system secrets, per host)
-#            den.aspects.nix-secrets.home  (Home Manager secrets, per user per host)
-# Platforms: nix-secrets: nixos, darwin; home: home-manager
+# Aspect:    den.aspects.nix-secrets (added to every host via den.default.includes)
+# Platforms: nixos, darwin, home-manager
 # Purpose:   Imports nix-secrets and gives every configuration the shared
 #            storage and registry (see _nix-secrets-shared.nix), so an aspect
 #            only enables the secrets it uses:
@@ -11,14 +10,21 @@
 #            The decrypted value is at `config.security.nix-secrets.secrets.<name>.path`.
 #
 # Notes:
-# - Not included by any host yet: sops-nix still provides every secret until the
-#   cutover (documentation/NIX_SECRETS_PLAN.md, Phases 3-4). The dev shell's
-#   `secrets` command already uses the inputs and the registry.
+# - A secret also needs an entry in _secrets-registry.nix (its recipients) and a
+#   file in amatos/secrets; see documentation/secrets.md.
 # - Every registry secret is declared, disabled; enabling one whose `.enc` file
 #   isn't in the locked `secrets` input fails evaluation.
 # - Hosts decrypt with their SSH host key; users with the per-machine age key
-#   sops-nix already uses (~/.config/sops-nix/key.txt).
-{ inputs, lib, ... }:
+#   sops-nix used (~/.config/sops-nix/key.txt).
+# - No `restartUnits`: on NixOS, give a unit that reads a secret
+#   `restartTriggers = [ (config.local.nix-secrets.restartTrigger "<name>") ]`,
+#   which changes whenever the secret's file in the storage does.
+{
+  den,
+  inputs,
+  lib,
+  ...
+}:
 let
   versions = import ./_versions.nix;
   shared = import ./_nix-secrets-shared.nix { inherit inputs lib; };
@@ -58,14 +64,25 @@ in
 
     nixos = {
       imports = [ inputs.nix-secrets.nixosModules.default ];
-      security.nix-secrets = shared // {
+
+      options.local.nix-secrets.restartTrigger = lib.mkOption {
+        type = lib.types.functionTo lib.types.str;
+        readOnly = true;
+        default = name: builtins.hashFile "sha256" "${inputs.secrets}/${name}.enc";
+        description = ''
+          A value for a unit's `restartTriggers` that changes with the encrypted
+          secret `name`, so the unit restarts after the secret is edited or rekeyed.
+          nix-secrets has no `restartUnits`. The activation script writes the new
+          value before switch-to-configuration restarts the unit.
+        '';
+      };
+
+      config.security.nix-secrets = shared // {
         identityPaths = hostIdentity;
       };
     };
 
-    # Separate from the system part: a host's includes only reach users that
-    # include den.batteries.host-aspects.
-    home.homeManager =
+    homeManager =
       { config, pkgs, ... }:
       {
         imports = [ inputs.nix-secrets.homeManagerModules.default ];
@@ -89,6 +106,8 @@ in
         };
       };
   };
+
+  den.default.includes = [ den.aspects.nix-secrets ];
 
   # nix-secrets for encrypted secrets (system and Home Manager); tag in _versions.nix
   flake-file.inputs.nix-secrets = {

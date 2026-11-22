@@ -12,7 +12,7 @@
 # - Only way in: SSH as `ephemeral` with the access key.
 # - Bootstrap keys (host key, ephemeral's age key) are placed in
 #   /var/lib/nixostron-keys by nixostron-vm and installed by the
-#   `nixostron-keys` activation script before sops-nix runs, so the VM keeps
+#   `nixostron-keys` activation script before nix-secrets runs, so the VM keeps
 #   one identity however often it's rebuilt.
 # - canTouchEfiVariables is forced off: a VM's NVRAM isn't worth writing, and
 #   Tart resets it with each clone.
@@ -24,7 +24,7 @@ let
   # Where nixostron-vm puts the bootstrap keys (secrets/bootstrap/nixostron.yaml)
   # before an activation: copied in by nixos-anywhere or over SSH on Tart, and
   # shared read-only from the host by QEMU. The `nixostron-keys` activation script
-  # below installs them where sshd and sops-nix look. Never in a saved image.
+  # below installs them where sshd and nix-secrets look. Never in a saved image.
   keyDir = "/var/lib/nixostron-keys";
 
   # QEMU settings shared by `build-vm` and disko's `vmWithDisko` (see nixostron-vm)
@@ -117,9 +117,14 @@ in
         };
 
         # Checked by nixostron-vm to prove system secrets decrypt.
-        sops.secrets.canary = { };
+        security.nix-secrets.secrets."hosts/nixostron/canary".enable = true;
+        # nix-secrets' pre-switch check decrypts every secret before the switch, when
+        # /etc/ssh still holds the key sshd generated: the bootstrap host key is only
+        # installed there by the `nixostron-keys` activation script below. Let it use
+        # the staged copy; missing identity files are skipped.
+        security.nix-secrets.identityPaths = [ "${keyDir}/host_key" ];
 
-        # Install the bootstrap keys, if present, before sops-nix decrypts anything.
+        # Install the bootstrap keys, if present, before nix-secrets decrypts anything.
         system.activationScripts.nixostron-keys = lib.stringAfter [ "users" "groups" ] ''
           if [ -f ${keyDir}/host_key ]; then
             ${pkgs.coreutils}/bin/install -D -m 600 -o root -g root ${keyDir}/host_key /etc/ssh/ssh_host_ed25519_key
@@ -131,7 +136,7 @@ in
             ${pkgs.coreutils}/bin/install -m 600 -o ${user} -g users ${keyDir}/user_key "$home/.config/sops-nix/key.txt"
           fi
         '';
-        system.activationScripts.setupSecrets.deps = [ "nixostron-keys" ];
+        system.activationScripts.nixSecretsActivate.deps = [ "nixostron-keys" ];
 
         virtualisation.vmVariant = qemuVm;
         virtualisation.vmVariantWithDisko = qemuVm;
@@ -143,6 +148,6 @@ in
     includes = [ den.batteries.primary-user ];
 
     # Checked by nixostron-vm to prove Home Manager secrets decrypt.
-    homeManager.sops.secrets.canary = { };
+    homeManager.security.nix-secrets.secrets."users/ephemeral/canary".enable = true;
   };
 }

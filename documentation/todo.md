@@ -1,9 +1,9 @@
 # TODO
 
-- When `alberth` declares a Home Manager secret, add each machine's user key to the `alberth.yaml` rule in
-  `.sops.yaml`: `alberth_muninn` already exists; `fortuna` needs an `alberth_fortuna` key generated first.
-- Remove the unused `github_access_token` from `secrets/common.yaml` (and revoke that token on GitHub) once
-  nothing needs it. Hosts now use `github_secrets_repo_access_token` through `den.aspects.nix-access-tokens`.
+- Revoke the old `github_access_token` on GitHub. Nothing uses it: it wasn't migrated to nix-secrets, and its
+  encrypted copy goes with `secrets/common.yaml` in the sops-nix cleanup.
+- Finish the nix-secrets migration: soak, then remove sops-nix ([NIX_SECRETS_PLAN.md](NIX_SECRETS_PLAN.md),
+  Phases 5 and 6).
 - Remove the `doCheck = false` override on `cargo-llvm-cov` in `modules/packages/languages/rust.nix` (see
   [Rust](languages.md#rust)) once nixpkgs fixes its tests. After updating inputs, check with
   `nix build --no-link --inputs-from . nixpkgs#cargo-llvm-cov` on any host: it builds the unmodified package from

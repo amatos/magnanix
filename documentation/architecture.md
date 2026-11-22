@@ -16,12 +16,11 @@ flake.lock                     pinned inputs
 .githooks/pre-commit           formatting and flake.nix up-to-date checks (enabled by the dev shell)
 .github/workflows/             CI and the weekly flake input update PR (see ci.md, applying.md)
 .github/actions/attic-cache/   composite action that joins Tailscale and sets up the Attic cache for CI
-.sops.yaml                     sops recipients and creation rules
-secrets/                       encrypted secrets: common, per host, per user, and the test VMs' bootstrap keys
+.sops.yaml, secrets/           the old sops-nix secrets, unused; kept until the nix-secrets cleanup
 documentation/                 this documentation, plus CICD_PLAN.md, TAILSCALE_SETUP.md and the tailnet ACL policy
 pkgs/                          the darwintron-vm / nixostron-vm scripts and locally packaged software
 modules/
-├── den/                       the framework and what every host shares: base, Determinate Nix, sops, Homebrew,
+├── den/                       the framework and what every host shares: base, Determinate Nix, nix-secrets, Homebrew,
 │                              Home Manager integration, disko, magnanix.repoDir and magnanix.draculaPro options,
 │                              and _versions.nix (the branch each core input tracks)
 ├── flake/outputs.nix          the flake's outputs: configurations, nh wrappers, checks, dev shell, formatter
@@ -40,7 +39,8 @@ Every `.nix` file starts with a header naming the aspect(s) it defines, the plat
 (`nixos`, `darwin`, `home-manager`) and what it is for, followed by notes on anything that differs from the
 defaults. Read the header first when you need to know what a file does or why something is set.
 
-The `base`, `determinate`, `sops` and `macos.homebrew` aspects are added to every host through `den.default.includes`.
+The `base`, `determinate`, `nix-secrets`, `sops` (unused, until the cleanup) and `macos.homebrew` aspects are added
+to every host through `den.default.includes`.
 Per-host settings go in `den.aspects.<host>`, and per-user settings in `den.aspects.<user>` (its `homeManager`
 attribute is the user's Home Manager configuration).
 
