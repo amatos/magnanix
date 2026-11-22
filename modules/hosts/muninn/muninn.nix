@@ -33,6 +33,7 @@ in
       den.aspects.certbot
       den.aspects.fonts
       den.aspects.audio
+      den.aspects.nix-access-tokens
       den.aspects.tailscale
 
       # Headless server: SSH (keys only) is the way in. It also creates

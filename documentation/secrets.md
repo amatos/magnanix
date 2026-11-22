@@ -69,3 +69,16 @@ The password is for logging in, not for `sudo`. The `sudo` aspect (included by `
 on NixOS, adds every user on the host to `wheel`, and sets `security.sudo-rs.wheelNeedsPassword = false` (the
 NixOS default is `true`), so `wheel` members run sudo without a password. On macOS it enables Touch ID for sudo
 instead.
+
+## GitHub token for Nix
+
+`github_secrets_repo_access_token` in `secrets/common.yaml` is a fine-grained GitHub token with read-only
+*Contents* access to the private `amatos/secrets` repo. The `nix-access-tokens` aspect (on magnus, muninn, fortuna
+and tenabrae) renders it as `access-tokens = github.com=<token>` in a file readable by root and the admin group
+(`wheel`, or `admin` on macOS), which the Nix config `!include`s. It lets those hosts fetch the private repo and
+lifts GitHub's rate limit for anonymous requests. Nix skips the `!include` when the file is missing or unreadable,
+so other users (such as `nix-ssh` for remote builds) and a host that hasn't decrypted it yet still work, just
+without the token. CI uses its own copy, the `SECRETS_REPO_TOKEN` Actions secret.
+
+To rotate it: create a new token on GitHub, replace the value with `sops secrets/common.yaml`, update
+`SECRETS_REPO_TOKEN`, deploy, then revoke the old token.
