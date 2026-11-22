@@ -95,4 +95,5 @@ matches:
   Wayland build reads keyboards from `/dev/input` and types through `/dev/uinput`, so the aspect enables
   `hardware.uinput` and adds the host's users to the `input` and `uinput` groups. Log out and in after the
   first switch for the groups to apply.
-- The search bar opens with Alt+Space (Option+Space on macOS).
+- The search bar's shortcut (Alt+Space, Option+Space on macOS) is turned off with `search_shortcut = "off"` in
+  `services.espanso.configs.default`.
