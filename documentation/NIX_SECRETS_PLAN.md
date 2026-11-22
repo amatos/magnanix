@@ -1,8 +1,9 @@
 # Plan: replace sops-nix with nix-secrets, secrets in `amatos/secrets`
 
-## Status: 📝 APPROVED PLAN, not started (next: Phase 0)
+## Status: 🧪 Phase 0 passed with workarounds (next: Phase 1)
 
-Nothing here is implemented. Sections 1–2 evaluate
+Phase 0 ran on the throwaway branch `spike/nix-secrets` (local, not merged); its results are under Phase 0 in §5,
+and the macOS workarounds it needed are D8. Nothing else is implemented. Sections 1–2 evaluate
 [nix-secrets](https://github.com/unnamed-systems/nix-secrets) against this flake; section 3 explains the
 design decisions; sections 4–6 are the implementation and migration steps; section 7 records what was decided in
 review.
@@ -18,7 +19,7 @@ model (age, YubiKeys, SSH host keys, NixOS + nix-darwin + Home Manager, template
 the ciphertext to the private `amatos/secrets` repo removes what `magnanix` (a **public** repo) leaks today:
 `.sops.yaml`, the per-file recipient lists in every sops file, and which secret lives on which host.
 
-It is a young project, though: four months old, two maintainers, `v0.5.x`. Three gaps affect this flake directly,
+It is a young project, though: four months old, two maintainers, `v0.5.x`. Four gaps affect this flake directly,
 and the plan works around each one:
 
 | Gap                                                                                     | Effect here                                                                                                         | Workaround in this plan                                                                         |
@@ -26,6 +27,7 @@ and the plan works around each one:
 | CLI reads **one** host's manifest ([#27](https://github.com/unnamed-systems/nix-secrets/issues/27)) | `rekey` from host A re-encrypts a shared secret to A's recipient list, which can drop host B, so B fails activation | A single recipient registry plus one "admin" manifest that holds every secret (§3 D1)            |
 | No `restartUnits` ([#37](https://github.com/unnamed-systems/nix-secrets/issues/37))    | `atticd`, `attic-watch-store` and `postfix` aren't restarted when their secret changes                              | `restartTriggers` on the hash of the encrypted file (§3 D5)                                     |
 | Host-to-secret mapping lives only in Nix                                                | `attic.nix` greps the sops file to see whether `attic_push_token` exists                                          | `builtins.pathExists` on the `.enc` file in the storage input                                   |
+| Activation on macOS is broken in `v0.5.4` (found in Phase 0; [#9](https://github.com/unnamed-systems/nix-secrets/issues/9) closed as stale) | No secret activates on magnus or darwintron, system or Home Manager | A 5-line source patch and a launchd override, carried until upstream fixes them (§3 D8) |
 
 If you'd rather not carry those workarounds, the alternative is to **keep sops-nix and only move `secrets/`
 into `amatos/secrets` as a non-flake input** (the `sopsFile` paths change, nothing else does). That gets most of
@@ -67,8 +69,14 @@ the privacy benefit for a fraction of the work. §8 describes it in case Phase 0
 - **Hostname guessing.** Without `#host`, the CLI uses `uname -n`, which on macOS can be `magnus.local`. The
   wrapper always passes an explicit configuration.
 - **Activation on macOS is asynchronous** (launchd `RunAtLoad`). `darwintron-vm` already polls for its canaries,
-  but anything that reads a secret *during* `darwin-rebuild` activation would race. Nothing does today; Phase 0
-  confirms that.
+  but anything that reads a secret *during* `darwin-rebuild` activation would race. Nothing does today.
+- **Activation on macOS doesn't work at all in `v0.5.4`** without two workarounds (D8).
+- **NixOS refuses to switch if any secret won't decrypt.** The module adds a pre-switch check
+  (`nix-secrets-activate-check`) that decrypts every secret with the keys the machine has *before* activation.
+  That's a useful guard against a forgotten rekey, but it means a host's identity must already be in place when
+  the switch starts (it broke nixostron in Phase 0; see Phase 3).
+- **Home Manager on nix-darwin needs `defaultGroup = "staff"`.** The default reads
+  `osConfig.users.users.<user>.group`, which nix-darwin doesn't set.
 - **Two-repo workflow for new secrets.** A host that enables a secret fails evaluation (the `missingSecrets`
   assertion) until the `.enc` file exists in the locked `secrets` input. See "Adding a secret" in Phase 5.
 - **Known rough edges in issues:** activation failed without `age` in `extraPackages` (it's now in the default,
@@ -94,10 +102,12 @@ Proposal:
   `recipients = lib.mkForce (admins ++ entry.recipients)`. Aspects only set `enable = true` (plus `owner`, `path`
   and so on). Recipients therefore can't drift between hosts, and enabling a secret that isn't in the registry
   fails evaluation.
-- A flake output, `secretsAdmin.all`, is a minimal `nixosSystem` with nix-secrets enabled and **every** registry
-  entry enabled. The CLI accepts any output name (`-m`) and evaluates
-  `<output>.<name>.config.security.nix-secrets.manifest`, so `nix-secrets -m secretsAdmin -f .#all rekey` rekeys
-  everything consistently. That includes the VM bootstrap keys, which no host enables.
+- A flake output, `secretsAdmin.<system>`, is a minimal configuration with nix-secrets enabled and **every**
+  registry entry enabled. The CLI accepts any output name (`-m`) and evaluates
+  `<output>.<name>.config.security.nix-secrets.manifest`, so `nix-secrets -m secretsAdmin -f .#aarch64-darwin rekey`
+  rekeys everything consistently. That includes the VM bootstrap keys, which no host enables. It's one per system
+  because the CLI builds the manifest with the local system's packages: a nix-darwin configuration on macOS, a
+  NixOS one on Linux (as built in Phase 0).
 
 When upstream ships manifest merging (#27), the admin output can go; the registry stays useful.
 
@@ -145,7 +155,11 @@ VMs. All of them need read access to `amatos/secrets`.
   zero-config on magnus (1Password agent) but needs a GitHub-authorised key on every other host, and a deploy key
   in CI.
 - **Test VMs** get no credentials either way: the scripts ship a `git archive` of the secrets repo with the source
-  and pass `--override-input secrets path:…` (Phase 4).
+  and pass `--override-input secrets path:…` (Phase 4). Phase 0 confirmed this works.
+
+Found in Phase 0: the `access-tokens` magnus has today can't read `amatos/secrets` (`github:` returns 404), so
+Phase 1's token is still needed. Until then the spike used `git+https://github.com/amatos/secrets`, which Nix
+fetches through git's credential helper (`gh` on magnus). That's a stopgap for magnus only.
 
 ### D5. Restarting services when a secret changes
 
@@ -183,6 +197,36 @@ from its private key with `ssh-keygen -y -f`, at the point where they need it. S
 
 Deriving keeps "nothing key-shaped in plaintext" without a second copy that could drift from the private key.
 That leaves three bootstrap secrets per VM: `host_key`, `user_key` and `access_key`.
+
+### D8. Carrying the macOS workarounds until upstream fixes them (found in Phase 0)
+
+`v0.5.4` activates nothing on macOS. Two bugs, both still present on upstream `master`:
+
+1. **The activation tool trips over its own marker file.** On Darwin, `nix-secrets-activate` mounts a RAM disk on
+   the generations directory and marks it with a `nix-secrets-anchor` file. It then parses every entry in that
+   directory as a generation number and fails on the marker (`Failed to parse generation: invalid digit found in
+   string`, `crates/nix-secrets-activate/src/main.rs`, `init_generation_dir`). This hits both the nix-darwin
+   daemon (`/run/nix-secrets.d`) and the Home Manager agent (`$(getconf DARWIN_USER_TEMP_DIR)/nix-secrets.d`).
+   It's the bug in [#9](https://github.com/unnamed-systems/nix-secrets/issues/9), which was closed as stale
+   without a fix.
+2. **The Home Manager launchd agent can't start.** `nix/home-manager/activate/launchd.nix` sets the agent's
+   `Program` to the whole command line. Home Manager quotes `Program` as one path, so launchd exits with 126.
+   The nix-darwin daemon is fine: it uses nix-darwin's `command`, which runs through a shell.
+
+Workarounds, in `modules/den/nix-secrets.nix`:
+
+- `pkgs/patches/nix-secrets-skip-darwin-anchor.patch` skips the marker in `init_generation_dir`. It's applied
+  to the activation package (`activate.package`) of the nix-darwin daemon and, on Darwin, of the Home Manager
+  agent. Linux hosts keep the unpatched upstream package.
+- On Darwin, the HM agent's `Program` is forced to `null` and the same command goes in `ProgramArguments`.
+
+Removing them: when a release fixes #9, the patch stops applying and the darwin system **build** fails (CI only
+evaluates darwin hosts, so it shows up in `darwintron-vm test` or on magnus, not in CI). Then drop the patch,
+check whether the HM agent bug was fixed too, and rerun `darwintron-vm test`.
+
+Upstream: the project's `CONTRIBUTING.md` doesn't accept LLM-assisted contributions, and both diagnoses and
+patches here were made with an AI assistant. So they are not sent upstream as PRs. Reporting the bugs (or fixing
+them yourself) is up to you.
 
 ---
 
@@ -255,13 +299,45 @@ only the three canaries, then run `darwintron-vm test <branch>` and `nixostron-v
    HM launchd agent and systemd user service).
 2. darwin evaluation works with Determinate (`installPackage = false` on hosts, so the module's
    `config.nix.package or null` default for the CLI is never forced; see `nix/core/env.nix`).
-3. `secretsAdmin.all` evaluates and `nix-secrets -m secretsAdmin -f .#all edit|decrypt|rekey` works with a
+3. `secretsAdmin.<system>` evaluates and `nix-secrets -m secretsAdmin -f .#<system> edit|decrypt|rekey` works with a
    YubiKey identity from `age-plugin-yubikey --identity`, with one key plugged in and with the others absent.
 4. Host decryption works with an `ssh-ed25519` recipient and `/etc/ssh/ssh_host_ed25519_key` as the identity
    (D2).
 5. `--override-input secrets path:…` works through `apply-configuration` and `nixos-rebuild`.
 
 If any of these fails and has no workaround, stop and use §8.
+
+**Result (2026-11-22): all five pass, with workarounds.** Final run on `spike/nix-secrets` at `79b840b`:
+`darwintron-vm test` and `nixostron-vm test` both passed. On both VMs, every canary (sops-nix and nix-secrets,
+system and Home Manager) decrypted after a reboot, and on darwintron also right after the switch. Both rolled back
+cleanly.
+
+| Check | Result |
+| ----- | ------ |
+| 1. Canaries decrypt | ✅ with the two macOS workarounds (D8); NixOS needed none |
+| 2. darwin evaluates under Determinate | ✅ (HM on darwin needs `defaultGroup = "staff"`) |
+| 3. Admin CLI with a YubiKey | ✅ `decrypt` and `rekey` with 13125942; rekeyed files still open with the VMs' keys |
+| 4. SSH host key as identity | ✅ on both VMs, no `ssh-to-age` |
+| 5. `--override-input` | ✅ the flake's `secrets` input pointed at `amatos/secrets` (README only) and the guests had no credentials, so the canaries could only come from the shipped copy |
+
+What the spike built, to carry into Phases 2–4 (the code is on `spike/nix-secrets`):
+
+- `modules/den/_versions.nix`: the nix-secrets tag (`nix-secrets = "v0.5.4";`); the input URL is built from it.
+- `modules/den/_secrets-registry.nix` (aliases and per-secret recipients) and `_nix-secrets-shared.nix` (the
+  `security.nix-secrets` settings every configuration and `secretsAdmin` share). Plain `import`s rather than a
+  `local.secrets.registry` option: simpler, and they're needed outside the module system by `secretsAdmin`.
+- `modules/den/nix-secrets.nix`: the `nix-secrets` aspect with a nested `nix-secrets.home`, and the D8
+  workarounds.
+- `secretsAdmin.<system>` and the `secrets` wrapper in `modules/flake/outputs.nix`.
+- A `yubikey-identities` helper in the dev shell, used by both `secrets` and sops (`SOPS_AGE_KEY_CMD`). With
+  several YubiKeys plugged in, the plugin tries them in its own order and picked 32146072 (PIN and touch)
+  first. The helper returns only 13125942's identity (no PIN, no touch) when it's plugged in, and every key's
+  otherwise. `YUBIKEY_PREFERRED_SERIAL` overrides the choice.
+- `apply-configuration` passes extra arguments through to `darwin-rebuild` / `nixos-rebuild`.
+- The VM scripts' override wiring (Phase 4).
+
+Found on the way and fixed on `main`: `wait_for_ssh` in both VM scripts could hang forever at a password prompt
+(#124, `BatchMode=yes`).
 
 ### Phase 1: GitHub token, still on sops-nix (independent of nix-secrets)
 
@@ -289,22 +365,26 @@ are added, but no host enables nix-secrets.
    fortuna's host key.
 3. **Add to `magnanix`** (one PR, no host changes):
    - flake-file inputs, in `modules/den/nix-secrets.nix` (Phase 3 fills in the rest of that file;
-     `nix run .#write-flake` regenerates `flake.nix`):
+     `nix run .#write-flake` regenerates `flake.nix`). The tag lives in `modules/den/_versions.nix`
+     (`nix-secrets = "v0.5.4";`), as in the spike:
      ```nix
      flake-file.inputs.nix-secrets = {
-       url = "github:unnamed-systems/nix-secrets/v0.5.4";
+       url = "github:unnamed-systems/nix-secrets/${versions.nix-secrets}";
        inputs.nixpkgs.follows = "nixpkgs";
      };
      flake-file.inputs.secrets = { url = "github:amatos/secrets"; flake = false; };
      ```
-   - `modules/den/secrets-registry.nix`: `recipientAliases` (admins, `host_*`, user keys) and
-     `local.secrets.registry` from the mapping table.
-   - `secretsAdmin.all` in `modules/flake/outputs.nix` (D1): `nixosSystem` with nix-secrets, every registry entry
-     enabled, `activate.enable = false`, `installPackage = false`, `identityPaths = [ ]`, `boot.isContainer = true`.
-   - Dev shell: `inputs.nix-secrets.packages.${system}.nix-secrets`, plus a `secrets` wrapper that:
-     - writes `age-plugin-yubikey --identity` to a `mktemp` file (mode 600) and removes it on exit,
-     - runs `nix-secrets -m secretsAdmin -f "$repo#all" -i "$tmp" "$@"`,
-     - defaults `NIX_SECRETS_STORAGE_PATH` to `~/Developer/secrets` (overridable).
+   - `modules/den/_secrets-registry.nix` (aliases: admins, `host_*`, user keys; and per-secret recipients from the
+     mapping table) and `_nix-secrets-shared.nix`, from the spike.
+   - `secretsAdmin.<system>` in `modules/flake/outputs.nix` (D1), from the spike: nix-secrets with every registry
+     entry enabled, `activate.enable = false`, `installPackage = false`, `identityPaths = [ ]`.
+   - Dev shell, from the spike: `inputs.nix-secrets.packages.${system}.nix-secrets` with `age-plugin-yubikey` in
+     its `extraPackages`, the `yubikey-identities` helper, and a `secrets` wrapper that:
+     - writes `yubikey-identities` to a `mktemp` file and removes it on exit,
+     - runs `nix-secrets --module-system secretsAdmin --flake "$repo#<system>" --identity "$tmp" "$@"`,
+     - defaults `NIX_SECRETS_STORAGE_PATH` to `~/Developer/secrets` (overridable; the spike used
+       `./secrets-spike`).
+   - `SOPS_AGE_KEY_CMD = "yubikey-identities"`, so sops picks the same YubiKey.
    - Keep `sops` in the dev shell until Phase 6.
    - `.github/workflows/update-flake-lock.yml`: the release-tag bump from §6. It ships in this PR because this
      is where the pinned input first appears, so a release that lands mid-migration is still picked up.
@@ -331,7 +411,7 @@ All of Phases 3 and 4 land as one PR. Mechanical changes per file:
 
 | File                                    | Change                                                                                                                                                                                        |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `modules/den/sops.nix` → `nix-secrets.nix` | Import `nixosModules`/`darwinModules`/`homeManagerModules`; `enable`, `storage = inputs.secrets`, `installPackage = false`, registry injection (D1), `identityPaths` (host key; HM: `~/.config/sops-nix/key.txt`), `extraPackages = [ pkgs.age ]`; `restartTrigger` helper (D5). |
+| `modules/den/sops.nix` → `nix-secrets.nix` | Start from the spike's aspect: the module imports, `storage = inputs.secrets`, `installPackage = false`, registry injection (D1), `identityPaths` (host key; HM: `~/.config/sops-nix/key.txt`), HM `defaultGroup = "staff"` on darwin, and the D8 workarounds. Add `extraPackages = [ pkgs.age ]` and the `restartTrigger` helper (D5). |
 | `users/alberth/alberth.nix`             | `security.nix-secrets.secrets."common/alberth_password" = { enable = true; neededForUsers = true; }`, and `hashedPasswordFile = ….path`.                                                     |
 | `packages/certbot.nix` (both platforms) | Enable `common/certbot_luadns` and use its `.path`. Update the `/run/secrets/certbot_luadns` comment.                                                                                       |
 | `packages/attic.nix`                    | `hasToken = builtins.pathExists "${inputs.secrets}/hosts/${hostName}/attic_push_token.enc"`; enable `hosts/${hostName}/attic_push_token` and `hosts/muninn/atticd_env`; `restartTriggers` (D5). |
@@ -340,7 +420,7 @@ All of Phases 3 and 4 land as one PR. Mechanical changes per file:
 | `packages/espanso/espanso.nix`          | `readDir "${inputs.secrets}/users/${user}/espanso"`, keep `*.yml.enc`, enable each with `path = "${xdg.configHome}/espanso/match/<name>.yml"`.                                              |
 | `packages/nix-access-tokens.nix`        | Port the template; `!include` **both** the old (`/run/secrets/…`) and new (`/run/nix-secrets/templates/…`) paths for one release so rollback keeps fetching.                                |
 | `hosts/virtual/{darwintron,nixostron}.nix` | Enable the canaries; give them an explicit `path` so the scripts don't depend on defaults.                                                                                                 |
-| `hosts/virtual/nixostron.nix`           | The `nixostron-keys` activation script installs the user key where HM's `identityPaths` looks (unchanged path for now), and must run before `nixSecretsActivate`.                          |
+| `hosts/virtual/nixostron.nix`           | The `nixostron-keys` activation script installs the user key where HM's `identityPaths` looks (unchanged path for now), and must run before `nixSecretsActivate`. Also add the staged `/var/lib/nixostron-keys/host_key` to `identityPaths`: the pre-switch check runs before that script installs the host key in `/etc/ssh` (missing paths are skipped). Done in the spike. |
 | `packages/openssh.nix`, `hosts/*/` comments | Replace "sops-nix decrypts with" in comments.                                                                                                                                                |
 
 ### Phase 4: scripts, CI, docs (the cutover PR, part 2)
@@ -351,9 +431,14 @@ All of Phases 3 and 4 land as one PR. Mechanical changes per file:
   - derive `host_key.pub` and `access_key.pub` with `ssh-keygen -y -f` instead of decrypting them (D7). That
     covers darwintron-vm's `/etc/ssh/ssh_host_ed25519_key.pub` and `authorized_keys` writes, and
     nixostron-vm's staged key files, which `nixostron.nix`'s `nixostron-keys` script installs;
-  - replace `expected_recipient` (which greps `.sops.yaml`) with `nix eval --raw "$work/src#secretsAdmin.all.config.security.nix-secrets.recipientAliases.host_<vm>"`;
+  - replace `expected_recipient` (which greps `.sops.yaml`) with `nix eval --raw "$work/src#secretsAdmin.<system>.config.security.nix-secrets.recipientAliases.host_<vm>"`;
   - ship `git archive` of the locked secrets rev with the source and pass `--override-input secrets path:<dir>` to
-    `apply-configuration`, `nixos-rebuild` and `nixos-anywhere` (D4);
+    `apply-configuration`, `nixos-rebuild` and `nixos-anywhere` (D4). The spike already does this for the
+    `test` path, shipping `./secrets-spike` instead of the secrets repo: darwintron to `~/Developer/secrets`,
+    with the override on both `nix develop` and `apply-configuration`; nixostron to `~/secrets`, with the
+    override on `nixos-rebuild switch`. Still to do: `nixos-anywhere` (the baseline install, which runs on magnus
+    and would otherwise fetch the input itself), and finding out whether `nix develop` really needs the override
+    (the spike passed it to be safe);
   - change the canary paths;
   - update the script tests (`test-scripts`).
 - **`.github/workflows/build.yml`, `update-flake-lock.yml`:** pass
@@ -391,10 +476,10 @@ at least one `secrets rekey` and one secret change on muninn, to exercise D5.
 
 ## 6. Keeping nix-secrets on the latest release
 
-The input is pinned to a tag (`github:unnamed-systems/nix-secrets/v0.5.4`), so `nix flake update` alone never
-moves it to a new release. The weekly `update-flake-lock` workflow does the bump (it ships in the Phase 2 PR). That
-workflow already opens a PR that gets a full CI build and a `darwintron-vm test` checklist. Three changes to
-`.github/workflows/update-flake-lock.yml`:
+The input is pinned to a tag (`nix-secrets = "v0.5.4";` in `modules/den/_versions.nix`, which builds the URL), so
+`nix flake update` alone never moves it to a new release. The weekly `update-flake-lock` workflow does the bump
+(it ships in the Phase 2 PR). That workflow already opens a PR that gets a full CI build and a
+`darwintron-vm test` checklist. Three changes to `.github/workflows/update-flake-lock.yml`:
 
 1. A new step **before** "Update flake.lock", so the lock and `write-flake` see the new tag:
 
@@ -404,14 +489,13 @@ workflow already opens a PR that gets a full CI build and a `darwintron-vm test`
    - name: Bump nix-secrets to its latest release tag
      id: nix-secrets
      run: |
-       file=modules/den/nix-secrets.nix
-       pattern='github:unnamed-systems/nix-secrets/v[0-9.]+'
-       old=$(grep -oE "$pattern" "$file" | sed 's|.*/||')
+       file=modules/den/_versions.nix
+       old=$(sed -nE 's/^ *nix-secrets = "(v[0-9]+\.[0-9]+\.[0-9]+)";.*/\1/p' "$file")
        # Assigned on their own lines so a failing command stops `bash -e`.
        tags=$(git ls-remote --tags --refs https://github.com/unnamed-systems/nix-secrets)
        new=$(sed 's|.*refs/tags/||' <<<"$tags" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
        [ -n "$old" ] && [ -n "$new" ] || { echo "::error::could not read the nix-secrets tags"; exit 1; }
-       sed -i -E "s|$pattern|github:unnamed-systems/nix-secrets/$new|" "$file"
+       sed -i -E "s/^( *nix-secrets = \")v[0-9]+\.[0-9]+\.[0-9]+(\";)/\1$new\2/" "$file"
        echo "old=$old" >> "$GITHUB_OUTPUT"
        echo "new=$new" >> "$GITHUB_OUTPUT"
        echo "nix-secrets: $old -> $new"
@@ -426,12 +510,14 @@ workflow already opens a PR that gets a full CI build and a `darwintron-vm test`
      echo "([changes](https://github.com/unnamed-systems/nix-secrets/compare/${{ steps.nix-secrets.outputs.old }}...${{ steps.nix-secrets.outputs.new }}))"
      echo
      echo '- [ ] Read the nix-secrets changes; on a minor bump also run `nixostron-vm test update-flake-lock`'
+     echo '- [ ] If `darwintron-vm test` fails to build the nix-secrets patch, upstream may have fixed #9: see D8'
    fi
    ```
 
-3. `modules/den/nix-secrets.nix` added to the "Create or update pull request" step's `add-paths`.
+3. `modules/den/_versions.nix` added to the "Create or update pull request" step's `add-paths`.
 
-The tag lookup and the `sed` rewrite were checked against the real repo (they return and write `v0.5.4`).
+The tag lookup and both `sed` commands were checked (GNU sed, as on the Ubuntu runner) against the real tags and
+the spike's `_versions.nix`: they read `v0.5.4` and rewrite only the `nix-secrets` line.
 The workflow itself first runs after the Phase 2 PR merges; start it by hand once (`workflow_dispatch`) to check it.
 
 Why not the alternatives:
@@ -457,6 +543,9 @@ merging, and run `nixostron-vm test` as well as darwintron for those.
 | Bootstrap `*_pub` keys            | Not stored; derived from the private keys (D7)                                                |
 | Pinning                           | Release tags, bumped weekly by `update-flake-lock` (§6)                                       |
 | `alberth_fortuna`                 | Created during the migration (Phase 2, step 2), and a recipient of alberth's HM secrets (D6)  |
+| Phase 0                           | Passed with the D8 workarounds; go ahead with Phase 1                                         |
+| Preferred YubiKey                 | 13125942 when plugged in, for both `secrets` and sops (`yubikey-identities`)                  |
+| Upstream fixes for D8             | No AI-prepared PRs (upstream policy); reporting them is up to you                             |
 
 ---
 
