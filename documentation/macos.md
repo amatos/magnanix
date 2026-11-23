@@ -142,6 +142,22 @@ snippets across Macs, point Advanced > Syncing at a folder in iCloud Drive or Dr
 > `~/Library/Application Support/Alfred` (workflows, snippets, clipboard history) to the Trash. Settings in a sync
 > folder are kept.
 
+## Harbor
+
+`den.aspects.macos.harbor` (`modules/packages/harbor.nix`), included for alberth on magnus, installs
+[Harbor](https://github.com/thsnkhn/harbor), a native download manager for direct links, magnet links and torrents.
+It isn't in nixpkgs or homebrew-cask, so the aspect declares the developer's tap, `thsnkhn/harbor`, and installs
+the cask by its full name, `thsnkhn/harbor/harbor`. The tap has to be declared here: `cleanup = "zap"` also untaps
+anything the flake doesn't declare.
+
+Harbor needs macOS Sequoia or later and updates itself (the cask is `auto_updates`, so `brew upgrade` leaves it
+alone).
+
+> [!WARNING]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves
+> `~/Library/Application Support/Harbor` and Harbor's preferences to the Trash. Files it has already downloaded are
+> kept.
+
 ## OrbStack
 
 `den.aspects.macos.orbstack` (`modules/packages/orbstack.nix`) installs OrbStack from nixpkgs
