@@ -137,5 +137,6 @@ in
     den.aspects.espanso.secure
     den.aspects.alberth.macDesktop
     den.aspects.alberth.mail
+    den.aspects.macos.harbor
   ];
 }
