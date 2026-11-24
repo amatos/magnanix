@@ -1,6 +1,6 @@
 # Remote builders
 
-magnus (aarch64-darwin) can't build Linux derivations itself, so it sends them to fortuna, then muninn:
+magnus (aarch64-darwin) can't build Linux derivations itself, so it sends them to fortuna, or if fortuna is not available, to muninn:
 
 - **x86_64-linux** builds natively there.
 - **aarch64-linux** builds under QEMU emulation on those x86_64 machines.
