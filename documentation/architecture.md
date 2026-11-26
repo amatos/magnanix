@@ -55,7 +55,7 @@ include one:
 
 - `base` (`modules/den/base.nix`), for every host and user: the shells, macOS defaults, `attic.client`, `cli.fastfetch`, `cli.imagemagick`,
   `cli.tealdeer`, `cli.trash`, `cli.utils`, `cli.yubikey`, `cli.zoxide`, `git` (with `git.tools`), `mail`, `nix-tools`, `ntp.client`, `python`, `sudo`, `tzdata`, `tui.atuin`, `tui.neovim`,
-  `tui.yazi` and `tui.zellij`. NixOS hosts also get `cli.fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
+  `tui.yazi` and `tui.zellij`. Linux users also get `rex-server`. NixOS hosts also get `cli.fwupd`, `nixosKernel` and `systemdBoot` (systemd-boot, so the UEFI system
   partition must be mounted at `/boot`).
 - The host's aspect, for apps on that machine. This is where most desktop apps are included:
 
@@ -169,7 +169,7 @@ The input declarations (and their `follows` settings) stay in the files listed; 
 home-manager and nix-darwin must be on matching releases, so change all three at once, then run
 `nix run .#write-flake`. The Nix version itself comes from the `determinate` input.
 
-All inputs are fetched from GitHub. Determinate's own nested inputs (`nix`, its nixpkgs mirror, `flake-parts`,
+All inputs are fetched from GitHub, except `rex`, which comes from Rex's own package host. Determinate's own nested inputs (`nix`, its nixpkgs mirror, `flake-parts`,
 `git-hooks-nix`) still come from FlakeHub, because Determinate's flake declares them that way and `nix` has to
 match the Determinate release.
 
