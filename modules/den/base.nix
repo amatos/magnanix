@@ -36,6 +36,7 @@
       den.aspects.ntp.client
       den.aspects.nixosKernel # NixOS-only: defines just the `nixos` class
       den.aspects.python
+      den.aspects.rex-server
       den.aspects.shell.bash
       den.aspects.shell.fish
       den.aspects.shell.nushell
