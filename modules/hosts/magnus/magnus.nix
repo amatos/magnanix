@@ -68,6 +68,7 @@ in
       den.aspects.macos.crossOver
       den.aspects.macos.crystalFetch
       den.aspects.macos.darkroom
+      den.aspects.macos.discord
       den.aspects.macos.dropover
       den.aspects.macos.due
       den.aspects.macos.flexibits

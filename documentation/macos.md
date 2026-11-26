@@ -142,6 +142,17 @@ snippets across Macs, point Advanced > Syncing at a folder in iCloud Drive or Dr
 > `~/Library/Application Support/Alfred` (workflows, snippets, clipboard history) to the Trash. Settings in a sync
 > folder are kept.
 
+## Discord
+
+`den.aspects.macos.discord` (`modules/packages/discord.nix`), included by magnus, installs Discord's native macOS
+client. It's the `discord` Homebrew cask, in `/Applications`, and updates itself (the cask is `auto_updates`, so
+`brew upgrade` leaves it alone). Sign in to the Discord account in the app after the first switch.
+
+> [!NOTE]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves `~/Library/Application Support/discord`
+> and Discord's preferences and caches to the Trash, signing you out. Messages and servers are kept on Discord's
+> servers.
+
 ## Harbor
 
 `den.aspects.macos.harbor` (`modules/packages/harbor.nix`), included for alberth on magnus, installs
