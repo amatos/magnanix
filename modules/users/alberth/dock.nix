@@ -225,6 +225,7 @@
               "/System/Applications/Preview.app"
               # "/Applications/iTerm.app"
               "${home}/Applications/Home Manager Apps/Ghostty.app"
+              "/Applications/Rex.app"
               "/Applications/Zed.app"
               "/Applications/Delta.app"
               "/Applications/Claude.app"
