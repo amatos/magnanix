@@ -27,5 +27,5 @@
   determinate = "main";
 
   # github:unnamed-systems/nix-secrets, pinned to a release tag while it is pre-1.0
-  nix-secrets = "v0.5.4";
+  nix-secrets = "v0.7.2";
 }
