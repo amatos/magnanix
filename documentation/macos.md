@@ -167,6 +167,18 @@ program in `/bin/sh -c wait4path` and it would no longer match the one the insta
 [BetterDisplay](https://betterdisplay.pro/), the display management tool, as the `betterdisplay` Homebrew cask. The
 cask updates itself; a Pro license is entered in the app.
 
+## BetterZip
+
+`den.aspects.macos.betterZip` (`modules/packages/betterzip.nix`), included for alberth on magnus, installs
+[BetterZip](https://macitbetter.com/), an archive utility for creating, browsing and extracting archives. It's the
+`betterzip` Homebrew cask, in `/Applications`, and also links the `betterzip` command-line tool. It needs macOS
+Ventura or later and updates itself (the cask is `auto_updates`, so `brew upgrade` leaves it alone). Enter the licence
+in the app after the first switch.
+
+> [!NOTE]
+> Removing the aspect zaps the cask (`onActivation.cleanup = "zap"`), which moves BetterZip's preferences, caches
+> and its Finder and Quick Look extensions' containers to the Trash.
+
 ## Discord
 
 `den.aspects.macos.discord` (`modules/packages/discord.nix`), included by magnus, installs Discord's native macOS
