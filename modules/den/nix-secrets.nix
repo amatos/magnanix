@@ -30,10 +30,10 @@ let
   shared = import ./_nix-secrets-shared.nix { inherit inputs lib; };
   hostIdentity = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
-  # WORKAROUNDS below: see documentation/NIX_SECRETS_PLAN.md, D8. When a release fixes
-  # them, the patch stops applying and darwin builds fail; drop both then.
+  # WORKAROUNDS below: see documentation/NIX_SECRETS_PLAN.md, D8. If the patch stops
+  # applying, check upstream before dropping it: v0.7.2 moved the code without fixing it.
   #
-  # WORKAROUND (v0.5.4, upstream issue #9): on Darwin the activation tool marks the
+  # WORKAROUND (v0.5.4 to v0.7.2, upstream issue #9): on Darwin the activation tool marks the
   # RAM disk it mounts on the generations directory with an anchor file, then fails
   # parsing that file as a generation number, so no secret ever activates. Both the
   # nix-darwin daemon and the Home Manager agent mount one. The patch skips the anchor.
