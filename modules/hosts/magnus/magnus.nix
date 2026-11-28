@@ -140,5 +140,6 @@ in
     den.aspects.alberth.mail
     den.aspects.macos.harbor
     den.aspects.macos.automounterHelper
+    den.aspects.macos.betterDisplay
   ];
 }
