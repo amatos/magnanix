@@ -141,5 +141,6 @@ in
     den.aspects.macos.harbor
     den.aspects.macos.automounterHelper
     den.aspects.macos.betterDisplay
+    den.aspects.macos.betterZip
   ];
 }
