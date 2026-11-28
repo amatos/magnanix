@@ -142,6 +142,25 @@ snippets across Macs, point Advanced > Syncing at a folder in iCloud Drive or Dr
 > `~/Library/Application Support/Alfred` (workflows, snippets, clipboard history) to the Trash. Settings in a sync
 > folder are kept.
 
+## AutoMounter Helper
+
+`den.aspects.macos.automounterHelper` (`modules/packages/automounter-helper.nix`), included for alberth on magnus,
+installs [AutoMounter Helper](https://www.pixeleyes.co.nz/automounter/helper/), the companion to AutoMounter that lets
+it mount network shares at custom locations. It's the `automounterhelper` Homebrew cask.
+
+The cask is a manual installer: brew only stages `AutoMounterHelper.app` in the Caskroom. The aspect does what the
+app's Install button would, as part of Home Manager activation (which runs after `brew bundle`): it copies the newest
+Caskroom build to `~/Library/AutoMounterHelper` when the build differs, removes its quarantine, registers it with Launch
+Services, and writes and loads the `nz.co.pixeleyes.AutoMounterHelper` LaunchAgent. Cask upgrades are picked up on the
+next switch, and nothing has to be opened by hand. The installer's licence agreement is skipped.
+
+The LaunchAgent is written by the activation script rather than `launchd.agents`, because Home Manager would wrap the
+program in `/bin/sh -c wait4path` and it would no longer match the one the installer writes.
+
+> [!NOTE]
+> Removing the aspect uninstalls the cask, which unloads and deletes the LaunchAgent and moves
+> `~/Library/AutoMounterHelper` to the Trash. AutoMounter itself and its share settings are untouched.
+
 ## Discord
 
 `den.aspects.macos.discord` (`modules/packages/discord.nix`), included by magnus, installs Discord's native macOS
