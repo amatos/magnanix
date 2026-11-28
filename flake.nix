@@ -59,7 +59,7 @@
       url = "github:zhaofengli/nix-homebrew";
     };
     nix-secrets = {
-      url = "github:unnamed-systems/nix-secrets/v0.5.4";
+      url = "github:unnamed-systems/nix-secrets/v0.7.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixpkgs = {
