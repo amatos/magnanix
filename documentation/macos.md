@@ -161,6 +161,12 @@ program in `/bin/sh -c wait4path` and it would no longer match the one the insta
 > Removing the aspect uninstalls the cask, which unloads and deletes the LaunchAgent and moves
 > `~/Library/AutoMounterHelper` to the Trash. AutoMounter itself and its share settings are untouched.
 
+## BetterDisplay
+
+`den.aspects.macos.betterDisplay` (`modules/packages/betterdisplay.nix`), included for alberth on magnus, installs
+[BetterDisplay](https://betterdisplay.pro/), the display management tool, as the `betterdisplay` Homebrew cask. The
+cask updates itself; a Pro license is entered in the app.
+
 ## Discord
 
 `den.aspects.macos.discord` (`modules/packages/discord.nix`), included by magnus, installs Discord's native macOS
